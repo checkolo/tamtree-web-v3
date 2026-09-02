@@ -204,6 +204,20 @@
   to { opacity: 1; transform: none; }
 }
 
+/* The mobile artboard redefines the node card rather than scaling it — radius,
+   padding and both type sizes step down together. Four pixels of node height
+   accumulate down a five-step stack into a visible offset. */
+@media (max-width: 700px) {
+  .node {
+    width: 100%;
+    border-radius: 15px;
+    padding: 13px 14px;
+  }
+
+  .node__title { font-size: 12.5px; }
+  .node__meta { font-size: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rv,
   .rv-l,

@@ -95,6 +95,15 @@
   --seam-ember: rgba(234, 88, 12, 0.62);
   --num: #b8410a;
   --num-glow: none;
+
+  /* Display-scale mute, and the ember gradient the hero's payoff line is cut
+     from. Both are theme-specific and neither is any other token's value — the
+     artboards use one-off colours here, and hardcoding either is what makes the
+     hero render in light colours under a dark theme. Display type only: at
+     66px+ the 3:1 large-text threshold applies, which --display-mute meets and
+     would not at body size. */
+  --display-mute: #7c8697;
+  --brand-gradient: linear-gradient(96deg, #f97316 2%, #ea580c 38%, #b8410a 72%, #ea580c 100%);
   --grain-opacity: 0.24;
   --grain-blend: multiply;
 
@@ -185,6 +194,8 @@
     --seam-ember: rgba(249, 115, 22, 0.5);
     --num: #fb923c;
     --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+    --display-mute: #94a3b8;
+    --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
     --grain-opacity: 0.5;
     --grain-blend: overlay;
   }
@@ -239,6 +250,8 @@
   --seam-ember: rgba(249, 115, 22, 0.5);
   --num: #fb923c;
   --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+  --display-mute: #94a3b8;
+  --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 }
@@ -289,6 +302,8 @@
   --seam-ember: rgba(249, 115, 22, 0.5);
   --num: #fb923c;
   --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+  --display-mute: #94a3b8;
+  --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 

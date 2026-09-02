@@ -272,6 +272,18 @@ video {
   flex: none;
 }
 
+/* The mobile artboard redefines .chip rather than scaling it — height, padding,
+   gap, size and tracking all step down together. */
+@media (max-width: 700px) {
+  .chip {
+    height: 28px;
+    padding: 0 11px;
+    gap: 7px;
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+}
+
 /* ── motion ─────────────────────────────────────────────────────────────────
    C2's third view. Every scroll-driven beat must remain legible at its END
    state with motion off — reduced motion removes the travel, never the

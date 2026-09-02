@@ -107,7 +107,7 @@ const scene = heroScene();
     font-size: 66px;
     font-weight: 600;
     letter-spacing: -0.04em;
-    color: var(--ink-4);
+    color: var(--display-mute);
   }
 
   .hero__setup-2 {
@@ -121,7 +121,7 @@ const scene = heroScene();
     font-weight: 800;
     line-height: 0.9;
     letter-spacing: -0.055em;
-    background: linear-gradient(96deg, #f97316 2%, #ea580c 38%, #b8410a 72%, #ea580c 100%);
+    background: var(--brand-gradient);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -161,21 +161,29 @@ const scene = heroScene();
      voice does not step down with the body type (mobile artboard). */
   @media (max-width: 700px) {
     .hero {
-      padding: 56px 0 72px;
+      padding: 54px 0 82px;
+    }
+
+    .hero__h1 {
+      margin-top: 26px;
+      line-height: 1.14;
     }
 
     .hero__setup {
       font-size: 30px;
+      letter-spacing: -0.035em;
     }
 
     .hero__payoff {
+      margin-top: 12px;
       font-size: 64px;
-      line-height: 0.94;
+      line-height: 0.88;
     }
 
     .hero__lede {
-      margin-top: 22px;
+      margin-top: 24px;
       font-size: 16.5px;
+      line-height: 1.62;
     }
 
     .hero__cta {
@@ -191,9 +199,11 @@ const scene = heroScene();
     }
 
     .hero__rail {
-      margin-top: 48px;
+      margin-top: 52px;
+      max-width: 280px;
       font-size: 10.5px;
-      line-height: 1.9;
+      line-height: 2.1;
+      letter-spacing: 0.07em;
     }
   }
 </style>

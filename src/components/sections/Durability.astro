@@ -1,0 +1,290 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+import Chip from '../Chip.astro';
+
+/**
+ * §02 — durable execution. The first ink-black island.
+ *
+ * `.island` rather than a theme branch: this section is ink-black in BOTH
+ * themes, so the class asserts the dark palette locally and the DOM is the same
+ * in each. See tokens.css.
+ *
+ * The mobile artboard moves the two bar labels out of the timeline track and
+ * into a row beneath it — a real layout difference, which V2 permits between
+ * widths (it does not permit one between themes). One DOM still serves both:
+ * the labels live in that row, and desktop overlays the row onto the track.
+ * Keeping them inside the bars and moving them out on mobile is the version
+ * that cannot work — the track has overflow:hidden and would clip them.
+ */
+---
+
+<section class="sec island durability">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="ember-wash durability__wash1" aria-hidden="true"></div>
+  <div class="ember-wash durability__wash2" aria-hidden="true"></div>
+
+  <div class="wrap durability__inner">
+    <div class="rv durability__intro">
+      <Eyebrow n="02">— durable execution</Eyebrow>
+      <h2>Your run survives everything.<br />Including Friday.</h2>
+      <p class="durability__lede">
+        Crash mid-run? It resumes where it stopped. Waiting on a human for three days? Zero compute
+        while it waits. Every run is backed by durable execution —
+        <span class="durability__em">an agent conversation is a workflow, not a prayer.</span>
+      </p>
+    </div>
+
+    <figure class="rv durability__figure">
+      <span class="durability__watermark" aria-hidden="true">$0.00</span>
+
+      <p class="durability__clock" aria-hidden="true">
+        <span class="is-start">FRI 18:04</span><span>SAT</span><span>SUN</span><span>MON 09:12</span>
+      </p>
+
+      <div class="durability__track">
+        <div class="grow durability__phase durability__phase--run"></div>
+        <div class="grow durability__phase durability__phase--sleep">
+          <span class="durability__pulse" aria-hidden="true"></span>
+          <span class="durability__asleep">asleep · zero compute · $0.00</span>
+          <span class="durability__pulse durability__pulse--late" aria-hidden="true"></span>
+        </div>
+        <div class="grow durability__phase durability__phase--resume"></div>
+      </div>
+
+      <p class="durability__labels">
+        <span class="is-start">running · step 7</span>
+        <span class="is-end">resumed · nothing lost</span>
+      </p>
+
+      <ul class="durability__chips">
+        <li><Chip>process crashed</Chip></li>
+        <li><Chip>host replaced</Chip></li>
+        <li><Chip>3-day human wait</Chip></li>
+        <li><Chip tone="live" dot>state intact</Chip></li>
+      </ul>
+
+      <figcaption class="visually-hidden">
+        A run that starts on Friday evening, sleeps through the weekend at zero cost while it waits
+        for a person, and resumes on Monday morning with its state intact.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .durability {
+    padding: 132px 0 124px;
+  }
+
+  .durability__wash1 {
+    width: 760px;
+    height: 360px;
+    left: -170px;
+    top: 120px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 16%, transparent), transparent 68%);
+  }
+
+  .durability__wash2 {
+    width: 900px;
+    height: 380px;
+    left: 270px;
+    top: 250px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--live) 13%, transparent), transparent 68%);
+  }
+
+  .durability__inner { position: relative; }
+  .durability__intro { text-align: center; }
+
+  h2 {
+    margin: 20px 0 0;
+    font-size: 76px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .durability__lede {
+    margin: 28px auto 0;
+    max-width: 720px;
+    font-size: 19px;
+    line-height: 1.66;
+    color: var(--ink-3);
+  }
+
+  .durability__em { color: var(--brand-ink); font-weight: 600; }
+
+  .durability__figure {
+    position: relative;
+    margin: 78px 0 0;
+  }
+
+  .durability__watermark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    font-family: var(--display);
+    font-size: 190px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    color: color-mix(in srgb, var(--live) 13%, transparent);
+  }
+
+  .durability__clock {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-4);
+    padding: 0 2px 14px;
+  }
+
+  .durability__clock .is-start { color: var(--brand-deep); }
+
+  .durability__track {
+    position: relative;
+    display: flex;
+    height: 86px;
+    border-radius: var(--r-xl);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: color-mix(in srgb, var(--page) 55%, transparent);
+  }
+
+  .durability__phase {
+    transform-origin: left;
+    display: flex;
+    align-items: center;
+  }
+
+  .durability__phase--run {
+    width: 20%;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 42%, transparent), color-mix(in srgb, var(--brand) 16%, transparent));
+    border-right: 1px solid color-mix(in srgb, var(--brand) 40%, transparent);
+  }
+
+  .durability__phase--sleep {
+    width: 56%;
+    animation-delay: 0.05s;
+    justify-content: center;
+    gap: 14px;
+    background: repeating-linear-gradient(
+      122deg,
+      color-mix(in srgb, var(--ink-3) 7%, transparent) 0 12px,
+      transparent 12px 24px
+    );
+  }
+
+  .durability__phase--resume {
+    width: 24%;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--live) 30%, transparent), color-mix(in srgb, var(--live) 10%, transparent));
+    border-left: 1px solid color-mix(in srgb, var(--live) 45%, transparent);
+  }
+
+  .durability__pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-4);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+
+  .durability__pulse--late { animation-delay: 0.8s; }
+
+  .durability__asleep {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+
+  /* Mobile's position is the DOM position; desktop overlays it on the track. */
+  .durability__labels {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 84px;
+    height: 86px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    margin: 0;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+
+  .durability__labels .is-start { color: var(--brand-deep); }
+  .durability__labels .is-end { color: var(--live-ink); }
+
+  .durability__chips {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (max-width: 700px) {
+    .durability { padding: 88px 0 84px; }
+
+    h2 { margin-top: 16px; font-size: 42px; }
+
+    .durability__lede {
+      margin-top: 22px;
+      font-size: 16.5px;
+      line-height: 1.64;
+    }
+
+    .durability__wash1 { width: 440px; height: 280px; left: -120px; top: 100px; }
+    .durability__wash2 { width: 480px; height: 300px; left: 80px; top: 230px; }
+
+    .durability__figure { margin-top: 50px; }
+
+    .durability__watermark {
+      inset: 28px 0 auto;
+      height: 78px;
+      font-size: 104px;
+      color: color-mix(in srgb, var(--live) 14%, transparent);
+    }
+
+    .durability__clock {
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      padding: 0 1px 10px;
+    }
+
+    .durability__track { height: 78px; border-radius: var(--r-lg); }
+
+    .durability__phase--sleep { gap: 8px; }
+
+    .durability__pulse { width: 5px; height: 5px; }
+
+    .durability__asleep {
+      font-size: 9.5px;
+      color: var(--ink-2);
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    /* Out of the track and into its own row, per the mobile artboard. */
+    .durability__labels {
+      position: static;
+      height: auto;
+      margin-top: 12px;
+      padding: 0;
+      font-size: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .durability__chips {
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 24px;
+    }
+  }
+</style>
