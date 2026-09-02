@@ -1,0 +1,218 @@
+---
+import Chip from '../Chip.astro';
+import Button from '../Button.astro';
+import RunScene from '../RunScene.astro';
+import WaitlistForm from '../WaitlistForm.astro';
+import { heroRun } from '../../data/hero-run';
+
+/**
+ * C3 correction, the significant one: the artboard draws TWO <h1> elements —
+ * the grey setup lines and the ember payoff. They are one heading. The page
+ * gets exactly one <h1> and the display treatment is carried by spans inside
+ * it, which renders identically and stops the outline claiming two titles.
+ */
+---
+
+<section class="sec hero" id="tt-hero">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="hero__wash hero__wash--ember" aria-hidden="true"></div>
+  <div class="hero__wash hero__wash--live" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="wrap hero__inner">
+    <p class="hero__badge">
+      <Chip tone="live" dot pulse>AGENT-FIRST ORCHESTRATION · LAUNCHING SOON</Chip>
+    </p>
+
+    <h1 class="hero__h1">
+      <span class="hero__setup">
+        Automations follow the script.<br />
+        <span class="hero__setup-2">Agents write their own.</span>
+      </span>
+      <span class="hero__payoff">Tamtree runs both.</span>
+    </h1>
+
+    <p class="hero__lede">
+      One orchestrator where deterministic pipelines and autonomous agent crews snap together on a
+      crash-proof engine — guardrails, evals, and budgets built in, not bolted on.
+    </p>
+
+    <div class="hero__cta">
+      <WaitlistForm id="hero-waitlist" />
+      <Button href="#tt-primitives" variant="ghost" class="hero__scroll">
+        Watch it run
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+          <path d="M12 5v14M6 13l6 6 6-6"></path>
+        </svg>
+      </Button>
+    </div>
+
+    <RunScene steps={heroRun.steps} caption={heroRun.caption} elapsed={heroRun.elapsed} />
+
+    <p class="hero__rail">
+      DURABLE EXECUTION · RUNTIME GUARDRAILS · EVAL GATES · COST LEDGER
+    </p>
+  </div>
+</section>
+
+<style>
+  .hero {
+    padding: 104px 0 132px;
+    background: var(--page);
+  }
+
+  .hero__inner {
+    position: relative;
+  }
+
+  .hero__wash {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    filter: blur(90px);
+  }
+
+  .hero__wash--ember {
+    width: 1100px;
+    height: 640px;
+    left: calc(var(--mx) - 550px);
+    top: calc(var(--my) - 420px);
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 22%, transparent), color-mix(in srgb, var(--brand) 5%, transparent) 45%, transparent 70%);
+    transition: left var(--dur-2) var(--ease), top var(--dur-2) var(--ease);
+  }
+
+  .hero__wash--live {
+    width: 620px;
+    height: 420px;
+    right: -160px;
+    top: 520px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--live) 14%, transparent), transparent 68%);
+  }
+
+  .hero__badge {
+    display: flex;
+    justify-content: center;
+  }
+
+  .hero__h1 {
+    margin: 34px 0 0;
+    text-align: center;
+    line-height: 1.06;
+  }
+
+  .hero__setup {
+    display: block;
+    font-size: 66px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    color: var(--ink-4);
+  }
+
+  .hero__setup-2 {
+    color: var(--ink-2);
+  }
+
+  .hero__payoff {
+    display: block;
+    margin-top: 10px;
+    font-size: 136px;
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.055em;
+    background: linear-gradient(96deg, #f97316 2%, #ea580c 38%, #b8410a 72%, #ea580c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hero__lede {
+    margin: 32px auto 0;
+    max-width: 740px;
+    text-align: center;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .hero__cta {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-top: 40px;
+  }
+
+  .hero__scroll {
+    height: 60px;
+  }
+
+  .hero__rail {
+    margin: 82px auto 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+
+  /* Mobile 390: the punchline steps to 64px over two lines, and the display
+     voice does not step down with the body type (mobile artboard). */
+  @media (max-width: 700px) {
+    .hero {
+      padding: 56px 0 72px;
+    }
+
+    .hero__setup {
+      font-size: 30px;
+    }
+
+    .hero__payoff {
+      font-size: 64px;
+      line-height: 0.94;
+    }
+
+    .hero__lede {
+      margin-top: 22px;
+      font-size: 16.5px;
+    }
+
+    .hero__cta {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .hero__scroll {
+      height: 52px;
+      justify-content: center;
+    }
+
+    .hero__rail {
+      margin-top: 48px;
+      font-size: 10.5px;
+      line-height: 1.9;
+    }
+  }
+</style>
+
+<script>
+  // The ember wash follows the pointer. Guarded on a fine pointer AND on
+  // reduced motion: on touch there is no pointer to follow, and a reader who
+  // asked for no motion should not get a light source tracking their finger.
+  const fine = matchMedia('(pointer: fine)').matches;
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hero = document.getElementById('tt-hero');
+
+  if (fine && !still && hero) {
+    document.addEventListener(
+      'mousemove',
+      (e) => {
+        const r = hero.getBoundingClientRect();
+        document.documentElement.style.setProperty('--mx', `${e.clientX - r.left}px`);
+        document.documentElement.style.setProperty('--my', `${e.clientY - r.top}px`);
+      },
+      { passive: true }
+    );
+  }
+</script>

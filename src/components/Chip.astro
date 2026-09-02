@@ -1,16 +1,87 @@
 ---
 /**
- * A status pill. `tone` colours the dot only — the label must say what the dot
- * means, because colour alone is not information (C3, and axe agrees).
+ * A status pill.
+ *
+ * `tone` tints the whole chip — border, ground and label — not just the dot.
+ * The artboards tint the chip and it matters: a live badge that is grey with a
+ * green dot reads as a dot on a chip, not as a live badge.
+ *
+ * The label must still say what the tone means. Colour is never the only
+ * carrier of the status, which is C3's rule and axe's.
  */
+type Tone = 'live' | 'running' | 'compose' | 'warn' | 'good' | 'danger' | 'neutral';
+
 interface Props {
-  tone?: 'live' | 'running' | 'compose' | 'warn' | 'good' | 'danger' | 'none';
+  tone?: Tone;
+  dot?: boolean;
+  size?: 'md' | 'sm';
+  pulse?: boolean;
   class?: string;
 }
-const { tone = 'none', class: className } = Astro.props;
+const { tone = 'neutral', dot = false, size = 'md', pulse = false, class: className } = Astro.props;
 ---
 
-<span class:list={['chip', className]}>
-  {tone !== 'none' && <span class="chip__dot" style={`background:var(--${tone})`} />}
+<span class:list={['chip', `chip--${tone}`, size === 'sm' && 'chip--sm', className]}>
+  {dot && <span class:list={['chip__dot', pulse && 'chip__dot--pulse']} aria-hidden="true" />}
   <slot />
 </span>
+
+<style>
+  .chip--live {
+    border-color: color-mix(in srgb, var(--live) 55%, transparent);
+    background: color-mix(in srgb, var(--live) 12%, transparent);
+    color: var(--live-ink);
+  }
+
+  .chip--live .chip__dot { background: var(--live); box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--live) 24%, transparent); }
+
+  .chip--running {
+    border-color: color-mix(in srgb, var(--running) 40%, transparent);
+    background: color-mix(in srgb, var(--running) 12%, transparent);
+    color: var(--running-ink);
+  }
+
+  .chip--running .chip__dot { background: var(--running); }
+
+  .chip--compose {
+    border-color: color-mix(in srgb, var(--compose) 40%, transparent);
+    background: color-mix(in srgb, var(--compose) 12%, transparent);
+    color: var(--compose-ink);
+  }
+
+  .chip--compose .chip__dot { background: var(--compose); }
+
+  .chip--warn {
+    border-color: color-mix(in srgb, var(--warn) 45%, transparent);
+    background: color-mix(in srgb, var(--warn) 14%, transparent);
+    color: var(--warn-ink);
+  }
+
+  .chip--warn .chip__dot { background: var(--warn); }
+
+  .chip--good {
+    border-color: color-mix(in srgb, var(--good) 45%, transparent);
+    background: color-mix(in srgb, var(--good) 12%, transparent);
+    color: var(--good-ink);
+  }
+
+  .chip--good .chip__dot { background: var(--good); }
+
+  .chip--danger {
+    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    color: var(--danger-ink);
+  }
+
+  .chip--danger .chip__dot { background: var(--danger); }
+
+  .chip--sm {
+    height: 22px;
+    padding: 0 9px;
+    font-size: 10px;
+  }
+
+  .chip__dot--pulse {
+    animation: blink 1.8s ease-in-out infinite;
+  }
+</style>

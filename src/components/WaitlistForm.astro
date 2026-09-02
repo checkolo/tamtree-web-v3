@@ -1,0 +1,131 @@
+---
+/**
+ * The waitlist form (T2.2), against Buttondown's real contract — see
+ * docs/waitlist.md. A plain form POST, no SDK, no fetch: the site is zero-JS by
+ * default and a waitlist that needs script to submit loses exactly the visitors
+ * most likely to have read the page.
+ *
+ * The hidden iframe target keeps the provider's redirect off our origin so the
+ * page can render the deck's own success state. With JS or iframes unavailable
+ * the POST still works and the visitor lands on Buttondown's confirmation —
+ * a worse experience and an acceptable floor, not the default.
+ */
+interface Props {
+  id?: string;
+  size?: 'md' | 'lg';
+  cta?: string;
+  class?: string;
+}
+const { id = 'waitlist', size = 'lg', cta = 'Get early access', class: className } = Astro.props;
+const inputId = `${id}-email`;
+const frameId = `${id}-sink`;
+---
+
+<form
+  class:list={['wl', `wl--${size}`, className]}
+  id={id}
+  action="https://buttondown.email/api/emails/embed-subscribe/tamtree"
+  method="post"
+  target={frameId}
+>
+  <label class="visually-hidden" for={inputId}>Work email</label>
+  <input
+    class="wl__input"
+    id={inputId}
+    type="email"
+    name="email"
+    placeholder="you@work.com"
+    autocomplete="email"
+    required
+  />
+  <input type="hidden" name="tag" value="waitlist" />
+  <button class="btn btn--primary btn--sm" type="submit">{cta}</button>
+</form>
+
+<p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
+<iframe class="visually-hidden" name={frameId} id={frameId} title="Waitlist submission" tabindex="-1"></iframe>
+
+<script>
+  for (const form of document.querySelectorAll<HTMLFormElement>('.wl')) {
+    const msg = document.getElementById(`${form.id}-msg`);
+    const sink = document.getElementById(`${form.id}-sink`) as HTMLIFrameElement | null;
+    if (!msg || !sink) continue;
+
+    form.addEventListener('submit', () => {
+      // The iframe load event is the only signal a cross-origin POST gives
+      // back — we cannot read the response, only observe that one arrived.
+      // So this reports "sent", never "confirmed", which is the honest claim.
+      sink.addEventListener(
+        'load',
+        () => {
+          msg.textContent = "You're on the list. We'll be in touch before launch.";
+          msg.hidden = false;
+          form.hidden = true;
+        },
+        { once: true }
+      );
+    });
+  }
+</script>
+
+<style>
+  .wl {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+    max-width: 100%;
+    padding: 0 8px 0 22px;
+    border-radius: var(--r-pill);
+    background: var(--field-bg);
+    border: 1px solid var(--line-2);
+    box-shadow: 0 4px 16px -6px rgba(15, 23, 42, 0.14);
+  }
+
+  .wl--lg { height: 60px; }
+  .wl--md { height: 52px; }
+
+  .wl__input {
+    width: 216px;
+    max-width: 100%;
+    height: 44px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+  }
+
+  .wl__input::placeholder {
+    color: var(--ink-3);
+  }
+
+  .wl__msg {
+    margin-top: 14px;
+    font-size: 16px;
+    color: var(--good-ink);
+  }
+
+  @media (max-width: 700px) {
+    .wl {
+      width: 100%;
+      height: auto;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 10px;
+      border-radius: var(--r-xl);
+    }
+
+    .wl__input {
+      width: 100%;
+      height: 48px;
+      padding-inline: 12px;
+    }
+
+    .wl :global(.btn) {
+      width: 100%;
+    }
+  }
+</style>

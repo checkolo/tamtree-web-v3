@@ -1,0 +1,219 @@
+/* ============================================================================
+   The run scene — node cards, connectors, and the scroll-driven reveals.
+
+   These are global because more than one section draws a run, and because the
+   reveal utilities are applied by every section. Ported from the artboards with
+   hardcoded colours replaced by tokens; the geometry is unchanged.
+   ========================================================================= */
+
+/* ── node cards ─────────────────────────────────────────────────────────── */
+
+.node {
+  position: relative;
+  width: 206px;
+  border-radius: var(--r-xl);
+  padding: 14px;
+  background: var(--node-bg);
+  border: 1px solid var(--line);
+  box-shadow: var(--node-shadow);
+}
+
+.node__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.node__title {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.node__meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-3);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+}
+
+.node__bar {
+  margin-top: 12px;
+  height: 5px;
+  border-radius: var(--r-xs);
+}
+
+/* ── connectors ─────────────────────────────────────────────────────────────
+   Decorative: the ordered list they sit between already says these steps run in
+   sequence, so the connector adds a picture of it and no information. They are
+   aria-hidden at the markup level. */
+
+.conn {
+  position: relative;
+  width: 56px;
+  height: 2px;
+  flex: none;
+  background: var(--conn-grad);
+}
+
+.conn--dashed {
+  background: repeating-linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--ink-3) 30%, transparent) 0 5px,
+    transparent 5px 10px
+  );
+}
+
+.pip {
+  position: absolute;
+  top: -2.5px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  box-shadow: var(--pip-glow);
+  animation: flow 2.2s linear infinite;
+}
+
+@keyframes flow {
+  0% { left: -6px; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { left: 56px; opacity: 0; }
+}
+
+/* ── work in progress ───────────────────────────────────────────────────── */
+
+.shimmer {
+  position: relative;
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ink-3) 14%, transparent);
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--compose) 85%, transparent), transparent);
+  transform: translateX(-100%);
+  animation: sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(220%); }
+}
+
+@keyframes pulsering {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--warn) 42%, transparent); }
+  50% { box-shadow: 0 0 0 12px transparent; }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.28; }
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+
+@keyframes drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(18px, -26px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes caret {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── scroll-driven reveals ──────────────────────────────────────────────────
+   `animation-timeline: view()` where supported. Where it is not, the animation
+   simply runs once on load — which is why every keyframe set ends at the
+   visible state rather than starting from it. There is no JS fallback and none
+   is wanted: the failure mode of the unsupported path is "it played early",
+   not "the content never appeared".
+
+   This is also what makes the reduced-motion rule below honest. Removing the
+   animation leaves the END state, so a reader who has asked for no motion gets
+   the finished frame rather than an empty one (C2's third view). */
+
+.rv {
+  animation: rvk 1s var(--ease) both;
+  animation-timeline: view();
+  animation-range: entry 4% entry 96%;
+}
+
+@keyframes rvk {
+  from { opacity: 0; transform: translateY(38px); }
+  to { opacity: 1; transform: none; }
+}
+
+.rv-l {
+  animation: rvl 1s var(--ease) both;
+  animation-timeline: view();
+  animation-range: entry 4% entry 96%;
+}
+
+@keyframes rvl {
+  from { opacity: 0; transform: translateX(-46px); }
+  to { opacity: 1; transform: none; }
+}
+
+.grow {
+  animation: growk 1s linear both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+@keyframes growk {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.rise {
+  animation: risek 1s var(--ease) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+@keyframes risek {
+  from { opacity: 0; transform: translateY(88px) rotate(-2deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* The mobile ladder grows from the left rather than up from a floor. */
+.rise-x {
+  animation: risexk 1s var(--ease) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 100%;
+}
+
+@keyframes risexk {
+  from { opacity: 0; transform: translateX(-60px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rv,
+  .rv-l,
+  .rise,
+  .rise-x {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .grow {
+    transform: none !important;
+  }
+}

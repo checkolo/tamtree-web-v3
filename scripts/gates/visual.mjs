@@ -35,6 +35,12 @@ const TOLERANCE = Number(process.env.TT_VISUAL_TOLERANCE ?? 0.5);
 const THRESHOLD = 0.12;
 
 const ROUTE = process.env.TT_VISUAL_ROUTE ?? '/';
+// Compare only the top N CSS pixels. The homepage lands section by section, and
+// without this the gate can say nothing at all until the last one is in — a
+// height mismatch masks every fidelity question underneath it. Clipping lets a
+// section be measured the day it is ported, which is when the answer is cheap
+// to act on. A full-height run (no clip) remains the real gate.
+const CLIP = Number(process.env.TT_VISUAL_CLIP ?? 0);
 
 await mkdir(OUT, { recursive: true });
 const server = await start(PORT);
@@ -61,6 +67,32 @@ for (const board of ARTBOARDS) {
   await new Promise((r) => setTimeout(r, 400));
   const shot = PNG.sync.read(await page.screenshot({ fullPage: true }));
   await page.close();
+
+  if (CLIP > 0) {
+    const h = Math.min(CLIP, shot.height, reference.height);
+    if (shot.height < CLIP || reference.height < CLIP) {
+      results.push({
+        board: board.name,
+        error: `clip of ${CLIP}px exceeds available height (built ${shot.height}, artboard ${reference.height})`,
+      });
+      continue;
+    }
+    const crop = (png) => {
+      const out = new PNG({ width: png.width, height: h });
+      png.data.copy(out.data, 0, 0, png.width * h * 4);
+      return out;
+    };
+    const a = crop(reference);
+    const b = crop(shot);
+    const diff = new PNG({ width: a.width, height: h });
+    const differing = pixelmatch(a.data, b.data, diff.data, a.width, h, {
+      threshold: THRESHOLD,
+      includeAA: false,
+    });
+    await writeFile(join(OUT, `${board.name}.png`), PNG.sync.write(diff));
+    results.push({ board: board.name, pct: (differing / (a.width * h)) * 100, differing, clipped: CLIP });
+    continue;
+  }
 
   if (shot.width !== reference.width || shot.height !== reference.height) {
     results.push({
@@ -97,9 +129,12 @@ for (const r of results) {
     console.error(`✗ ${r.board}: ${r.error}`);
   } else if (r.pct > TOLERANCE) {
     failed = true;
-    console.error(`✗ ${r.board}: ${r.pct.toFixed(2)}% of pixels differ (tolerance ${TOLERANCE}%) → design/diff/${r.board}.png`);
+    console.error(
+      `✗ ${r.board}: ${r.pct.toFixed(2)}% of pixels differ${r.clipped ? ` (top ${r.clipped}px)` : ''} ` +
+        `(tolerance ${TOLERANCE}%) → design/diff/${r.board}.png`
+    );
   } else {
-    console.log(`✓ ${r.board}: ${r.pct.toFixed(2)}% differ`);
+    console.log(`✓ ${r.board}: ${r.pct.toFixed(2)}% differ${r.clipped ? ` (top ${r.clipped}px)` : ''}`);
   }
 }
 
