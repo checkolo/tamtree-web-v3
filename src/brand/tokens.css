@@ -104,6 +104,24 @@
      would not at body size. */
   --display-mute: #7c8697;
   --brand-gradient: linear-gradient(96deg, #f97316 2%, #ea580c 38%, #b8410a 72%, #ea580c 100%);
+
+  /* The guardrail spine, and it is the clearest case in the whole palette of a
+     token that is not a colour but a MATERIAL. On paper it is a solid ember bar
+     that casts a shadow; on ink it is a translucent lit panel that emits a
+     glow. The artboards say so in their own comments. Same element, same DOM,
+     opposite physics — which is exactly what a token is for and what a shared
+     hex could not express. */
+  --spine-bg: linear-gradient(180deg, #f97316, #ea580c);
+  --spine-border: #c2410c;
+  --spine-ink: #2b1103;
+  --spine-weight: 700;
+  --spine-shadow: 0 16px 30px -14px rgba(234, 88, 12, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+
+  /* Data cells. Light separates the two columns by ground (warm vs white);
+     dark uses one translucent white for both. */
+  --cell-bg: #f7f4f0;
+  --cell-bg-2: #ffffff;
+  --danger-soft: #b3313c;
   --grain-opacity: 0.24;
   --grain-blend: multiply;
 
@@ -196,6 +214,14 @@
     --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
     --display-mute: #94a3b8;
     --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
+    --spine-bg: linear-gradient(180deg, rgba(249, 115, 22, 0.3), rgba(249, 115, 22, 0.06));
+    --spine-border: rgba(249, 115, 22, 0.42);
+    --spine-ink: #fdba74;
+    --spine-weight: 400;
+    --spine-shadow: 0 0 34px -6px rgba(249, 115, 22, 0.5);
+    --cell-bg: rgba(255, 255, 255, 0.03);
+    --cell-bg-2: rgba(255, 255, 255, 0.03);
+    --danger-soft: #e4636d;
     --grain-opacity: 0.5;
     --grain-blend: overlay;
   }
@@ -252,6 +278,14 @@
   --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
   --display-mute: #94a3b8;
   --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
+  --spine-bg: linear-gradient(180deg, rgba(249, 115, 22, 0.3), rgba(249, 115, 22, 0.06));
+  --spine-border: rgba(249, 115, 22, 0.42);
+  --spine-ink: #fdba74;
+  --spine-weight: 400;
+  --spine-shadow: 0 0 34px -6px rgba(249, 115, 22, 0.5);
+  --cell-bg: rgba(255, 255, 255, 0.03);
+  --cell-bg-2: rgba(255, 255, 255, 0.03);
+  --danger-soft: #e4636d;
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 }
@@ -304,6 +338,14 @@
   --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
   --display-mute: #94a3b8;
   --brand-gradient: linear-gradient(96deg, #fdba74 4%, #f97316 42%, #ea580c 74%, #fb923c 100%);
+  --spine-bg: linear-gradient(180deg, rgba(249, 115, 22, 0.3), rgba(249, 115, 22, 0.06));
+  --spine-border: rgba(249, 115, 22, 0.42);
+  --spine-ink: #fdba74;
+  --spine-weight: 400;
+  --spine-shadow: 0 0 34px -6px rgba(249, 115, 22, 0.5);
+  --cell-bg: rgba(255, 255, 255, 0.03);
+  --cell-bg-2: rgba(255, 255, 255, 0.03);
+  --danger-soft: #e4636d;
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 

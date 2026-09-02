@@ -282,6 +282,15 @@ video {
     font-size: 10.5px;
     letter-spacing: 0.04em;
   }
+
+  /* Needed explicitly: the block above has the same specificity as .chip--sm
+     and comes later, so without this the small variant silently inherits the
+     full-size height inside a media query. */
+  .chip--sm {
+    height: 21px;
+    padding: 0 9px;
+    font-size: 9.5px;
+  }
 }
 
 /* ── motion ─────────────────────────────────────────────────────────────────
