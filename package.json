@@ -22,10 +22,12 @@
     "gate:lighthouse": "node scripts/gates/lighthouse.mjs",
     "gate:screenshots": "node scripts/gates/screenshots.mjs",
     "gate:licenses": "node scripts/gates/licenses.mjs",
-    "gates": "pnpm gate:tokens && pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe",
+    "gates": "pnpm gate:tokens && pnpm gate:runs && pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe && pnpm gate:visual",
     "gate:tokens": "node scripts/gates/tokens.mjs",
     "artboards:export": "node scripts/artboards/export.mjs",
-    "gate:visual": "node scripts/gates/visual.mjs"
+    "gate:visual": "node scripts/gates/visual.mjs",
+    "gate:runs": "node --experimental-strip-types scripts/gates/runs.mjs",
+    "runs:record": "node scripts/runs/record.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",

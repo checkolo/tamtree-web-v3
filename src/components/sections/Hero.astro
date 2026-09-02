@@ -3,7 +3,9 @@ import Chip from '../Chip.astro';
 import Button from '../Button.astro';
 import RunScene from '../RunScene.astro';
 import WaitlistForm from '../WaitlistForm.astro';
-import { heroRun } from '../../data/hero-run';
+import { heroScene } from '../../data/hero-run';
+
+const scene = heroScene();
 
 /**
  * C3 correction, the significant one: the artboard draws TWO <h1> elements —
@@ -47,7 +49,7 @@ import { heroRun } from '../../data/hero-run';
       </Button>
     </div>
 
-    <RunScene steps={heroRun.steps} caption={heroRun.caption} elapsed={heroRun.elapsed} />
+    <RunScene steps={scene.steps} caption={scene.caption} elapsed={scene.elapsed} />
 
     <p class="hero__rail">
       DURABLE EXECUTION · RUNTIME GUARDRAILS · EVAL GATES · COST LEDGER
