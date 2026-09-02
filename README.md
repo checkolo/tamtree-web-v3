@@ -32,8 +32,9 @@ pnpm preview    # serve the built dist/ the way Astro will
 pnpm check      # astro check — types + template diagnostics
 ```
 
-`pnpm dev` shows drafts; a production build hides them. To include drafts in a
-build, set `TT_INCLUDE_DRAFTS=1`.
+`pnpm dev` shows drafts; a production build hides them. To include them in a
+build, put `TT_INCLUDE_DRAFTS=1` in a `.env` file — it is read through
+`import.meta.env`, and Vite does not pick up a plain shell variable.
 
 ---
 
