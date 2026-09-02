@@ -192,12 +192,18 @@ video {
 
 .btn--primary {
   background: var(--btn-primary-bg);
-  color: #1a0d03;
+  /* White, on the owner's decision (2026-09-03), over the artboards' bright
+     ember: 2.80:1 at #f97316 and 3.56:1 at #ea580c, both under AA's 4.5:1 for
+     a 16px label. Taken knowingly, after the alternative — a deeper ground at
+     4.8-6.5:1 — was put and declined. Recorded here rather than in a commit
+     message because the next person to touch this line will not read one, and
+     gate:axe cannot flag it: axe does not resolve gradient backgrounds. */
+  color: #ffffff;
   box-shadow: var(--btn-primary-shadow);
 }
 
 .btn--primary:hover {
-  color: #1a0d03;
+  color: #ffffff;
   transform: translateY(-2px) scale(1.02);
   box-shadow: var(--btn-primary-shadow-hover);
 }

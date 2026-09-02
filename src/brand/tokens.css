@@ -148,9 +148,9 @@
      page's --brand/--brand-press pair: the artboards draw it starting from
      #f97316 in BOTH themes — a gradient to #ea580c on paper, flat on ink.
      Driving it from the theme tokens made the light button #ea580c→#c2410c,
-     a shade too dark, and put its #1a0d03 label at 3.68:1 over the bottom
-     half — below AA for 16px text. The label stays a literal for the same
-     reason §08's ink does: it must not move with the palette. */
+     a shade too dark and darker than any artboard draws it. The label is a
+     literal in base.css for the same reason §08's ink is: it must not move
+     with the palette. See the note there about what it costs. */
   --btn-primary-bg: linear-gradient(180deg, #f97316, #ea580c);
   --btn-primary-shadow: 0 12px 26px -10px rgba(234, 88, 12, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.42);
   --btn-primary-shadow-hover: 0 18px 38px -12px rgba(234, 88, 12, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.5);
