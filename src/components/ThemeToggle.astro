@@ -102,7 +102,9 @@
     border: 0;
     border-radius: var(--r-pill);
     background: transparent;
-    color: var(--ink-4);
+    /* --ink-3, not --ink-4: this is the label of an interactive control, not
+       de-emphasised metadata. --ink-4 measured 3.70:1 on --surface-2 in dark. */
+    color: var(--ink-3);
     font-family: var(--body);
     font-size: 12.5px;
     cursor: pointer;

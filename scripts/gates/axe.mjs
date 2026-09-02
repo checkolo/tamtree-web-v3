@@ -1,4 +1,10 @@
-// Gate G5 — axe-core over every route: zero critical/serious violations.
+// Gate G5 — axe-core over every route, in BOTH colour schemes: zero
+// critical/serious violations.
+//
+// The scheme loop is not padding. This site is themed by a token swap, so every
+// colour pair exists twice and a single-scheme run tests half of them. Measured
+// when it was added: --ink-4 passed nothing in either theme (2.77:1 light,
+// 3.75:1 dark) and only the light failure was visible to the original gate.
 import puppeteer from 'puppeteer-core';
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -27,7 +33,9 @@ const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new'
 
 let failed = false;
 for (const route of routes.sort()) {
+ for (const scheme of ['light', 'dark']) {
   const page = await browser.newPage();
+  await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: scheme }]);
   await page.goto(`http://localhost:${PORT}/${route === '/' ? '' : route}`, {
     waitUntil: 'networkidle0',
   });
@@ -45,15 +53,16 @@ for (const route of routes.sort()) {
   );
   if (bad.length) {
     failed = true;
-    console.error(`✗ ${route}`);
+    console.error(`✗ ${route}  [${scheme}]`);
     for (const v of bad) {
       console.error(`   [${v.impact}] ${v.id}: ${v.help}`);
       for (const n of v.nodes.slice(0, 3)) console.error(`     ${n.target.join(' ')}`);
     }
   } else {
-    console.log(`✓ ${route}`);
+    console.log(`✓ ${route}  [${scheme}]`);
   }
   await page.close();
+ }
 }
 
 await browser.close();
@@ -62,4 +71,6 @@ if (failed) {
   console.error('G5 FAIL — critical/serious axe violations found.');
   process.exit(1);
 }
-console.log(`G5: OK — ${routes.length} routes, zero critical/serious violations.`);
+console.log(
+  `G5: OK — ${routes.length} route(s) × light/dark, zero critical/serious violations.`
+);

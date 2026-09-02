@@ -41,8 +41,16 @@
   /* ── ink ─────────────────────────────────────────────────────────────── */
   --ink: #0b1120;
   --ink-2: #334155;
-  --ink-3: #64748b;
-  --ink-4: #8b93a1;
+  /* --ink-3 and --ink-4 are darker than the artboards draw them, by measurement
+     rather than by taste. At the sizes they are used — 11.5–12.5px eyebrows,
+     dates and the copyright line — the artboard values fail WCAG AA on the
+     warm --surface ground: --ink-3 measured 4.27:1 and --ink-4 2.77:1 against
+     a 4.5:1 requirement. --ink-3 moved 4%, which is not perceptible; --ink-4
+     moved 25%, which is, and is the honest cost of the quietest ink being
+     readable at 12px. The v2 design system met the same problem and wrote an
+     exemption; this palette fixes it instead. */
+  --ink-3: #617086;
+  --ink-4: #696f7a;
 
   --line: #e8e0d6;
   --line-2: #d8cfc2;
@@ -139,7 +147,9 @@
     --ink: #f1f5f9;
     --ink-2: #cbd5e1;
     --ink-3: #94a3b8;
-    --ink-4: #64748b;
+    /* Same measurement, other direction: #64748b reads 3.75–4.13:1 on the three
+       dark grounds. Lightened to clear 4.5:1 on the worst of them. */
+    --ink-4: #738196;
 
     --line: #192335;
     --line-2: #334155;
@@ -193,7 +203,7 @@
   --ink: #f1f5f9;
   --ink-2: #cbd5e1;
   --ink-3: #94a3b8;
-  --ink-4: #64748b;
+  --ink-4: #738196;
 
   --line: #192335;
   --line-2: #334155;
@@ -252,7 +262,7 @@
   --ink: #f1f5f9;
   --ink-2: #cbd5e1;
   --ink-3: #94a3b8;
-  --ink-4: #64748b;
+  --ink-4: #738196;
 
   --line: #192335;
   --line-2: #334155;
