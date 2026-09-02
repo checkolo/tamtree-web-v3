@@ -9,7 +9,7 @@
  * The label must still say what the tone means. Colour is never the only
  * carrier of the status, which is C3's rule and axe's.
  */
-type Tone = 'live' | 'running' | 'compose' | 'warn' | 'good' | 'danger' | 'neutral';
+type Tone = 'live' | 'running' | 'compose' | 'warn' | 'good' | 'danger' | 'brand' | 'neutral';
 
 interface Props {
   tone?: Tone;
@@ -74,6 +74,14 @@ const { tone = 'neutral', dot = false, size = 'md', pulse = false, class: classN
   }
 
   .chip--danger .chip__dot { background: var(--danger); }
+
+  .chip--brand {
+    border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+    background: color-mix(in srgb, var(--brand) 9%, transparent);
+    color: var(--brand-ink);
+  }
+
+  .chip--brand .chip__dot { background: var(--brand); }
 
   .chip--sm {
     height: 22px;

@@ -122,6 +122,16 @@
   --cell-bg: #f7f4f0;
   --cell-bg-2: #ffffff;
   --danger-soft: #b3313c;
+
+  /* Meter bars. Light fills are dark enough to carry white text; dark fills are
+     lighter than their ground and carry INK text. So --bar-ink flips to the
+     opposite of what "text on a coloured fill" usually implies, and reading the
+     light value and assuming white in dark would fail contrast in the one place
+     a reader looks for the number. */
+  --track-bg: #f0ece6;
+  --bar-good: linear-gradient(90deg, rgba(31, 109, 96, 0.42), #1f6d60);
+  --bar-danger: linear-gradient(90deg, rgba(179, 49, 60, 0.3), rgba(179, 49, 60, 0.72));
+  --bar-ink: #ffffff;
   --grain-opacity: 0.24;
   --grain-blend: multiply;
 
@@ -222,6 +232,10 @@
     --cell-bg: rgba(255, 255, 255, 0.03);
     --cell-bg-2: rgba(255, 255, 255, 0.03);
     --danger-soft: #e4636d;
+    --track-bg: #0f172a;
+    --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
+    --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
+    --bar-ink: #0b1120;
     --grain-opacity: 0.5;
     --grain-blend: overlay;
   }
@@ -286,6 +300,10 @@
   --cell-bg: rgba(255, 255, 255, 0.03);
   --cell-bg-2: rgba(255, 255, 255, 0.03);
   --danger-soft: #e4636d;
+  --track-bg: #0f172a;
+  --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
+  --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
+  --bar-ink: #0b1120;
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 }
@@ -346,6 +364,10 @@
   --cell-bg: rgba(255, 255, 255, 0.03);
   --cell-bg-2: rgba(255, 255, 255, 0.03);
   --danger-soft: #e4636d;
+  --track-bg: #0f172a;
+  --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
+  --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
+  --bar-ink: #0b1120;
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 

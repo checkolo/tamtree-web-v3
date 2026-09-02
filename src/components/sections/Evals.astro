@@ -1,0 +1,368 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+import Chip from '../Chip.astro';
+
+/**
+ * §04 — evals and promotion gates.
+ *
+ * C3: this is a real <table>. Version, score and verdict for two candidates is
+ * tabular data by any reading, and the contract is explicit that tabular data
+ * gets a table with <th> and scope. The bar is a visual encoding of the score
+ * that the cell also states in text, so nothing is carried by the bar alone.
+ *
+ * The mobile artboard moves the version label and its verdict chip above the
+ * bar (device 4). `display: contents` on the header row is what lets one DOM do
+ * both: on desktop the wrapper dissolves and its children become direct flex
+ * items of the row, giving label | bar | verdict; on mobile it is a block that
+ * sits above the track.
+ *
+ * The gate line differs by width in kind, not just position: desktop draws ONE
+ * continuous dashed line across both bars with the label above, mobile clips a
+ * line inside each track and hangs the label underneath. Both are in the DOM
+ * and each is hidden at the other width. That is a difference between WIDTHS,
+ * which V2 allows — the rule that admits no exceptions is between themes at the
+ * same width, and this DOM is identical in both.
+ */
+
+const rows = [
+  { version: 'v14', score: 94, label: '94% pass', verdict: 'promoted →', tone: 'good' as const, current: true },
+  { version: 'v15', score: 71, label: '71%', verdict: 'held back', tone: 'danger' as const, current: false },
+];
+---
+
+<section class="sec evals">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="ember-wash evals__wash" aria-hidden="true"></div>
+
+  <div class="wrap evals__inner">
+    <div class="rv evals__head">
+      <div>
+        <Eyebrow n="04">— evals &amp; promotion gates</Eyebrow>
+        <h2>Ship agents<br />like you ship code.</h2>
+      </div>
+      <p class="evals__lede">
+        Eval suites, LLM-as-judge, dry-run simulation — and promotion gates, so a prompt change that
+        tanks quality never reaches production. Online evals and drift alerts keep watching after you
+        ship. <span class="evals__em">CI, but for behavior.</span>
+      </p>
+    </div>
+
+    <div class="rv evals__card">
+      <div class="evals__gate evals__gate--wide" aria-hidden="true">
+        <span class="evals__gate-line"></span>
+        <span class="evals__gate-label">GATE · 90%</span>
+      </div>
+
+      <table class="evals__table">
+        <caption class="visually-hidden">
+          Two candidate versions against the 90% promotion gate: v14 passes at 94% and is promoted,
+          v15 scores 71% and is held back.
+        </caption>
+        <thead class="visually-hidden">
+          <tr>
+            <th scope="col">Version</th>
+            <th scope="col">Eval score</th>
+            <th scope="col">Promotion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr class:list={['evals__row', !row.current && 'is-past']}>
+              <th scope="row" class="evals__ver">{row.version}</th>
+              <td class="evals__score">
+                <span class="evals__track">
+                  <span
+                    class:list={['grow', 'evals__bar', `evals__bar--${row.tone}`]}
+                    style={`width:${row.score}%`}
+                  >
+                    <span class="evals__value">{row.label}</span>
+                  </span>
+                  <span class="evals__gate-line evals__gate-line--inline" aria-hidden="true"></span>
+                </span>
+              </td>
+              <td class="evals__verdict">
+                <Chip tone={row.tone}>{row.verdict}</Chip>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div class="evals__gate evals__gate--narrow" aria-hidden="true">
+        <span class="evals__gate-tick"></span>
+        <span class="evals__gate-label">GATE · 90%</span>
+      </div>
+
+      <ul class="evals__tags">
+        <li><Chip>eval suites</Chip></li>
+        <li><Chip>LLM-as-judge</Chip></li>
+        <li><Chip>dry-run simulation</Chip></li>
+        <li><Chip>online evals</Chip></li>
+        <li><Chip tone="brand">drift alerts</Chip></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<style>
+  .evals { background: var(--surface); }
+
+  .evals__wash {
+    width: 900px;
+    height: 420px;
+    right: -220px;
+    top: -60px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 14%, transparent), transparent 68%);
+  }
+
+  .evals__inner { position: relative; }
+
+  .evals__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 60px;
+  }
+
+  h2 {
+    margin: 20px 0 0;
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .evals__lede {
+    max-width: 470px;
+    font-size: 18px;
+    line-height: 1.66;
+    color: var(--ink-2);
+    padding-bottom: 8px;
+  }
+
+  .evals__em { color: var(--brand-ink); font-weight: 600; }
+
+  .evals__card {
+    position: relative;
+    margin-top: 66px;
+    padding: 34px 38px 30px;
+    border-radius: 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  /* display:block, not flex. A <table> box laid out as a flex container keeps
+     4px of table-specific box behaviour that its tbody does not — visible only
+     as a card 4px too tall. tbody owns the row layout instead. */
+  .evals__table {
+    width: 100%;
+    display: block;
+    margin: 0;
+  }
+
+  .evals__table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* Chrome gives th and td a 1px UA padding. Two pixels per row, 44px becoming
+     46px, and the card 4px too tall — the price of using a real table, paid
+     once. */
+  .evals__row th,
+  .evals__row td {
+    padding: 0;
+  }
+
+  .evals__row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .evals__ver {
+    width: 52px;
+    flex: none;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .is-past .evals__ver { color: var(--ink-3); }
+
+  .evals__score { flex: 1; min-width: 0; }
+
+  .evals__track {
+    position: relative;
+    display: block;
+    height: 44px;
+    border-radius: var(--r-md);
+    background: var(--track-bg);
+    overflow: hidden;
+  }
+
+  .evals__bar {
+    transform-origin: left;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    border-radius: var(--r-md);
+    padding-right: 14px;
+  }
+
+  .evals__bar--good {
+    background: var(--bar-good);
+  }
+
+  .evals__bar--danger {
+    background: var(--bar-danger);
+  }
+
+  .evals__row:nth-child(2) .evals__bar { animation-delay: 0.08s; }
+
+  .evals__value {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--bar-ink);
+    font-weight: 700;
+  }
+
+  .evals__verdict { flex: none; }
+
+  .evals__verdict :global(.chip) {
+    width: 150px;
+    justify-content: center;
+  }
+
+  /* Desktop: one continuous dashed line across both bars, label above. */
+  .evals__gate--wide {
+    position: absolute;
+    left: 110px;
+    right: 208px;
+    top: 34px;
+    height: 110px;
+    pointer-events: none;
+  }
+
+  .evals__gate-line {
+    position: absolute;
+    left: 90%;
+    top: -14px;
+    bottom: -12px;
+    width: 1px;
+    background: repeating-linear-gradient(180deg, var(--brand) 0 6px, transparent 6px 12px);
+  }
+
+  .evals__gate-label {
+    position: absolute;
+    left: 90%;
+    top: -36px;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--brand-ink);
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  .evals__gate-line--inline,
+  .evals__gate--narrow { display: none; }
+
+  .evals__tags {
+    margin: 28px 0 0;
+    padding: 22px 0 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    list-style: none;
+  }
+
+  /* 390: label and verdict move above the bar, and the gate line moves inside
+     the track where overflow:hidden clips it. */
+  @media (max-width: 700px) {
+    .evals__head {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    h2 { margin-top: 16px; font-size: 42px; }
+
+    .evals__lede {
+      margin-top: 22px;
+      max-width: none;
+      padding-bottom: 0;
+      font-size: 16px;
+      line-height: 1.64;
+    }
+
+    .evals__card {
+      margin-top: 34px;
+      padding: 38px 18px 22px;
+      border-radius: 20px;
+    }
+
+    .evals__table tbody { gap: 18px; }
+
+    .evals__row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 0 8px;
+      row-gap: 7px;
+    }
+
+    .evals__ver { width: auto; font-size: 13px; }
+    .evals__verdict { justify-self: end; }
+    .evals__score { grid-column: 1 / -1; }
+
+    .evals__track { height: 38px; border-radius: 9px; }
+    .evals__bar { border-radius: 9px; padding-right: 12px; }
+    .evals__value { font-size: 11.5px; }
+
+    .evals__verdict :global(.chip) { width: auto; }
+
+    .evals__gate--wide { display: none; }
+
+    .evals__gate-line--inline {
+      display: block;
+      left: 90%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+    }
+
+    .evals__gate--narrow {
+      display: block;
+      position: relative;
+      height: 20px;
+      margin-top: 6px;
+    }
+
+    .evals__gate-tick {
+      position: absolute;
+      left: 90%;
+      top: 0;
+      width: 1px;
+      height: 7px;
+      background: color-mix(in srgb, var(--brand) 70%, transparent);
+    }
+
+    .evals__gate--narrow .evals__gate-label {
+      top: 9px;
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+    }
+
+    .evals__tags {
+      margin-top: 22px;
+      padding-top: 18px;
+      gap: 8px;
+    }
+  }
+</style>

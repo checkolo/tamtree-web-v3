@@ -265,6 +265,17 @@ video {
   color: var(--ink-2);
 }
 
+/* A list item whose only content is a chip. The chip is inline-flex, so the
+   li's line box reserves descender space beneath it — a few pixels that are
+   invisible in isolation and accumulate wherever chips are listed. Making the
+   item a flex container removes the line box entirely.
+
+   C3 asks for chips to be listed as lists, which is right; this is the pixel
+   cost of doing that, paid once here rather than per section. */
+li:has(> .chip:only-child) {
+  display: flex;
+}
+
 .chip__dot {
   width: 7px;
   height: 7px;
