@@ -164,7 +164,10 @@ const outputs = [
     font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.16em;
-    color: var(--display-mute);
+    /* --ink-3, not --display-mute. --display-mute is documented display-only:
+       at 66px it clears the 3:1 large-text threshold and at 10–11px it does
+       not. The artboards use it here; the palette does not get to. */
+    color: var(--ink-3);
   }
 
   .guardrails__list {

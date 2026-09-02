@@ -1,0 +1,301 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+import Chip from '../Chip.astro';
+import { costLedger, RUN_CAP_USD } from '../../data/cost-ledger';
+
+/**
+ * §05 + §06 — knowledge & memory, and cost governance. Two cards, one section.
+ *
+ * Two <h2> in one section is correct here: they are siblings in the outline,
+ * not a heading and a subheading, and gate:semantic checks for skipped levels
+ * rather than for one heading per section.
+ *
+ * The ledger's figures run through the C5 fixture path — see cost-ledger.ts.
+ */
+const ledger = costLedger();
+---
+
+<section class="sec knowledge">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="ember-wash knowledge__wash" aria-hidden="true"></div>
+
+  <div class="wrap knowledge__grid">
+    <article class="rv knowledge__card">
+      <Eyebrow n="05">— knowledge &amp; memory</Eyebrow>
+      <h2>Knows your stuff.<br />Remembers your users.</h2>
+      <p class="knowledge__lede">
+        Built-in knowledge bases ground every agent on your own data —
+        <span class="knowledge__em">no bolt-on vector plumbing.</span> And memory outlives the
+        thread: agents recognize each end user and carry long-term context across conversations.
+      </p>
+
+      <figure class="knowledge__device">
+        <svg viewBox="0 0 540 196" role="img" class="knowledge__svg">
+          <title>An agent at the centre, drawing on your documents, tickets and product data, and carrying what it learns forward to the same user next time.</title>
+          <circle cx="234" cy="96" r="66" fill="none" stroke="color-mix(in srgb, var(--brand) 28%, transparent)" stroke-width="1"></circle>
+          <circle cx="234" cy="96" r="46" fill="none" stroke="color-mix(in srgb, var(--brand) 42%, transparent)" stroke-width="1"></circle>
+          <circle cx="234" cy="96" r="26" fill="var(--knowledge-core)" stroke="var(--brand)" stroke-width="1.6"></circle>
+          <text x="234" y="100" text-anchor="middle" fill="var(--brand-deep)" font-family="JetBrains Mono, monospace" font-size="11">agent</text>
+          <path d="M150 56 L182 80 M150 96 L184 96 M150 138 L182 114" stroke="color-mix(in srgb, var(--brand) 50%, transparent)" stroke-width="1.2" stroke-dasharray="3 5"></path>
+          <path d="M302 96 L348 96" stroke="var(--knowledge-link)" stroke-width="1.2"></path>
+        </svg>
+        <ul class="knowledge__sources">
+          <li><Chip class="knowledge__chip">your docs</Chip></li>
+          <li><Chip class="knowledge__chip">tickets</Chip></li>
+          <li><Chip class="knowledge__chip">product data</Chip></li>
+        </ul>
+        <p class="knowledge__memory">
+          <Chip tone="live" dot class="knowledge__remember">remembers this user</Chip>
+        </p>
+        <figcaption class="visually-hidden">
+          An agent grounded on your documents, tickets and product data, which also remembers the
+          person it is talking to between conversations.
+        </figcaption>
+      </figure>
+    </article>
+
+    <article class="rv knowledge__card">
+      <Eyebrow n="06">— cost governance</Eyebrow>
+      <h2>Watch every token.<br />Cap every run.</h2>
+      <p class="knowledge__lede">
+        Token and cost tracking per step, rolled into a ledger. Budgets with a real kill-switch.
+        Model routing that sends easy work to cheap models.
+        <span class="knowledge__em">Your CFO can look at the bill without sitting down.</span>
+      </p>
+
+      <div class="knowledge__budget">
+        <p class="knowledge__budget-head">
+          <span class="knowledge__budget-label">RUN BUDGET</span>
+          <span class="knowledge__budget-figure">
+            {ledger.spentLabel} <span>/ ${RUN_CAP_USD.toFixed(2)} cap</span>
+          </span>
+        </p>
+
+        <div class="knowledge__meter">
+          <div class="grow knowledge__meter-fill" style={`width:${ledger.percent}%`}></div>
+        </div>
+
+        <table class="knowledge__rows">
+          <caption class="visually-hidden">Cost per step for this run.</caption>
+          <tbody>
+            {ledger.steps.map((row) => (
+              <tr>
+                <th scope="row">{row.step}</th>
+                <td>{row.cost}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <ul class="knowledge__controls">
+          <li><Chip tone="danger">kill-switch armed</Chip></li>
+          <li><Chip>model routing</Chip></li>
+        </ul>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style>
+  .knowledge {
+    padding: 126px 0;
+    background: var(--page);
+  }
+
+  .knowledge__wash {
+    width: 940px;
+    height: 430px;
+    left: 50%;
+    margin-left: -470px;
+    top: -90px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 13%, transparent), transparent 68%);
+  }
+
+  .knowledge__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 34px;
+  }
+
+  /* The dark card's inset ember top edge becomes a warm cap on paper — the same
+     line, lit from behind on ink and printed on paper. */
+  .knowledge__card {
+    padding: 40px;
+    border-radius: 26px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: inset 0 2px 0 color-mix(in srgb, var(--brand) 55%, transparent), var(--card-shadow);
+  }
+
+  h2 {
+    margin: 18px 0 0;
+    font-size: 46px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .knowledge__lede {
+    margin: 22px 0 0;
+    font-size: 17px;
+    line-height: 1.65;
+    color: var(--ink-2);
+  }
+
+  .knowledge__em { color: var(--brand-ink); font-weight: 600; }
+
+  .knowledge__device {
+    margin: 34px 0 0;
+    position: relative;
+    height: 196px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--brand) 11%, transparent), transparent 66%);
+    overflow: hidden;
+  }
+
+  .knowledge__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .knowledge__sources {
+    position: absolute;
+    left: 22px;
+    top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .knowledge__device :global(.knowledge__chip) {
+    height: 26px;
+    font-size: 10.5px;
+  }
+
+  .knowledge__memory {
+    position: absolute;
+    right: 20px;
+    top: 76px;
+    margin: 0;
+  }
+
+  .knowledge__device :global(.knowledge__remember) { height: 38px; }
+
+  .knowledge__budget {
+    margin-top: 34px;
+    padding: 22px;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: var(--budget-bg);
+  }
+
+  .knowledge__budget-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .knowledge__budget-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    /* --ink-3, not --display-mute. --display-mute is documented display-only:
+       at 66px it clears the 3:1 large-text threshold and at 10–11px it does
+       not. The artboards use it here; the palette does not get to. */
+    color: var(--ink-3);
+  }
+
+  .knowledge__budget-figure {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+
+  .knowledge__budget-figure span { color: var(--ink-4); }
+
+  .knowledge__meter {
+    margin-top: 12px;
+    position: relative;
+    height: 14px;
+    border-radius: 8px;
+    background: var(--meter-bg);
+    overflow: hidden;
+  }
+
+  .knowledge__meter-fill {
+    transform-origin: left;
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--brand-press), var(--brand));
+  }
+
+  .knowledge__rows {
+    width: 100%;
+    display: block;
+    margin: 20px 0 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+
+  .knowledge__rows tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .knowledge__rows tr {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .knowledge__rows th {
+    padding: 0;
+    text-align: left;
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+
+  .knowledge__rows td {
+    padding: 0;
+    color: var(--ink-2);
+  }
+
+  .knowledge__controls {
+    margin: 20px 0 0;
+    padding: 0;
+    display: flex;
+    gap: 9px;
+    list-style: none;
+  }
+
+  @media (max-width: 700px) {
+    .knowledge { padding: 84px 0; }
+
+    .knowledge__grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .knowledge__card { padding: 28px 22px; border-radius: 22px; }
+
+    h2 { margin-top: 14px; font-size: 31px; }
+
+    .knowledge__lede { margin-top: 18px; font-size: 15.5px; }
+
+    .knowledge__device { height: 176px; border-radius: 16px; }
+
+    .knowledge__device :global(.knowledge__chip) {
+      height: 23px;
+      font-size: 9.5px;
+      padding: 0 9px;
+    }
+
+    .knowledge__device :global(.knowledge__remember) { height: 32px; }
+
+    .knowledge__sources { left: 16px; top: 32px; gap: 10px; }
+    .knowledge__memory { right: 14px; top: 66px; }
+  }
+</style>

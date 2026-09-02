@@ -132,6 +132,13 @@
   --bar-good: linear-gradient(90deg, rgba(31, 109, 96, 0.42), #1f6d60);
   --bar-danger: linear-gradient(90deg, rgba(179, 49, 60, 0.3), rgba(179, 49, 60, 0.72));
   --bar-ink: #ffffff;
+  
+  /* §05/§06 devices. The knowledge core is a lit disc on ink and a warm
+     printed one on paper; the link into memory shifts hue with the ground. */
+  --knowledge-core: #fff4ea;
+  --knowledge-link: rgba(120, 168, 25, 0.75);
+  --budget-bg: #faf7f3;
+  --meter-bg: rgba(15, 23, 42, 0.09);
   --grain-opacity: 0.24;
   --grain-blend: multiply;
 
@@ -236,6 +243,10 @@
     --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
     --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
     --bar-ink: #0b1120;
+    --knowledge-core: #1b1206;
+    --knowledge-link: rgba(148, 211, 38, 0.75);
+    --budget-bg: rgba(255, 255, 255, 0.03);
+    --meter-bg: rgba(148, 163, 184, 0.16);
     --grain-opacity: 0.5;
     --grain-blend: overlay;
   }
@@ -304,6 +315,10 @@
   --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
   --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
   --bar-ink: #0b1120;
+  --knowledge-core: #1b1206;
+  --knowledge-link: rgba(148, 211, 38, 0.75);
+  --budget-bg: rgba(255, 255, 255, 0.03);
+  --meter-bg: rgba(148, 163, 184, 0.16);
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 }
@@ -368,6 +383,10 @@
   --bar-good: linear-gradient(90deg, rgba(46, 180, 124, 0.28), rgba(46, 180, 124, 0.75));
   --bar-danger: linear-gradient(90deg, rgba(228, 99, 109, 0.22), rgba(228, 99, 109, 0.5));
   --bar-ink: #0b1120;
+  --knowledge-core: #1b1206;
+  --knowledge-link: rgba(148, 211, 38, 0.75);
+  --budget-bg: rgba(255, 255, 255, 0.03);
+  --meter-bg: rgba(148, 163, 184, 0.16);
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 
