@@ -1,0 +1,394 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+import Chip from '../Chip.astro';
+
+/**
+ * §07 — MCP-native, and the ladder.
+ *
+ * The two claims are one section because they are one argument: Tamtree meets
+ * you where your tools already are, and it does not put a ceiling on you once
+ * you are in. The ladder is the second half of that sentence, not a feature
+ * list, which is why it sits under the same <h2> as an <h3>.
+ *
+ * Both halves change *layout* between widths and not between themes (V2). The
+ * MCP exchange is two horizontal rows on desktop and two stacked pairs on
+ * mobile; the ladder is a bar chart rising from a floor on desktop and bars
+ * growing from a spine on mobile. One DOM serves both in each case — the
+ * mobile ladder's spine is the desktop floor rule, rotated by CSS rather than
+ * by a second element.
+ *
+ * The rungs are var(--brand) at an alpha ramp, so the ladder is the same
+ * material in both themes. The top rung is not: on paper it goes solid ember
+ * with ink on it, on ink it stays a lit panel. That is a real material
+ * difference and it lives in --rung-top-*.
+ */
+
+const rungs = [
+  { label: 'visual editor', n: '01' },
+  { label: '{{ expressions }}', n: '02' },
+  { label: 'sandboxed code nodes', n: '03' },
+  { label: 'Python SDK', n: '04' },
+  { label: 'Git sync + CLI', n: '05' },
+  { label: 'full REST API', n: '06' },
+];
+---
+
+<section class="sec interop">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="ember-wash interop__wash" aria-hidden="true"></div>
+
+  <div class="wrap interop__inner">
+    <div class="rv interop__top">
+      <div class="interop__copy">
+        <Eyebrow n="07">— mcp-native</Eyebrow>
+        <h2>Plays well with everything you already use.</h2>
+        <p class="interop__lede">
+          Tamtree is MCP-native: any MCP server becomes tools for your agents, and your workflows
+          become MCP tools for anything else. Yes — you can register n8n or Zapier as a tool. We
+          didn't rebuild their connectors.
+        </p>
+        <p class="interop__punch">We made them employees.</p>
+      </div>
+
+      <div class="interop__card">
+        <div class="interop__exchange">
+          <Chip class="interop__chip">any MCP server</Chip>
+          <div class="conn interop__conn" aria-hidden="true"><span class="pip"></span></div>
+          <Chip tone="brand" class="interop__chip">tools for your agents</Chip>
+        </div>
+        <div class="interop__rule" aria-hidden="true"></div>
+        <div class="interop__exchange interop__exchange--back">
+          <Chip class="interop__chip">anything that speaks MCP</Chip>
+          <div class="conn interop__conn" aria-hidden="true">
+            <span class="pip interop__pip2"></span>
+          </div>
+          <Chip tone="compose" class="interop__chip">your workflows, as tools</Chip>
+        </div>
+      </div>
+    </div>
+
+    <div class="rv interop__ladder">
+      <div class="interop__ladder-head">
+        <h3>Start clicking. No ceiling after that.</h3>
+        <span class="interop__ladder-label">THE LADDER</span>
+      </div>
+
+      <ol class="interop__rungs">
+        {rungs.map((rung, i) => (
+          <li
+            class:list={['rise', 'interop__rung', i === rungs.length - 1 && 'interop__rung--top']}
+            style={`--i:${i + 1}; animation-delay:${i * 0.05}s`}
+          >
+            <span class="interop__rung-label">{rung.label}</span>
+            <span class="interop__rung-n" aria-hidden="true">{rung.n}</span>
+          </li>
+        ))}
+      </ol>
+
+      <div class="interop__floor" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .interop {
+    padding: 130px 0 140px;
+    background: var(--surface);
+  }
+
+  .interop__wash {
+    width: 760px;
+    height: 340px;
+    left: -180px;
+    top: 60px;
+    background: radial-gradient(circle, var(--wash-compose), transparent 68%);
+  }
+
+  .interop__inner { position: relative; }
+
+  .interop__top {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 56px;
+    align-items: center;
+  }
+
+  h2 {
+    margin: 20px 0 0;
+    font-size: 62px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .interop__lede {
+    margin: 26px 0 0;
+    max-width: 490px;
+    font-size: 18px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  .interop__punch {
+    margin: 26px 0 0;
+    font-family: var(--display);
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.02;
+    color: var(--brand-ink);
+  }
+
+  .interop__card {
+    padding: 28px;
+    border-radius: 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .interop__exchange {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* The return leg reads right-to-left: your workflows going *out*. Reversing
+     the row rather than reordering the markup keeps the reading order — server,
+     link, tools — the same for a screen reader in both directions. */
+  .interop__exchange--back { flex-direction: row-reverse; }
+
+  .interop__card :global(.interop__chip) { height: 38px; }
+
+  .interop__conn { flex: 1; width: auto; }
+
+  .interop__pip2 { animation-delay: 0.9s; }
+
+  /* Desktop has no divider between the legs — the mobile card does, where the
+     two pairs stack and would otherwise run together. */
+  .interop__rule { display: none; }
+
+  .interop__ladder { margin-top: 96px; }
+
+  .interop__ladder-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 34px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .interop__ladder-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+  }
+
+  .interop__rungs {
+    margin: 36px 0 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+  }
+
+  .interop__rung {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    /* 104px, then 36px a rung. Written as the arithmetic it is so the ramp
+       cannot drift a step out of line under editing. */
+    height: calc(68px + var(--i) * 36px);
+    border-radius: 14px 14px 4px 4px;
+    padding: 16px 14px;
+    border: 1px solid;
+    border-bottom: 0;
+  }
+
+  .interop__rung:nth-child(1) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) var(--rung-fill-1), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent));
+    border-color: color-mix(in srgb, var(--brand) var(--rung-line-1), transparent);
+  }
+
+  .interop__rung:nth-child(2) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) var(--rung-fill-2), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent));
+    border-color: color-mix(in srgb, var(--brand) var(--rung-line-2), transparent);
+  }
+
+  .interop__rung:nth-child(3) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) var(--rung-fill-3), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent));
+    border-color: color-mix(in srgb, var(--brand) var(--rung-line-3), transparent);
+  }
+
+  .interop__rung:nth-child(4) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) var(--rung-fill-4), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent));
+    border-color: color-mix(in srgb, var(--brand) var(--rung-line-4), transparent);
+  }
+
+  .interop__rung:nth-child(5) {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) var(--rung-fill-5), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent));
+    border-color: color-mix(in srgb, var(--brand) var(--rung-line-5), transparent);
+  }
+
+  .interop__rung--top {
+    background: var(--rung-top-bg);
+    border-color: var(--rung-top-line);
+    box-shadow: var(--rung-top-shadow);
+  }
+
+  .interop__rung-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--brand-deep);
+  }
+
+  .interop__rung--top .interop__rung-label {
+    color: var(--rung-top-ink);
+    font-weight: var(--rung-top-weight);
+  }
+
+  .interop__rung-n {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--brand-deep) var(--rung-num), transparent);
+  }
+
+  .interop__rung--top .interop__rung-n { color: var(--rung-top-num); }
+
+  .interop__floor {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--brand) var(--ladder-edge), transparent),
+      color-mix(in srgb, var(--brand) var(--ladder-core), transparent),
+      color-mix(in srgb, var(--brand) var(--ladder-edge), transparent)
+    );
+  }
+
+  @media (max-width: 700px) {
+    .interop { padding: 84px 0 92px; }
+
+    .interop__wash { width: 440px; height: 280px; left: -130px; top: 50px; }
+
+    .interop__top {
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    h2 { margin-top: 16px; font-size: 36px; }
+
+    .interop__lede { margin-top: 20px; max-width: none; font-size: 16px; line-height: 1.64; }
+
+    .interop__punch { margin-top: 20px; font-size: 30px; line-height: 1.04; }
+
+    .interop__card { padding: 20px 18px; border-radius: 20px; gap: 20px; }
+
+    /* Each leg becomes a vertical pair, and the flow turns with it. */
+    .interop__exchange,
+    .interop__exchange--back {
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .interop__card :global(.interop__chip) { height: 34px; }
+
+    .interop__conn {
+      flex: none;
+      width: 2px;
+      height: 26px;
+      background: var(--conn-grad-v);
+    }
+
+    .interop__conn .pip {
+      top: 0;
+      left: -2.5px;
+      animation-name: flow-y;
+    }
+
+    .interop__rule {
+      display: block;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .interop__ladder { margin-top: 60px; }
+
+    .interop__ladder-head { display: block; }
+
+    h3 { font-size: 26px; }
+
+    .interop__ladder-label { display: block; margin-top: 10px; font-size: 10px; }
+
+    /* The floor becomes the spine: the same rule, stood up on the left, with
+       the rungs growing out of it sideways. */
+    .interop__rungs {
+      position: relative;
+      margin-top: 24px;
+      padding-left: 2px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 9px;
+    }
+
+    .interop__rungs::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      border-radius: 2px;
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--brand) var(--ladder-edge-m), transparent),
+        color-mix(in srgb, var(--brand) var(--ladder-core-m), transparent),
+        color-mix(in srgb, var(--brand) var(--ladder-edge-m), transparent)
+      );
+    }
+
+    .interop__rung {
+      flex: none;
+      flex-direction: row;
+      align-items: center;
+      height: 48px;
+      /* The mobile ramp is the artboard's, which is not quite linear — it
+         eases off at the top so the last two rungs read as a pair. */
+      animation-name: risexk;
+      border-radius: 3px 13px 13px 3px;
+      padding: 0 13px;
+      border-left: 0;
+      border-bottom: 1px solid;
+    }
+
+    .interop__rung:nth-child(1) { width: 46%; background: linear-gradient(90deg, color-mix(in srgb, var(--brand) var(--rung-fill-1), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent)); }
+    .interop__rung:nth-child(2) { width: 57%; background: linear-gradient(90deg, color-mix(in srgb, var(--brand) var(--rung-fill-2), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent)); }
+    .interop__rung:nth-child(3) { width: 68%; background: linear-gradient(90deg, color-mix(in srgb, var(--brand) var(--rung-fill-3), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent)); }
+    .interop__rung:nth-child(4) { width: 79%; background: linear-gradient(90deg, color-mix(in srgb, var(--brand) var(--rung-fill-4), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent)); }
+    .interop__rung:nth-child(5) { width: 88%; background: linear-gradient(90deg, color-mix(in srgb, var(--brand) var(--rung-fill-5), transparent), color-mix(in srgb, var(--brand) var(--rung-fill-end), transparent)); }
+
+    .interop__rung--top {
+      width: 100%;
+      height: 58px;
+      background: var(--rung-top-bg-m);
+      box-shadow: var(--rung-top-shadow-m);
+    }
+
+    .interop__rung-label { font-size: 11.5px; }
+    .interop__rung--top .interop__rung-label { font-size: 12.5px; }
+    .interop__rung-n { font-size: 9.5px; }
+
+    .interop__floor { display: none; }
+  }
+</style>

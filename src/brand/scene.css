@@ -86,6 +86,32 @@
   100% { left: 56px; opacity: 0; }
 }
 
+/* The mobile artboards turn the same connector on its side. --conn-grad-v has
+   existed since T1.1 for exactly this; the pip needed a second keyframe set
+   because `flow` animates `left` and this one has to travel `top`. The travel
+   distance is the element's own height, so it is set per call site rather than
+   baked into the keyframes. */
+.conn--v {
+  position: relative;
+  width: 2px;
+  height: 26px;
+  flex: none;
+  background: var(--conn-grad-v);
+}
+
+.conn--v .pip {
+  top: 0;
+  left: -2.5px;
+  animation: flow-y 2.2s linear infinite;
+}
+
+@keyframes flow-y {
+  0% { top: -6px; opacity: 0; }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
 /* ── work in progress ───────────────────────────────────────────────────── */
 
 .shimmer {

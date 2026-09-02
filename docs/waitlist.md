@@ -43,6 +43,16 @@ richer automation: an embed script would have forced a third-party origin into
 `script-src` on every page of a site whose whole delivery argument (C4) is that
 nothing important needs script to become visible.
 
+## The finale's opt-ins — an assumption, flagged
+
+§10's form adds two checkboxes (`launch news`, `early-access beta`) as further
+`tag` fields alongside the hidden `tag=waitlist`. **That repeated `tag` fields
+produce multiple tags on the subscriber is assumed, not verified** — the embed
+endpoint is documented for the single-tag case. If it turns out only the first
+or last wins, the fix is `metadata__*` fields, which is a change to the form's
+field names and nothing else. Verify against a real list at T7.1, before the
+first real subscriber depends on it.
+
 ## Not decided here
 
 Double opt-in, the confirmation email's copy, and the sending domain's DNS are

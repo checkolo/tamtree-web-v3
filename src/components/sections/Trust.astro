@@ -1,0 +1,188 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+import Button from '../Button.astro';
+
+/**
+ * §08 — the inversion. The one section that is byte-identical in both themes:
+ * an ember band with ink on it, printed the same on paper and on ink.
+ *
+ * So the colours here are literals rather than tokens, deliberately. A token
+ * exists to let a value differ between themes; every value in this section is
+ * one that must NOT differ, and writing it as var(--ink) would be a standing
+ * invitation for a later palette change to break the one band whose whole point
+ * is that it does not move. The ink is #160a02 — the same ink --btn-inverse
+ * already uses, which is why the CTA needs no override.
+ *
+ * The claims list is a <ul>: five parallel assertions, not a sentence. It reads
+ * as a row of chips and is structured as the list it is.
+ */
+
+const claims = [
+  'durable by default',
+  'guardrails on every call',
+  'eval gates',
+  'budget kill-switch',
+  'full audit trail',
+];
+---
+
+<section class="sec trust">
+  <div class="grain trust__grain" aria-hidden="true"></div>
+
+  <svg class="trust__watermark" viewBox="0 0 24 24" fill="none" stroke-linecap="round" aria-hidden="true" focusable="false">
+    <path d="M12 22V6.5" stroke="#160a02" stroke-width="1.6"></path>
+    <path d="M12 14.2L5.6 8.6" stroke="#160a02" stroke-width="1.6"></path>
+    <path d="M12 11.4L18.4 6.2" stroke="#160a02" stroke-width="1.6"></path>
+    <circle cx="12" cy="5" r="2.3" fill="#160a02"></circle>
+    <circle cx="4.7" cy="7.9" r="2.1" fill="#160a02"></circle>
+    <circle cx="19.3" cy="5.5" r="2.1" fill="#160a02"></circle>
+  </svg>
+
+  <div class="wrap trust__inner">
+    <Eyebrow n="08" class="trust__eyebrow">— production-grade</Eyebrow>
+
+    <h2 class="rv">Agents you<br />can trust.</h2>
+
+    <p class="trust__sub">Because the runtime doesn&rsquo;t trust them either.</p>
+
+    <div class="trust__grid">
+      <p class="trust__body">
+        Every call is guarded, every version is graded, every run is capped, and every step is on
+        the record. A demo only has to work once — production has to survive the crash, the
+        injection, the regression and the bill. Tamtree ships those the day you start, not in a
+        hardening phase later.
+      </p>
+
+      <div class="trust__aside">
+        <ul class="trust__claims">
+          {claims.map((claim) => <li>{claim}</li>)}
+        </ul>
+        <Button variant="inverse" href="#waitlist" class="trust__cta">Get early access</Button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .trust {
+    padding: 120px 0 128px;
+    background: linear-gradient(152deg, #fb923c 0%, #f97316 38%, #ea580c 78%, #c2410c 100%);
+  }
+
+  /* The band's grain multiplies in both themes — it is darkening ember, not
+     lifting a dark ground, so it does not take --grain-blend. */
+  .trust__grain {
+    opacity: 0.35;
+    mix-blend-mode: multiply;
+  }
+
+  .trust__watermark {
+    position: absolute;
+    right: -90px;
+    top: 40px;
+    width: 520px;
+    height: 520px;
+    opacity: 0.13;
+  }
+
+  .trust__inner { position: relative; }
+
+  .trust :global(.trust__eyebrow) { color: rgba(22, 10, 2, 0.62); }
+
+  .trust :global(.trust__eyebrow b) {
+    color: #160a02;
+    text-shadow: none;
+  }
+
+  h2 {
+    margin: 22px 0 0;
+    font-size: 172px;
+    font-weight: 800;
+    line-height: 0.84;
+    letter-spacing: -0.06em;
+    color: #160a02;
+  }
+
+  .trust__sub {
+    margin: 34px 0 0;
+    font-family: var(--display);
+    font-size: 46px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.06;
+    color: rgba(22, 10, 2, 0.62);
+  }
+
+  .trust__grid {
+    margin-top: 56px;
+    display: grid;
+    grid-template-columns: 7fr 5fr;
+    gap: 56px;
+    align-items: end;
+  }
+
+  .trust__body {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.66;
+    color: rgba(22, 10, 2, 0.82);
+  }
+
+  .trust__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .trust__claims {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+
+  /* The chips are hand-built rather than <Chip>: every tone the component
+     offers is a tint of the palette, and this band needs ink on ember, which is
+     no tone at all. Borrowing chip--neutral and overriding all three of its
+     colours would be the same CSS wearing a component's name. */
+  .trust__claims li {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    padding: 0 12px;
+    letter-spacing: 0.06em;
+    border-radius: var(--r-pill);
+    border: 1px solid rgba(22, 10, 2, 0.28);
+    background: rgba(22, 10, 2, 0.08);
+    color: #160a02;
+    font-family: var(--mono);
+    font-size: 11.5px;
+  }
+
+  @media (max-width: 700px) {
+    .trust { padding: 82px 0 86px; }
+
+    .trust__watermark { right: -110px; top: 30px; width: 340px; height: 340px; }
+
+    h2 { margin-top: 16px; font-size: 62px; line-height: 0.86; }
+
+    .trust__sub { margin-top: 22px; font-size: 27px; line-height: 1.1; }
+
+    .trust__grid {
+      margin-top: 30px;
+      grid-template-columns: 1fr;
+      gap: 26px;
+    }
+
+    .trust__body { font-size: 16px; line-height: 1.64; }
+
+    .trust__aside { gap: 24px; align-items: stretch; }
+
+    .trust__claims { gap: 8px; }
+
+    .trust :global(.trust__cta) { width: 100%; }
+  }
+</style>

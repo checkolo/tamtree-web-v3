@@ -10,13 +10,27 @@
  * the POST still works and the visitor lands on Buttondown's confirmation —
  * a worse experience and an acceptable floor, not the default.
  */
+interface Tag {
+  value: string;
+  label: string;
+  checked?: boolean;
+}
+
 interface Props {
   id?: string;
-  size?: 'md' | 'lg';
+  size?: 'md' | 'lg' | 'xl';
   cta?: string;
+  /** Optional opt-ins, submitted as additional `tag` fields. */
+  tags?: Tag[];
   class?: string;
 }
-const { id = 'waitlist', size = 'lg', cta = 'Get early access', class: className } = Astro.props;
+const {
+  id = 'waitlist',
+  size = 'lg',
+  cta = 'Get early access',
+  tags = [],
+  class: className,
+} = Astro.props;
 const inputId = `${id}-email`;
 const frameId = `${id}-sink`;
 ---
@@ -28,18 +42,39 @@ const frameId = `${id}-sink`;
   method="post"
   target={frameId}
 >
-  <label class="visually-hidden" for={inputId}>Work email</label>
-  <input
-    class="wl__input"
-    id={inputId}
-    type="email"
-    name="email"
-    placeholder="you@work.com"
-    autocomplete="email"
-    required
-  />
-  <input type="hidden" name="tag" value="waitlist" />
-  <button class="btn btn--primary btn--sm" type="submit">{cta}</button>
+  <div class="wl__row">
+    <label class="visually-hidden" for={inputId}>Work email</label>
+    <input
+      class="wl__input"
+      id={inputId}
+      type="email"
+      name="email"
+      placeholder="you@work.com"
+      autocomplete="email"
+      required
+    />
+    <input type="hidden" name="tag" value="waitlist" />
+    <button class="btn btn--primary btn--sm wl__submit" type="submit">{cta}</button>
+  </div>
+
+  {
+    tags.length > 0 && (
+      <fieldset class="wl__tags">
+        <legend class="visually-hidden">What to send you</legend>
+        {tags.map((tag) => (
+          <label class="wl__tag">
+            <input type="checkbox" name="tag" value={tag.value} checked={tag.checked} />
+            <span class="wl__box" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </span>
+            {tag.label}
+          </label>
+        ))}
+      </fieldset>
+    )
+  }
 </form>
 
 <p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
@@ -69,12 +104,23 @@ const frameId = `${id}-sink`;
 </script>
 
 <style>
+  /* The pill lives on .wl__row, not on the form: the xl variant carries opt-in
+     checkboxes under it, and a fieldset inside the pill would be a fieldset
+     inside a text field as far as the eye is concerned. The md/lg forms have a
+     single row, so this is visually identical for them. */
   .wl {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: max-content;
+    max-width: 100%;
+  }
+
+  .wl__row {
     display: flex;
     align-items: center;
     gap: 8px;
-    width: max-content;
-    max-width: 100%;
+    width: 100%;
     padding: 0 8px 0 22px;
     border-radius: var(--r-pill);
     background: var(--field-bg);
@@ -82,8 +128,19 @@ const frameId = `${id}-sink`;
     box-shadow: 0 4px 16px -6px rgba(15, 23, 42, 0.14);
   }
 
-  .wl--lg { height: 60px; }
-  .wl--md { height: 52px; }
+  .wl--lg .wl__row { height: 60px; }
+  .wl--md .wl__row { height: 52px; }
+
+  /* The finale's field is the page's last word, so it is wider, taller and lit
+     from behind rather than merely bordered. */
+  .wl--xl { width: 620px; }
+
+  .wl--xl .wl__row {
+    height: 66px;
+    padding-left: 24px;
+    box-shadow: 0 0 60px -20px color-mix(in srgb, var(--brand) 60%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
 
   .wl__input {
     width: 216px;
@@ -97,8 +154,72 @@ const frameId = `${id}-sink`;
     font-size: 16px;
   }
 
+  .wl--xl .wl__input {
+    flex: 1;
+    width: auto;
+    height: 48px;
+    font-size: 17px;
+  }
+
   .wl__input::placeholder {
     color: var(--ink-3);
+  }
+
+  .wl--xl .wl__submit { height: 50px; }
+
+  .wl__tags {
+    display: flex;
+    justify-content: center;
+    gap: 26px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .wl__tag {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+
+  /* The native box is kept and hidden rather than replaced: it is what makes
+     the label clickable, the checkbox focusable and the state announced. The
+     painted box follows it with :checked and the focus ring follows :focus-visible,
+     so nothing is reimplemented except the paint. */
+  .wl__tag input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .wl__box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 1px solid var(--line-2);
+    background: color-mix(in srgb, var(--ink) 3%, transparent);
+    color: transparent;
+  }
+
+  .wl__tag input:checked + .wl__box {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: #160a02;
+  }
+
+  .wl__tag:has(input:checked) { color: var(--ink-2); }
+
+  .wl__tag input:focus-visible + .wl__box {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
   }
 
   .wl__msg {
@@ -108,8 +229,9 @@ const frameId = `${id}-sink`;
   }
 
   @media (max-width: 700px) {
-    .wl {
-      width: 100%;
+    .wl { width: 100%; }
+
+    .wl__row {
       height: auto;
       flex-direction: column;
       align-items: stretch;
@@ -124,8 +246,41 @@ const frameId = `${id}-sink`;
       padding-inline: 12px;
     }
 
-    .wl :global(.btn) {
+    .wl__row :global(.btn) {
       width: 100%;
     }
+
+    /* The finale keeps its field a pill on mobile and drops the button below
+       it, which is what the mobile artboard draws — the compact treatment above
+       is for the hero's form, where the field is one item in a stack. */
+    .wl--xl { width: 100%; gap: 22px; }
+
+    .wl--xl .wl__row {
+      height: auto;
+      padding: 0;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      gap: 11px;
+    }
+
+    .wl--xl .wl__input {
+      height: 56px;
+      padding-inline: 20px;
+      border-radius: var(--r-pill);
+      background: var(--field-bg);
+      border: 1px solid var(--line-2);
+      box-shadow: 0 0 50px -18px color-mix(in srgb, var(--brand) 60%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-size: 16.5px;
+    }
+
+    .wl--xl .wl__submit { height: 54px; }
+
+    .wl__tags { gap: 18px; }
+
+    .wl__tag { gap: 8px; font-size: 14px; }
+
+    .wl__box { width: 19px; height: 19px; }
   }
 </style>

@@ -1,0 +1,180 @@
+---
+import WaitlistForm from '../WaitlistForm.astro';
+
+/**
+ * §10 — the waitlist finale, and the second ink-black island.
+ *
+ * `.island` again rather than a theme branch: the finale is ink-black on paper
+ * and on ink alike, so the DOM does not differ between themes. See tokens.css.
+ *
+ * The mark is drawn rather than placed: the three strokes animate in, which is
+ * the only place on the page the logo behaves like the thing it depicts. It is
+ * <Mark>'s glyph and not <Mark> itself, because Mark's job is to be the mark
+ * beside the wordmark — giving it an animation prop would push a one-section
+ * flourish into a component two other sections use flat.
+ *
+ * The two checkboxes submit as additional `tag` fields. See docs/waitlist.md:
+ * repeated `tag` on the embed endpoint is the assumed multi-tag form and is
+ * unverified against a live list until T7.1.
+ */
+---
+
+<section class="sec island waitlist" id="waitlist">
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="ember-wash waitlist__wash" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="wrap waitlist__inner">
+    <svg
+      class="waitlist__mark"
+      width="46"
+      height="46"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke-linecap="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path class="waitlist__stroke waitlist__stroke--trunk" d="M12 22V6.5" stroke="var(--brand)" stroke-width="1.8"></path>
+      <path class="waitlist__stroke waitlist__stroke--left" d="M12 14.2L5.6 8.6" stroke="var(--brand)" stroke-width="1.8"></path>
+      <path class="waitlist__stroke waitlist__stroke--right" d="M12 11.4L18.4 6.2" stroke="var(--brand)" stroke-width="1.8"></path>
+      <circle cx="12" cy="5" r="2.3" fill="var(--brand)"></circle>
+      <circle cx="4.7" cy="7.9" r="2.1" fill="var(--brand-ink)"></circle>
+      <circle cx="19.3" cy="5.5" r="2.1" fill="var(--live)"></circle>
+    </svg>
+
+    <h2 class="rv">Be first<br class="waitlist__break" /> in line.</h2>
+
+    <p class="waitlist__lede">
+      Tamtree is launching soon. One email, two checkboxes, zero spam.
+    </p>
+
+    <div class="waitlist__form">
+      <WaitlistForm
+        id="finale-waitlist"
+        size="xl"
+        cta="Save my spot"
+        tags={[
+          { value: 'launch-news', label: 'launch news', checked: true },
+          { value: 'early-access', label: 'early-access beta' },
+        ]}
+      />
+
+      <p class="waitlist__fine">NO SPAM · UNSUBSCRIBE IN ONE CLICK · WE ONLY EMAIL WHEN IT MATTERS</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .waitlist {
+    padding: 150px 0 140px;
+    background: var(--page);
+  }
+
+  .waitlist__wash {
+    width: 1200px;
+    height: 620px;
+    left: 120px;
+    top: -160px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 24%, transparent), transparent 66%);
+  }
+
+  .waitlist__inner {
+    position: relative;
+    text-align: center;
+  }
+
+  .waitlist__mark { margin-bottom: 26px; }
+
+  /* The dash lengths are the paths' own lengths, so each stroke draws itself
+     exactly once. Reduced motion removes the animation and the reset below
+     leaves the finished glyph rather than an empty one. */
+  .waitlist__stroke {
+    stroke-dashoffset: 0;
+    animation: draw 1s ease both;
+  }
+
+  .waitlist__stroke--trunk {
+    stroke-dasharray: 18;
+    animation-duration: 1.2s;
+    animation-delay: 0.1s;
+  }
+
+  .waitlist__stroke--left {
+    stroke-dasharray: 10;
+    animation-delay: 0.5s;
+  }
+
+  .waitlist__stroke--right {
+    stroke-dasharray: 10;
+    animation-delay: 0.7s;
+  }
+
+  @keyframes draw {
+    from { stroke-dashoffset: 18; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 132px;
+    font-weight: 800;
+    letter-spacing: -0.055em;
+    color: var(--ink);
+  }
+
+  /* Desktop sets the whole line; the break is the mobile artboard's. */
+  .waitlist__break { display: none; }
+
+  .waitlist__lede {
+    margin: 28px auto 0;
+    max-width: 620px;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--ink-3);
+  }
+
+  .waitlist__form {
+    margin: 46px auto 0;
+    width: 620px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-items: center;
+  }
+
+  .waitlist__fine {
+    margin: 6px 0 0;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    /* --ink-4, not --display-mute: this is 11.5px running text and has to clear
+       4.5:1, which the display mute does not at this size. */
+    color: var(--ink-4);
+  }
+
+  @media (max-width: 700px) {
+    .waitlist { padding: 96px 0 90px; }
+
+    .waitlist__wash { width: 560px; height: 420px; left: -40px; top: -120px; }
+
+    .waitlist__mark { width: 40px; height: 40px; margin-bottom: 20px; }
+
+    h2 { font-size: 58px; line-height: 0.88; }
+
+    .waitlist__break { display: inline; }
+
+    .waitlist__lede { margin-top: 22px; font-size: 16.5px; }
+
+    .waitlist__form { margin-top: 32px; width: 100%; gap: 22px; }
+
+    .waitlist__fine {
+      margin: 20px auto 0;
+      max-width: 260px;
+      font-size: 10px;
+      line-height: 2;
+      letter-spacing: 0.08em;
+    }
+  }
+</style>
