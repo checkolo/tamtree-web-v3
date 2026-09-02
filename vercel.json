@@ -1,0 +1,46 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "framework": "astro",
+  "trailingSlash": true,
+  "headers": [
+    {
+      "//": "C1 contract 2, half of it. Astro with output:'static' writes files, not response headers, so the RFC 8288 alternate link is host configuration and can only live here. Without it a sibling .md is undiscoverable to anything that does not already know the convention.",
+      "source": "/blog/:slug/",
+      "headers": [
+        {
+          "key": "Link",
+          "value": "</blog/:slug.md>; rel=\"alternate\"; type=\"text/markdown\""
+        }
+      ]
+    },
+    {
+      "//": "The other half. Served as text/markdown so a fetch renders as source rather than downloading, and cached hard because the content hash is in the path's own history, not a query string.",
+      "source": "/(.*).md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
+      "//": "The corpus files (C4). Plain text, and explicitly crawlable — they exist to be read by machines.",
+      "source": "/(llms|llms-full).txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" },
+        { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=(), interest-cohort=()" },
+        {
+          "//": "form-action carries buttondown.email because the waitlist form (T2.2) POSTs there directly — no runtime of ours, no database, no GDPR surface owned here. style-src allows inline because Expressive Code sets per-token colours as style attributes; script-src does NOT, and the site ships no inline script beyond the pre-paint theme block, which is hashed at T1.3.",
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; form-action 'self' https://buttondown.email"
+        }
+      ]
+    }
+  ]
+}

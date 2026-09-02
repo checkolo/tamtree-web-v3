@@ -1,0 +1,42 @@
+{
+  "name": "tamtree-web",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "serve": "node scripts/serve.mjs",
+    "gate:md": "node scripts/gates/md.mjs",
+    "gate:directives": "node scripts/gates/directives.mjs",
+    "gate:copy": "node scripts/gates/copy.mjs",
+    "gate:semantic": "node scripts/gates/semantic.mjs",
+    "gate:links": "node scripts/gates/check-links.mjs",
+    "gate:axe": "node scripts/gates/axe.mjs",
+    "gate:lighthouse": "node scripts/gates/lighthouse.mjs",
+    "gate:screenshots": "node scripts/gates/screenshots.mjs",
+    "gate:licenses": "node scripts/gates/licenses.mjs",
+    "gates": "pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe"
+  },
+  "dependencies": {
+    "@astrojs/markdown-satteri": "^0.4.0",
+    "@astrojs/rss": "^4.0.19",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.2.10",
+    "astro-expressive-code": "^0.44.2",
+    "satteri": "^0.10.5",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "axe-core": "^4.13.0",
+    "puppeteer-core": "^25.9.0",
+    "typescript": "^6.0.3"
+  }
+}
