@@ -1,0 +1,117 @@
+---
+/**
+ * The theme toggle, as the artboards draw it in the footer: a segmented pair
+ * rather than a single switch, so the current state is legible without having
+ * to infer it from an icon.
+ *
+ * Semantics: a radiogroup, not two buttons. "Light" and "Dark" are two values
+ * of one setting, and a radiogroup is what tells assistive tech that picking
+ * one deselects the other.
+ *
+ * `aria-checked` is written by script on load, because the server cannot know
+ * the answer — it lives in localStorage. Until then neither option claims to
+ * be selected, which is honest rather than wrong.
+ */
+---
+
+<div class="toggle" role="radiogroup" aria-label="Colour theme">
+  <button type="button" class="toggle__opt" role="radio" aria-checked="false" data-theme-set="light">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="4"></circle>
+      <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"></path>
+    </svg>
+    Light
+  </button>
+  <button type="button" class="toggle__opt" role="radio" aria-checked="false" data-theme-set="dark">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"></path>
+    </svg>
+    Dark
+  </button>
+</div>
+
+<script>
+  const KEY = 'tt-theme';
+  const root = document.documentElement;
+
+  function current() {
+    const explicit = root.getAttribute('data-theme');
+    if (explicit === 'dark' || explicit === 'light') return explicit;
+    return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function paint() {
+    const now = current();
+    for (const el of document.querySelectorAll<HTMLElement>('[data-theme-set]')) {
+      el.setAttribute('aria-checked', String(el.dataset.themeSet === now));
+      // Only the selected option is in the tab order; arrow keys move within
+      // the group. That is how a radiogroup is meant to behave, and doing it
+      // by hand is the cost of not using real radio inputs, which cannot carry
+      // the artboard's layout.
+      el.tabIndex = el.dataset.themeSet === now ? 0 : -1;
+    }
+  }
+
+  function set(theme: string) {
+    root.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem(KEY, theme);
+    } catch {
+      /* not remembered, still applied */
+    }
+    paint();
+  }
+
+  document.addEventListener('click', (e) => {
+    const opt = (e.target as HTMLElement)?.closest<HTMLElement>('[data-theme-set]');
+    if (opt?.dataset.themeSet) set(opt.dataset.themeSet);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    const opt = (e.target as HTMLElement)?.closest<HTMLElement>('[data-theme-set]');
+    if (!opt) return;
+    e.preventDefault();
+    set(current() === 'dark' ? 'light' : 'dark');
+    document.querySelector<HTMLElement>(`[data-theme-set="${current()}"]`)?.focus();
+  });
+
+  // Follow the system while no explicit choice has been stored.
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (!root.hasAttribute('data-theme')) paint();
+  });
+
+  paint();
+</script>
+
+<style>
+  .toggle {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--r-pill);
+    background: var(--surface-2);
+    border: 1px solid var(--line-2);
+  }
+
+  .toggle__opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink-4);
+    font-family: var(--body);
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+  }
+
+  .toggle__opt[aria-checked='true'] {
+    background: var(--ink-2);
+    color: var(--surface);
+    font-weight: 600;
+  }
+</style>

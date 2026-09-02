@@ -1,0 +1,38 @@
+---
+/**
+ * Renders an `<a>` when it has an href and a `<button>` when it does not.
+ * A button that navigates and a link that acts are both wrong for keyboard and
+ * screen-reader users, and the distinction is invisible in a mock — so the
+ * component decides it from the props rather than leaving it to each call site.
+ */
+interface Props {
+  variant?: 'primary' | 'ghost' | 'inverse';
+  size?: 'md' | 'sm';
+  href?: string;
+  type?: 'button' | 'submit';
+  class?: string;
+  [key: string]: unknown;
+}
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  type = 'button',
+  class: className,
+  ...rest
+} = Astro.props;
+
+const classes = ['btn', `btn--${variant}`, size === 'sm' && 'btn--sm', className];
+---
+
+{
+  href ? (
+    <a href={href} class:list={classes} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={classes} {...rest}>
+      <slot />
+    </button>
+  )
+}

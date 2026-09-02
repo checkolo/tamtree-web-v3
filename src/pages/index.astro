@@ -1,19 +1,79 @@
 ---
-// Placeholder. The real homepage is T2.1, ported from the artboards under
-// the semantic rules in C3 — this exists so Phase 0 has something to build.
+import Base from '../layouts/Base.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Button from '../components/Button.astro';
+import Chip from '../components/Chip.astro';
+
+// Placeholder homepage. The real one is T2.1, ported section by section from
+// the artboards under C3. This exercises every Phase 1 primitive so the brand
+// layer has something that proves it — including an .island, which is the one
+// construct whose whole point is that it does NOT vary between themes.
 ---
-<html lang="en" data-theme="dark">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tamtree</title>
-    <meta name="description" content="An agent-first workflow orchestrator." />
-    <link rel="canonical" href="https://www.tamtree.io/" />
-  </head>
-  <body>
-    <main>
-      <h1>Tamtree</h1>
-      <p>An agent-first workflow orchestrator.</p>
-    </main>
-  </body>
-</html>
+
+<Base
+  title="Tamtree"
+  description="An agent-first workflow orchestrator. Durable execution, runtime guardrails and cost governance for agent workflows in production."
+>
+  <section class="sec">
+    <div class="grid-bg"></div>
+    <div class="grain"></div>
+    <div class="wrap">
+      <Eyebrow n="01">the primitives</Eyebrow>
+      <h1>Agents compose. Workflows run.<br /><span>Tamtree runs both.</span></h1>
+      <p class="lede">
+        The brand layer is in place: tokens, the responsive contract, and the primitives.
+        The homepage itself is T2.1.
+      </p>
+      <p class="row">
+        <Button href="/#waitlist">Get early access</Button>
+        <Button href="/blog/" variant="ghost">Read the blog</Button>
+        <Chip tone="live">Pre-launch</Chip>
+      </p>
+    </div>
+  </section>
+
+  <section class="sec island">
+    <div class="grid-bg"></div>
+    <div class="seam"></div>
+    <div class="wrap">
+      <Eyebrow n="02">durable execution</Eyebrow>
+      <h2>An island stays ink-black in both themes.</h2>
+      <p class="lede">
+        Same markup, same class, no theme branch — the section asserts the dark palette
+        locally, so light and dark resolve to one DOM.
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  h1 {
+    margin-top: 18px;
+    font-size: clamp(46px, 7vw, 76px);
+  }
+
+  h1 span {
+    color: var(--brand-ink);
+  }
+
+  h2 {
+    margin-top: 18px;
+    font-size: clamp(34px, 5vw, 54px);
+  }
+
+  .lede {
+    margin-top: 22px;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-top: 32px;
+  }
+</style>

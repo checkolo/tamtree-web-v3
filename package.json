@@ -22,7 +22,8 @@
     "gate:lighthouse": "node scripts/gates/lighthouse.mjs",
     "gate:screenshots": "node scripts/gates/screenshots.mjs",
     "gate:licenses": "node scripts/gates/licenses.mjs",
-    "gates": "pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe"
+    "gates": "pnpm gate:tokens && pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe",
+    "gate:tokens": "node scripts/gates/tokens.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",

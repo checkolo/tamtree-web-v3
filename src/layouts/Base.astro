@@ -1,0 +1,78 @@
+---
+import '../brand/tokens.css';
+import '../brand/base.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+
+// Raw so it can be inlined in <head>. It must run before the first paint and
+// before any stylesheet, which a bundled module script cannot do.
+import themeInit from '../brand/theme-init.js?raw';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Absolute path of a machine-readable sibling, when one exists (C1/C4). */
+  markdownHref?: string;
+  bodyClass?: string;
+}
+
+const { title, description, markdownHref, bodyClass } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Before the stylesheets, deliberately. See theme-init.js. -->
+    <script is:inline set:html={themeInit}></script>
+
+    <title>{full}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    {markdownHref && <link rel="alternate" type="text/markdown" href={markdownHref} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={full} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+  </head>
+
+  <body class={bodyClass}>
+    <a href="#main" class="skip">Skip to content</a>
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+
+    <style>
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 100;
+        padding: 12px 18px;
+        background: var(--brand);
+        color: #1a0d03;
+        font-weight: 600;
+      }
+
+      .skip:focus {
+        left: 0;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+---
+/**
+ * A section label. When `n` is given it renders the numeral the artboards put
+ * before every section title.
+ *
+ * It is a <span>, never a heading. The number looks like structure and is not:
+ * making it an <h2> would put "01" in the document outline ahead of the real
+ * section title and skip a level on the way (C3).
+ */
+interface Props {
+  n?: string;
+  class?: string;
+}
+const { n, class: className } = Astro.props;
+---
+
+<span class:list={['eyebrow', n && 'eyebrow--n', className]}>
+  {n && <b>{n}</b>}
+  <slot />
+</span>

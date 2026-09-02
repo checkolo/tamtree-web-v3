@@ -1,0 +1,218 @@
+---
+import Mark from './Mark.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+/**
+ * Ported semantically (C3). Three changes from the artboard's DOM, none of
+ * which move a pixel:
+ *
+ *   * The link columns are <nav> landmarks with <ul> lists, labelled by their
+ *     eyebrow via aria-labelledby. The artboard's eyebrows are visual labels
+ *     for groups that had no grouping — the label was doing a job the markup
+ *     was not.
+ *   * They are NOT headings. Footer link-group labels as <h2> would land after
+ *     the page's own sections in the outline and read as new chapters.
+ *   * The oversized "tamtree" watermark is aria-hidden. It is the same word the
+ *     wordmark above already says; announcing it again is noise.
+ *
+ * In the light theme the footer closes on PAPER — it is deliberately not one of
+ * the ink-black islands (design decision, 2026-09-01).
+ */
+const columns = [
+  {
+    id: 'foot-product',
+    label: 'Product',
+    links: [
+      { href: '/product/pipelines/', label: 'Pipelines' },
+      { href: '/product/crews/', label: 'Crews' },
+      { href: '/product/guardrails/', label: 'Guardrails' },
+    ],
+  },
+  {
+    id: 'foot-platform',
+    label: 'Platform',
+    links: [
+      { href: '/product/evals/', label: 'Evals' },
+      { href: '/product/knowledge/', label: 'Knowledge' },
+      { href: '/product/cost-controls/', label: 'Cost controls' },
+    ],
+  },
+];
+
+const legal = [
+  { href: '/privacy/', label: 'Privacy' },
+  { href: '/terms/', label: 'Terms' },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="foot">
+  <div class="seam"></div>
+  <div class="wrap">
+    <div class="foot__grid">
+      <div class="foot__brand">
+        <Mark size={24} />
+        <p class="foot__blurb">
+          The agent-first workflow orchestrator. Built for production. Launching soon.
+        </p>
+      </div>
+
+      {columns.map((col) => (
+        <nav class="foot__col" aria-labelledby={col.id}>
+          <span class="eyebrow" id={col.id}>{col.label}</span>
+          <ul>
+            {col.links.map((l) => (
+              <li><a href={l.href}>{l.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+      ))}
+
+      <div class="foot__col foot__col--legal">
+        <nav aria-labelledby="foot-legal">
+          <span class="eyebrow" id="foot-legal">Legal</span>
+          <ul>
+            {legal.map((l) => (
+              <li><a href={l.href}>{l.label}</a></li>
+            ))}
+          </ul>
+        </nav>
+        <ThemeToggle />
+      </div>
+    </div>
+
+    <div class="foot__base">
+      <span>© {year} TAMTREE</span>
+      <span>DURABLE EXECUTION · MCP-NATIVE</span>
+    </div>
+  </div>
+
+  <div class="foot__watermark" aria-hidden="true"><span>tamtree</span></div>
+</footer>
+
+<style>
+  .foot {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    padding: 76px 0 0;
+  }
+
+  .foot__grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 40px;
+  }
+
+  .foot__brand {
+    grid-column: span 5;
+  }
+
+  .foot__blurb {
+    margin: 18px 0 0;
+    max-width: 330px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .foot__col {
+    grid-column: span 2;
+  }
+
+  .foot__col--legal {
+    grid-column: span 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .foot__col ul {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .foot__col a {
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+
+  .foot__col a:hover {
+    color: var(--brand-ink);
+  }
+
+  .foot__base {
+    margin-top: 56px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-4);
+  }
+
+  /* The word bleeding off the bottom edge, clipped to a fading ember. */
+  .foot__watermark {
+    margin-top: 34px;
+    height: 210px;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .foot__watermark span {
+    font-family: var(--display);
+    font-size: 300px;
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    line-height: 0.78;
+    color: transparent;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--brand) 28%, transparent), transparent 82%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  @media (max-width: 700px) {
+    .foot {
+      padding-top: 56px;
+    }
+
+    .foot__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 32px;
+    }
+
+    .foot__brand,
+    .foot__col,
+    .foot__col--legal {
+      grid-column: span 2;
+    }
+
+    .foot__base {
+      margin-top: 40px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .foot__watermark {
+      height: 96px;
+    }
+
+    .foot__watermark span {
+      font-size: 132px;
+    }
+  }
+</style>

@@ -1,0 +1,52 @@
+---
+/**
+ * The Tamtree mark and wordmark.
+ *
+ * The SVG is `aria-hidden` rather than titled: the wordmark beside it says
+ * "tamtree" in real text, so a title on the glyph would make a screen reader
+ * announce the name twice. Decorative here means decorative — the meaning is
+ * carried by the text, which is C3's rule for exactly this case.
+ */
+interface Props {
+  size?: number;
+  wordmark?: boolean;
+  class?: string;
+}
+const { size = 26, wordmark = true, class: className } = Astro.props;
+const wordSize = Math.round(size * 0.85);
+---
+
+<span class:list={['mark', className]}>
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke-linecap="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M12 22V6.5" stroke="var(--brand)" stroke-width="2"></path>
+    <path d="M12 14.2L5.6 8.6" stroke="var(--brand)" stroke-width="2" opacity=".8"></path>
+    <path d="M12 11.4L18.4 6.2" stroke="var(--brand)" stroke-width="2" opacity=".8"></path>
+    <circle cx="12" cy="5" r="2.3" fill="var(--brand)"></circle>
+    <circle cx="4.7" cy="7.9" r="2.1" fill="var(--brand)" opacity=".9"></circle>
+    <circle cx="19.3" cy="5.5" r="2.1" fill="var(--live)"></circle>
+  </svg>
+  {wordmark && <span class="mark__word" style={`font-size:${wordSize}px`}>tamtree</span>}
+</span>
+
+<style>
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .mark__word {
+    font-family: var(--display);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+  }
+</style>

@@ -1,0 +1,311 @@
+/* ============================================================================
+   Tamtree brand tokens — extracted from all four v3 artboards together
+   (canvas-v3-light/Main + Mobile at 1440/390, canvas-v3-dark/Main + Mobile).
+
+   Contract C6. Three rules govern this file and they are not stylistic:
+
+   1. The bare `:root` block below is the COMPLETE light palette. No colour may
+      have its only definition inside a media query or a `[data-theme]` block —
+      a viewer whose system is light and who has never touched the toggle reads
+      only this block, and a token defined solely in a dark block resolves to
+      nothing for them.
+
+   2. The dark palette is declared TWICE, deliberately: once under
+      `prefers-color-scheme: dark` guarded by `:root:not([data-theme="light"])`
+      so the system preference applies unless overridden, and once under
+      `:root[data-theme="dark"]` so an explicit toggle wins in both directions.
+      CSS gives no way to share one declaration block across a media boundary,
+      so the duplication is structural. `gate:tokens` asserts the two blocks
+      stay identical — the drift risk is real and it is now a build failure.
+
+   3. Theme is a swap of VALUES. Light and dark share markup exactly; there is
+      one DOM, one stylesheet and one set of class names.
+
+   Where the dark values come from: the light artboards carry an `.on-dark`
+   block for their ink-black islands, and its values match the dark artboards'
+   own `:root` everywhere the two overlap. It is the dark palette expressed in
+   the fuller token vocabulary the light artboards introduced, so it is the
+   source for the surface recipes the dark artboards inline.
+   ========================================================================= */
+
+:root {
+  color-scheme: light;
+
+  /* ── ground ──────────────────────────────────────────────────────────────
+     Paper is warm, so ember stays the only other warm hue on the page. */
+  --page: #fdfcfb;
+  --surface: #f6f2ec;
+  --surface-2: #ffffff;
+  --deep: #060b16;
+
+  /* ── ink ─────────────────────────────────────────────────────────────── */
+  --ink: #0b1120;
+  --ink-2: #334155;
+  --ink-3: #64748b;
+  --ink-4: #8b93a1;
+
+  --line: #e8e0d6;
+  --line-2: #d8cfc2;
+
+  /* ── ember ───────────────────────────────────────────────────────────────
+     Display type at 24px and above may use --brand; anything smaller steps to
+     --brand-ink, which is the same hue carried to a readable contrast. That
+     rule is why every hue below has an `-ink` partner: the saturated value is
+     for fills and large type, the ink value for text. */
+  --brand: #ea580c;
+  --brand-ink: #b8410a;
+  --brand-deep: #9a3609;
+  --brand-press: #c2410c;
+
+  --live: #94d326;
+  --live-ink: #566f22;
+  --compose: #a78bfa;
+  --compose-ink: #6a2bd4;
+  --running: #4f9de8;
+  --running-ink: #2f6bab;
+  --warn: #d99417;
+  --warn-ink: #8a5a17;
+  --good: #2eb47c;
+  --good-ink: #1f6d60;
+  --danger: #b3313c;
+  --danger-ink: #b3313c;
+
+  /* ── surface recipes ─────────────────────────────────────────────────────
+     These flip wholesale between paper and the ink-black islands, which is why
+     they are tokens rather than component CSS. On paper a raised surface casts
+     a shadow; on ink it emits a glow. Same token, opposite physics. */
+  --chip-bg: #ffffff;
+  --node-bg: #ffffff;
+  --node-shadow: 0 18px 38px -22px rgba(15, 23, 42, 0.34), inset 0 1px 0 #ffffff;
+  --card-bg: linear-gradient(170deg, #ffffff, #fbf8f4);
+  --card-shadow: 0 40px 80px -52px rgba(15, 23, 42, 0.5), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --field-bg: #ffffff;
+  --conn-grad: linear-gradient(90deg, rgba(15, 23, 42, 0.05), rgba(15, 23, 42, 0.24), rgba(15, 23, 42, 0.05));
+  --conn-grad-v: linear-gradient(180deg, rgba(15, 23, 42, 0.05), rgba(15, 23, 42, 0.24), rgba(15, 23, 42, 0.05));
+  --pip-glow: 0 0 0 3.5px rgba(148, 211, 38, 0.22);
+  --grid-ink: rgba(15, 23, 42, 0.055);
+  --seam-ember: rgba(234, 88, 12, 0.62);
+  --num: #b8410a;
+  --num-glow: none;
+  --grain-opacity: 0.24;
+  --grain-blend: multiply;
+
+  /* ── type ────────────────────────────────────────────────────────────── */
+  --display: "Bricolage Grotesque", "Helvetica Neue", Arial, sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── motion ──────────────────────────────────────────────────────────────
+     One easing across the whole site. The artboards use it 18 times and
+     nothing else, so it is a token rather than a convention. */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-1: 0.22s;  /* hovers, presses — anything a pointer causes */
+  --dur-2: 0.6s;   /* a single element arriving */
+  --dur-3: 0.9s;   /* a group arriving in sequence */
+  --dur-4: 1s;     /* a scene playing itself out */
+
+  /* ── radii ───────────────────────────────────────────────────────────── */
+  --r-xs: 3px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 16px;
+  --r-pill: 999px;
+
+  /* ── layout ──────────────────────────────────────────────────────────────
+     The artboards define two widths and nothing between them; any width in
+     between is interpolation this stylesheet owns (C6.4). */
+  --wrap: 1240px;
+  --gutter: 20px;
+  --sec-y: 130px;
+
+  /* Hero spotlight origin, moved by pointer on desktop and left at rest
+     otherwise. Declared here so the hero's CSS has a value with no JS. */
+  --mx: 50%;
+  --my: 32%;
+}
+
+/* ── dark, by system preference ───────────────────────────────────────────
+   Guarded so an explicit light choice still wins inside a dark system. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --page: #0b1120;
+    --surface: #0f172a;
+    --surface-2: #1e293b;
+    --deep: #060b16;
+
+    --ink: #f1f5f9;
+    --ink-2: #cbd5e1;
+    --ink-3: #94a3b8;
+    --ink-4: #64748b;
+
+    --line: #192335;
+    --line-2: #334155;
+
+    --brand: #f97316;
+    --brand-ink: #fb923c;
+    --brand-deep: #fdba74;
+    --brand-press: #ea580c;
+
+    --live: #94d326;
+    --live-ink: #b2e254;
+    --compose: #a78bfa;
+    --compose-ink: #c4b5fd;
+    --running: #4f9de8;
+    --running-ink: #85bdf2;
+    --warn: #d99417;
+    --warn-ink: #f0b752;
+    --good: #2eb47c;
+    --good-ink: #5fd3a1;
+    --danger: #b3313c;
+    --danger-ink: #f2919a;
+
+    --chip-bg: rgba(255, 255, 255, 0.03);
+    --node-bg: linear-gradient(180deg, #131d31, #0e1626);
+    --node-shadow: 0 22px 48px -22px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    --card-bg: linear-gradient(170deg, #131d31, #0b1120);
+    --card-shadow: 0 50px 90px -50px rgba(0, 0, 0, 0.9);
+    --field-bg: rgba(255, 255, 255, 0.045);
+    --conn-grad: linear-gradient(90deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+    --conn-grad-v: linear-gradient(180deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+    --pip-glow: 0 0 12px 2px rgba(148, 211, 38, 0.75);
+    --grid-ink: rgba(148, 163, 184, 0.055);
+    --seam-ember: rgba(249, 115, 22, 0.5);
+    --num: #fb923c;
+    --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+    --grain-opacity: 0.5;
+    --grain-blend: overlay;
+  }
+}
+
+/* ── dark, by explicit choice ─────────────────────────────────────────────
+   Identical to the block above by contract; gate:tokens enforces it. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --page: #0b1120;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+  --deep: #060b16;
+
+  --ink: #f1f5f9;
+  --ink-2: #cbd5e1;
+  --ink-3: #94a3b8;
+  --ink-4: #64748b;
+
+  --line: #192335;
+  --line-2: #334155;
+
+  --brand: #f97316;
+  --brand-ink: #fb923c;
+  --brand-deep: #fdba74;
+  --brand-press: #ea580c;
+
+  --live: #94d326;
+  --live-ink: #b2e254;
+  --compose: #a78bfa;
+  --compose-ink: #c4b5fd;
+  --running: #4f9de8;
+  --running-ink: #85bdf2;
+  --warn: #d99417;
+  --warn-ink: #f0b752;
+  --good: #2eb47c;
+  --good-ink: #5fd3a1;
+  --danger: #b3313c;
+  --danger-ink: #f2919a;
+
+  --chip-bg: rgba(255, 255, 255, 0.03);
+  --node-bg: linear-gradient(180deg, #131d31, #0e1626);
+  --node-shadow: 0 22px 48px -22px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --card-bg: linear-gradient(170deg, #131d31, #0b1120);
+  --card-shadow: 0 50px 90px -50px rgba(0, 0, 0, 0.9);
+  --field-bg: rgba(255, 255, 255, 0.045);
+  --conn-grad: linear-gradient(90deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+  --conn-grad-v: linear-gradient(180deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+  --pip-glow: 0 0 12px 2px rgba(148, 211, 38, 0.75);
+  --grid-ink: rgba(148, 163, 184, 0.055);
+  --seam-ember: rgba(249, 115, 22, 0.5);
+  --num: #fb923c;
+  --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+  --grain-opacity: 0.5;
+  --grain-blend: overlay;
+}
+
+/* ── the ink-black islands ────────────────────────────────────────────────
+   §02 (durable execution), §10 (waitlist) and the hero stage are ink-black on
+   BOTH themes — in the light artboards they are the paper page's dark islands,
+   and in the dark artboards they are simply the page a shade deeper. So this
+   is one unconditional rule rather than a theme-conditional one: it asserts
+   the dark palette locally and drops the ground to --deep. In dark mode most
+   of it is a no-op re-assertion, which is exactly why the DOM does not have to
+   differ between themes to get the effect.
+   ---------------------------------------------------------------------- */
+.island {
+  color-scheme: dark;
+
+  --page: #060b16;
+  --surface: #0f172a;
+  --surface-2: #1e293b;
+
+  --ink: #f1f5f9;
+  --ink-2: #cbd5e1;
+  --ink-3: #94a3b8;
+  --ink-4: #64748b;
+
+  --line: #192335;
+  --line-2: #334155;
+
+  --brand-ink: #fb923c;
+  --brand-deep: #fdba74;
+  --live-ink: #b2e254;
+  --compose-ink: #c4b5fd;
+  --running-ink: #85bdf2;
+  --warn-ink: #f0b752;
+  --good-ink: #5fd3a1;
+  --danger-ink: #f2919a;
+
+  --chip-bg: rgba(255, 255, 255, 0.03);
+  --node-bg: linear-gradient(180deg, #131d31, #0e1626);
+  --node-shadow: 0 22px 48px -22px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  --card-bg: linear-gradient(170deg, #131d31, #0b1120);
+  --card-shadow: 0 50px 90px -50px rgba(0, 0, 0, 0.9);
+  --field-bg: rgba(255, 255, 255, 0.045);
+  --conn-grad: linear-gradient(90deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+  --conn-grad-v: linear-gradient(180deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.34), rgba(148, 163, 184, 0.1));
+  --pip-glow: 0 0 12px 2px rgba(148, 211, 38, 0.75);
+  --grid-ink: rgba(148, 163, 184, 0.055);
+  --seam-ember: rgba(249, 115, 22, 0.5);
+  --num: #fb923c;
+  --num-glow: 0 0 24px rgba(249, 115, 22, 0.55);
+  --grain-opacity: 0.5;
+  --grain-blend: overlay;
+
+  background: var(--page);
+  color: var(--ink);
+}
+
+/* ── mobile ───────────────────────────────────────────────────────────────
+   The mobile artboards are a designed layout, not a reflow (V2), and they
+   carry their own values for the few tokens where the desktop figure is
+   simply too large at 390. Everything else is shared, which is the evidence
+   that the two are one design rather than two.
+   ---------------------------------------------------------------------- */
+@media (max-width: 700px) {
+  :root {
+    --node-shadow: 0 14px 30px -20px rgba(15, 23, 42, 0.34), inset 0 1px 0 #ffffff;
+    --sec-y: 84px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --node-shadow: 0 16px 34px -20px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    }
+  }
+
+  :root[data-theme="dark"],
+  .island {
+    --node-shadow: 0 16px 34px -20px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  }
+}

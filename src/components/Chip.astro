@@ -1,0 +1,16 @@
+---
+/**
+ * A status pill. `tone` colours the dot only — the label must say what the dot
+ * means, because colour alone is not information (C3, and axe agrees).
+ */
+interface Props {
+  tone?: 'live' | 'running' | 'compose' | 'warn' | 'good' | 'danger' | 'none';
+  class?: string;
+}
+const { tone = 'none', class: className } = Astro.props;
+---
+
+<span class:list={['chip', className]}>
+  {tone !== 'none' && <span class="chip__dot" style={`background:var(--${tone})`} />}
+  <slot />
+</span>
