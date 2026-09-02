@@ -23,7 +23,9 @@
     "gate:screenshots": "node scripts/gates/screenshots.mjs",
     "gate:licenses": "node scripts/gates/licenses.mjs",
     "gates": "pnpm gate:tokens && pnpm gate:md && pnpm gate:directives && pnpm gate:copy && pnpm gate:semantic && pnpm gate:links && pnpm gate:axe",
-    "gate:tokens": "node scripts/gates/tokens.mjs"
+    "gate:tokens": "node scripts/gates/tokens.mjs",
+    "artboards:export": "node scripts/artboards/export.mjs",
+    "gate:visual": "node scripts/gates/visual.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "^0.4.0",
@@ -37,6 +39,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "axe-core": "^4.13.0",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
     "puppeteer-core": "^25.9.0",
     "typescript": "^6.0.3"
   }
