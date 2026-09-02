@@ -86,7 +86,20 @@ if (failures.length) {
   process.exit(1);
 }
 if (checked === 0) {
-  console.error('gate:md FAIL — no published .md siblings found. C1 contract 1 is not being met.');
+  // Distinguish the two ways of getting here. "Every post in the repo is a
+  // draft this build excluded" is not a contract violation, and reporting it as
+  // one sends the reader looking for a bug in the .md route that is not there.
+  if (skipped > 0) {
+    console.log(
+      `gate:md: OK — nothing to check; all ${skipped} post(s) are drafts excluded from this ` +
+        `build. Re-run against a TT_INCLUDE_DRAFTS=1 build to cover them.`
+    );
+    process.exit(0);
+  }
+  console.error(
+    'gate:md FAIL — there are published posts but no .md siblings in dist/. C1 contract 1 ' +
+      'is not being met: the source is the artifact and every post must publish it.'
+  );
   process.exit(1);
 }
 console.log(`gate:md: OK — ${checked} published .md match source${skipped ? ` (${skipped} draft(s) not in this build)` : ''}.`);

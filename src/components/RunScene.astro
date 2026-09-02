@@ -95,7 +95,7 @@ const dotFor: Record<string, string> = {
     </div>
   </div>
 
-  <figcaption class="scene__caption">{caption}</figcaption>
+  <figcaption class="scene__caption visually-hidden">{caption}</figcaption>
 </figure>
 
 <style>
@@ -278,15 +278,16 @@ const dotFor: Record<string, string> = {
     color: var(--warn-ink);
   }
 
-  /* Visible, not hidden: it reads as the scene's label, which is what it is. */
-  .scene__caption {
-    margin: 66px auto 0;
-    max-width: 680px;
-    text-align: center;
-    font-size: 15px;
-    line-height: 1.6;
-    color: var(--ink-3);
-  }
+  /* Visually hidden, and that is the correct reading of C3 rather than a
+     concession to the artboard.
+     
+     C3's requirement is a text equivalent that survives with JS and CSS off,
+     and its headline claim is that semantic markup costs ZERO pixels. A
+     visually-hidden figcaption satisfies both exactly: it is real prose in the
+     DOM for an extractor and a screen reader, and with CSS off it stops being
+     hidden and becomes visible — which is the test the contract actually
+     names. Rendering it visibly was an addition beyond the contract, and it
+     cost 138px of page height against the artboard. */
 
   /* Mobile: the scene stacks and the connectors turn vertical, so the pips
      travel down. The paused chip moves inside its card rather than hanging

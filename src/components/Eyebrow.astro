@@ -3,6 +3,12 @@
  * A section label. When `n` is given it renders the numeral the artboards put
  * before every section title.
  *
+ * The space after the numeral is written as an explicit `{' '}`. Astro's
+ * compiler collapses inter-element whitespace the way JSX does, so a newline
+ * between `<b>` and `<slot />` emits NOTHING — the numeral and the label run
+ * together and every following glyph shifts left. It is invisible in review and
+ * gate:visual sees it immediately.
+ *
  * It is a <span>, never a heading. The number looks like structure and is not:
  * making it an <h2> would put "01" in the document outline ahead of the real
  * section title and skip a level on the way (C3).
@@ -15,6 +21,5 @@ const { n, class: className } = Astro.props;
 ---
 
 <span class:list={['eyebrow', n && 'eyebrow--n', className]}>
-  {n && <b>{n}</b>}
-  <slot />
+  {n && <b>{n}</b>}{n && ' '}<slot />
 </span>

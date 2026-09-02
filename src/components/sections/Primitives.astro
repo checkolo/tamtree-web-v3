@@ -1,0 +1,296 @@
+---
+import Eyebrow from '../Eyebrow.astro';
+
+/**
+ * §01 — the two primitives.
+ *
+ * C3: the crew diagram is a <figure> with a real <figcaption>, and its SVG
+ * carries a <title> rather than being hidden. It is not decorative — it is the
+ * only place the page shows what "a lead decides each move" looks like — so an
+ * extractor that drops it should be told what it dropped.
+ */
+---
+
+<section class="sec primitives" id="tt-primitives">
+  <div class="seam" aria-hidden="true"></div>
+  <div class="ember-wash primitives__wash" aria-hidden="true"></div>
+
+  <div class="wrap primitives__grid">
+    <div class="rv primitives__copy">
+      <Eyebrow n="01">— the primitives</Eyebrow>
+      <h2>Some work wants a script.<br />Some work wants a crew.</h2>
+      <div class="primitives__prose">
+        <p>
+          <strong class="is-pipeline">Pipelines</strong> are deterministic DAGs — the same steps,
+          in the same order, every time. Sync, ETL, billing: things that should be boring.
+        </p>
+        <p>
+          <strong class="is-crew">Crews</strong> are multi-agent teams — a lead agent decides
+          each move. Research, triage, support: things with no script.
+        </p>
+        <p class="primitives__close">
+          Nest them freely: a pipeline step can <em>be</em> a crew. A crew can call a pipeline
+          as a tool. <span class="is-pipeline">One engine underneath.</span>
+        </p>
+      </div>
+    </div>
+
+    <figure class="rv primitives__figure">
+      <div class="primitives__card">
+        <div class="primitives__head">
+          <div class="primitives__modes">
+            <span>pipeline mode</span>
+            <span class="is-active">crew mode</span>
+          </div>
+          <span class="primitives__label">SAME RUN, DIFFERENT BRAIN</span>
+        </div>
+
+        <div class="primitives__flow">
+          <div class="node primitives__node">
+            <span class="node__title">sync accounts</span>
+            <p class="node__meta">deterministic</p>
+          </div>
+
+          <span class="conn primitives__conn" aria-hidden="true"><span class="pip"></span></span>
+
+          <div class="primitives__crew">
+            <span class="primitives__tag">step = crew</span>
+            <svg viewBox="0 0 262 212" role="img">
+              <title>A crew: a lead agent at the centre with four members, one of them active.</title>
+              <path d="M131 104 L58 56 M131 104 L214 62 M131 104 L74 166 M131 104 L206 158" stroke="var(--compose-ink)" stroke-width="1.4" opacity=".62" stroke-dasharray="4 5"></path>
+              <circle cx="131" cy="104" r="27" fill="color-mix(in srgb, var(--compose) 18%, var(--surface-2))" stroke="var(--compose-ink)" stroke-width="1.6"></circle>
+              <text x="131" y="108" text-anchor="middle" fill="var(--compose-ink)" font-family="JetBrains Mono, monospace" font-size="11">lead</text>
+              <circle cx="58" cy="56" r="16" fill="var(--surface-2)" stroke="color-mix(in srgb, var(--compose-ink) 70%, transparent)"></circle>
+              <circle cx="214" cy="62" r="16" fill="var(--surface-2)" stroke="color-mix(in srgb, var(--compose-ink) 70%, transparent)"></circle>
+              <circle cx="74" cy="166" r="16" fill="var(--surface-2)" stroke="color-mix(in srgb, var(--compose-ink) 70%, transparent)"></circle>
+              <circle cx="206" cy="158" r="16" fill="var(--surface-2)" stroke="color-mix(in srgb, var(--live) 85%, transparent)"></circle>
+              <circle cx="206" cy="158" r="4.5" fill="var(--live)"></circle>
+            </svg>
+          </div>
+
+          <span class="conn primitives__conn" aria-hidden="true"><span class="pip" style="animation-delay:1s"></span></span>
+
+          <div class="node primitives__node">
+            <span class="node__title">write report</span>
+            <p class="node__meta">deterministic</p>
+          </div>
+        </div>
+      </div>
+      <figcaption class="visually-hidden">
+        The same run with a deterministic step either side of a step that is itself a crew — a
+        lead agent delegating to four members.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .primitives {
+    background: var(--surface);
+  }
+
+  .primitives__wash {
+    width: 820px;
+    height: 420px;
+    left: -200px;
+    top: -70px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 14%, transparent), transparent 68%);
+  }
+
+  .primitives__grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 56px;
+    align-items: center;
+  }
+
+  .primitives__copy { grid-column: span 5; }
+  .primitives__figure { grid-column: span 7; margin: 0; }
+
+  h2 {
+    margin: 20px 0 0;
+    font-size: 50px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .primitives__prose {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 470px;
+    font-size: 18px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  .primitives__close { color: var(--ink-2); }
+  .primitives__close em { color: var(--ink); font-style: italic; }
+
+  .is-pipeline { color: var(--brand-ink); font-weight: 600; }
+  .is-crew { color: var(--compose-ink); font-weight: 600; }
+
+  .primitives__card {
+    position: relative;
+    padding: 26px;
+    border-radius: 24px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  .primitives__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .primitives__modes {
+    display: flex;
+    padding: 4px;
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--surface) 70%, var(--page));
+    border: 1px solid var(--line);
+    gap: 4px;
+    width: max-content;
+  }
+
+  .primitives__modes span {
+    padding: 8px 16px;
+    border-radius: var(--r-pill);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--brand-ink);
+  }
+
+  .primitives__modes .is-active {
+    background: var(--compose);
+    color: #1e1035;
+    font-weight: 700;
+  }
+
+  .primitives__label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--brand-ink);
+    letter-spacing: 0.08em;
+  }
+
+  .primitives__flow {
+    margin-top: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .primitives__node {
+    width: 150px;
+    border-color: color-mix(in srgb, var(--brand) 42%, transparent);
+  }
+
+  .primitives__conn { width: 40px; }
+
+  .primitives__crew {
+    position: relative;
+    width: 262px;
+    height: 212px;
+    border-radius: 18px;
+    border: 1px dashed color-mix(in srgb, var(--compose-ink) 50%, transparent);
+    background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--compose) 16%, transparent), transparent 68%);
+    flex: none;
+  }
+
+  .primitives__crew svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .primitives__tag {
+    position: absolute;
+    top: -11px;
+    left: 16px;
+    z-index: 1;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    background: var(--surface-2);
+    border: 1px solid color-mix(in srgb, var(--compose-ink) 45%, transparent);
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--compose-ink);
+  }
+
+  /* Mobile 390: one column, the flow turns vertical, the head stacks. */
+  @media (max-width: 700px) {
+    .primitives__grid {
+      grid-template-columns: 1fr;
+      gap: 34px;
+    }
+
+    .primitives__copy,
+    .primitives__figure { grid-column: 1; }
+
+    h2 { margin-top: 16px; font-size: 33px; }
+
+    .primitives__prose {
+      margin-top: 22px;
+      gap: 16px;
+      max-width: none;
+      font-size: 16px;
+      line-height: 1.64;
+    }
+
+    .primitives__wash {
+      width: 480px;
+      height: 320px;
+      left: -130px;
+      top: -50px;
+    }
+
+    .primitives__card { padding: 18px; border-radius: 20px; }
+
+    .primitives__head {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .primitives__modes span { padding: 7px 13px; font-size: 11px; }
+    .primitives__label { font-size: 10px; }
+
+    .primitives__flow {
+      margin-top: 20px;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .primitives__node { width: 100%; }
+
+    .primitives__conn {
+      width: 2px;
+      height: 26px;
+      align-self: center;
+      background: var(--conn-grad-v);
+    }
+
+    .primitives__conn .pip {
+      top: 0;
+      left: -2.5px;
+      animation-name: flow-y-sm;
+    }
+
+    .primitives__crew { width: 100%; height: 200px; }
+    .primitives__tag { left: 14px; font-size: 9.5px; }
+  }
+
+  @keyframes flow-y-sm {
+    0% { top: -6px; opacity: 0; }
+    12% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { top: 26px; opacity: 0; }
+  }
+</style>
