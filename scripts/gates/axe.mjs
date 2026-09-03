@@ -32,6 +32,7 @@ const server = await start(PORT);
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: 'new' });
 
 let failed = false;
+let excusedTotal = 0;
 for (const route of routes.sort()) {
  for (const scheme of ['light', 'dark']) {
   const page = await browser.newPage();
@@ -44,13 +45,59 @@ for (const route of routes.sort()) {
     // eslint-disable-next-line no-undef
     axe.run(document, { resultTypes: ['violations'] })
   );
-  // No contrast exemptions. The v2 design system carried one for white on
-  // #db5210; that colour is not in the v3 palette, so the exemption is dropped
-  // rather than inherited — an inherited exemption excuses a failure nobody
-  // reviewed.
-  const bad = result.violations.filter((v) =>
-    ['critical', 'serious'].includes(v.impact)
+  // One contrast exemption, and it is narrow on purpose.
+  //
+  // The primary button ships a white label over the artboards' bright ember —
+  // 2.80:1 on the dark theme's flat #f97316, against AA's 4.5:1. That is a
+  // decision, not a defect: the alternative was put with its numbers (deepen
+  // the ground to #cc430b→#a83808 for 4.8-6.5:1) and declined in favour of the
+  // artboards' ember, then re-confirmed on 2026-09-03 after the owner viewed
+  // the rendered result. The reasoning lives on the declaration in base.css.
+  //
+  // Why the gate needs to know at all: the comment there says axe can never
+  // raise this, which was true only while the button was a gradient — axe
+  // reports those as *incomplete* rather than failing. --btn-primary-bg is a
+  // gradient on light but a flat colour on dark, and axe resolves a flat
+  // colour perfectly well. So without this the gate is permanently red, and a
+  // permanently-red gate is one nobody reads.
+  //
+  // Scoped to the one rule on the one selector. Every other contrast pair on
+  // the button — and every contrast pair anywhere else — still fails the gate.
+  // The v2 system's white-on-#db5210 exemption is NOT inherited: that colour
+  // is not in the v3 palette, and an inherited exemption excuses a failure
+  // nobody reviewed.
+  const EXEMPT = { rule: 'color-contrast', selector: '.btn--primary' };
+  const exempt = await page.evaluate(
+    (sel, targets) =>
+      targets.map((t) =>
+        // A node is excused only if the element it names really carries the
+        // class, resolved in the page rather than by matching the selector
+        // string — axe's target is a path, and string-matching it would excuse
+        // anything that merely mentioned the class.
+        [document.querySelector(t)].every((el) => el && el.matches(sel))
+      ),
+    EXEMPT.selector,
+    result.violations.flatMap((v) =>
+      v.id === EXEMPT.rule ? v.nodes.map((n) => n.target.join(' ')) : []
+    )
   );
+
+  let cursor = 0;
+  let excused = 0;
+  const bad = result.violations
+    .map((v) => {
+      if (v.id !== EXEMPT.rule) return v;
+      const nodes = v.nodes.filter(() => {
+        const ok = exempt[cursor++];
+        if (ok) excused++;
+        return !ok;
+      });
+      return { ...v, nodes };
+    })
+    .filter((v) => v.nodes.length > 0)
+    .filter((v) => ['critical', 'serious'].includes(v.impact));
+
+  if (excused) excusedTotal += excused;
   if (bad.length) {
     failed = true;
     console.error(`✗ ${route}  [${scheme}]`);
@@ -72,5 +119,9 @@ if (failed) {
   process.exit(1);
 }
 console.log(
-  `G5: OK — ${routes.length} route(s) × light/dark, zero critical/serious violations.`
+  `G5: OK — ${routes.length} route(s) × light/dark, zero critical/serious violations.` +
+    (excusedTotal
+      ? `\n  ⚠ ${excusedTotal} excused: white-on-ember on .btn--primary, the owner's` +
+        ` decision of 2026-09-03. Not a pass — a documented failure.`
+      : '')
 );
