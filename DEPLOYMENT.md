@@ -54,8 +54,24 @@ keys inside a header entry, so the rationale lives here instead):
 - `/(.*)` → the CSP's `form-action` allows `buttondown.email` because the
   waitlist form POSTs there directly (no runtime or database of ours sits
   between); `style-src 'unsafe-inline'` is for Expressive Code, which sets
-  per-token colours as style attributes; `script-src` does **not** allow
-  inline — the site ships no inline script beyond the pre-paint theme block.
+  per-token colours as style attributes. `style-src`/`font-src` also allowlist
+  `fonts.googleapis.com`/`fonts.gstatic.com` — Bricolage Grotesque, Instrument
+  Sans and JetBrains Mono are loaded from Google Fonts (`Base.astro`'s
+  `<link>`s), a real cross-origin fetch a `'self'`-only policy silently
+  drops, with no console error to point at. `script-src` does **not** allow
+  `'unsafe-inline'` — Astro's `vite.build.assetsInlineLimit: 0`
+  (`astro.config.mjs`) forces every page's own `<script>` out to an external,
+  `'self'`-origin file instead of being inlined below the 4KB default, which
+  is what a bare `script-src 'self'` needs to run them at all. The one
+  exception is the pre-paint theme block (`Base.astro`'s `is:inline` script,
+  sourced from `theme-init.js`) — it must run before the first stylesheet, so
+  it can't be a deferred module. It's allowed by exact hash
+  (`'sha256-dc4Dkcbb+LDKAowpbGY8L3pvQ4vSff6qtm4WUVZQwyA='`), not
+  `'unsafe-inline'`, so **editing `theme-init.js` means recomputing that hash**
+  (`openssl dgst -sha256 -binary src/brand/theme-init.js | openssl base64 -A`)
+  and updating it in `vercel.json`, or the script silently stops running in
+  production — same failure mode as the two bugs above, just for one specific
+  script instead of all of them.
 
 ### 2. Nothing to authenticate — the content repo is public
 

@@ -20,3 +20,4 @@ reports/
 .env.production
 design/reference/
 design/diff/
+.vercel
