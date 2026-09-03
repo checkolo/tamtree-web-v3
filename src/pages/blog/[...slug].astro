@@ -16,6 +16,41 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props;
 const { Content } = await render(post);
+
+/**
+ * The empty-body guard, and why it is on the page rather than in a gate.
+ *
+ * A throw inside an mdast plugin does not fail anything. The glob loader
+ * catches it, caches the entry with EMPTY rendered content, and exits 0 — so a
+ * post with an unknown directive ships as a title, a date and nothing else.
+ * `gate:directives` already checks for this in `dist`, which covers CI.
+ *
+ * It does not cover the case that has now cost two sessions: **the dev server**.
+ * The Sätteri processor is constructed once, in `astro.config.mjs`, so editing
+ * `src/plugins/directives.mjs` does NOT take effect in a running dev server —
+ * measured, not assumed. Add a directive to the vocabulary and use it, and the
+ * running server renders it with the OLD vocabulary, throws, and caches an
+ * empty body. The page then stays blank through every subsequent edit, with no
+ * error in the terminal the second time round, until the server is restarted.
+ *
+ * So the check lives where both cases pass through: in dev it says what
+ * happened, in a build it fails outright. This throw is in a page component
+ * rather than a plugin, so nothing catches it and the build actually stops.
+ */
+// Measured, because the first version of this check got it backwards: on a
+// swallowed failure `post.rendered` is `undefined` ENTIRELY — not an empty
+// string — so testing for a blank string excluded the one case worth catching.
+// A healthy entry always has `rendered.html` populated once `render()` has run.
+const emptyRender = !post.rendered?.html?.trim() && !!post.body?.trim();
+
+if (emptyRender && import.meta.env.PROD) {
+  throw new Error(
+    `[blog] "${post.id}" rendered to an empty body from ${post.body?.length ?? 0} characters of ` +
+      `Markdown. Something in the pipeline threw and the content loader swallowed it — check ` +
+      `the build output for "[glob-loader] Error rendering ${post.id}.md". An unknown or ` +
+      `malformed directive is the usual cause.`
+  );
+}
 const published = post.data.publishDate;
 const cat = lookup(post.data.category);
 
@@ -64,6 +99,27 @@ const share = hero ? await getImage({ src: hero, width: 1200, format: 'jpeg' }) 
               sizes="(max-width: 860px) 92vw, 700px"
               loading="eager"
             />
+          )
+        }
+
+        {
+          /* Dev only — a build throws instead, above. */
+          emptyRender && (
+            <div class="post__void">
+              <p><strong>This post rendered to an empty body.</strong></p>
+              <p>
+                Something in the Markdown pipeline threw and the content loader swallowed it, so
+                the page shipped with a heading and nothing under it. Look in the dev server's
+                output for <code>[glob-loader] Error rendering {post.id}.md</code>.
+              </p>
+              <p>
+                If the terminal says nothing, the error was cached on an earlier render. The
+                Sätteri processor is built once in <code>astro.config.mjs</code>, so edits to{' '}
+                <code>src/plugins/directives.mjs</code> do not reach a running dev server —{' '}
+                <strong>restart it</strong>, and clear <code>.astro</code> and{' '}
+                <code>node_modules/.astro</code>, which are two separate caches.
+              </p>
+            </div>
           )
         }
 
@@ -132,6 +188,23 @@ const share = hero ? await getImage({ src: hero, width: 1200, format: 'jpeg' }) 
     border: 1px solid var(--line);
     background: var(--field-bg);
   }
+
+  /* Loud on purpose, and dev-only — a production build never reaches this page
+     because the guard above throws instead. */
+  .post__void {
+    margin-top: 36px;
+    padding: 22px 24px;
+    border: 2px solid var(--danger);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .post__void p { margin: 10px 0 0; }
+  .post__void p:first-child { margin: 0; color: var(--danger); }
+  .post__void code { font-family: var(--mono); font-size: 0.92em; }
 
   /* Long-form measure. Everything the Markdown pipeline emits lands here, so
      this is where the reading rhythm is set rather than in each directive. */
