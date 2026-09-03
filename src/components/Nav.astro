@@ -14,7 +14,17 @@ import Button from './Button.astro';
 const links = [
   { href: '/product/', label: 'Product' },
   { href: '/how-it-works/', label: 'How it works' },
+  { href: '/blog/', label: 'Writing' },
 ];
+
+/**
+ * `aria-current="page"` on the section you are in. `startsWith` rather than
+ * equality because /blog/a-post/ and /blog/category/engineering/ are both
+ * inside Writing, and a nav that goes blank the moment you open a post is
+ * telling the reader they have left the section they are reading.
+ */
+const here = Astro.url.pathname;
+const isCurrent = (href: string) => here === href || here.startsWith(href);
 ---
 
 <header class="nav">
@@ -38,7 +48,11 @@ const links = [
     <nav class="nav__nav" aria-label="Main">
       <ul class="nav__list" id="nav-links">
         {links.map((l) => (
-          <li><a href={l.href}>{l.label}</a></li>
+          <li>
+            <a href={l.href} aria-current={isCurrent(l.href) ? 'page' : undefined}>
+              {l.label}
+            </a>
+          </li>
         ))}
       </ul>
       <Button href="/#waitlist" size="sm" class="nav__cta">Get early access</Button>
@@ -99,6 +113,13 @@ const links = [
 
   .nav__list a:hover {
     color: var(--brand-ink);
+  }
+
+  /* Weight as well as colour, so the current section is not carried by hue
+     alone — the same rule the category filter follows (C3). */
+  .nav__list a[aria-current='page'] {
+    color: var(--ink);
+    font-weight: 600;
   }
 
   .nav__menu {

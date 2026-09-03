@@ -40,6 +40,7 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+
 /* The constellation canvas is `position: fixed; z-index: 0`, and positioned
    elements paint above normal-flow inline content. Without these two rules the
    dot network draws over the page text rather than behind it. Nav already

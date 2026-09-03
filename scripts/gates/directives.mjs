@@ -75,7 +75,14 @@ for (const { slug, file } of await listPosts(POSTS)) {
   }
   checkedPosts++;
 
-  const bodyMatch = /<article[^>]*>([\s\S]*?)<\/article>/.exec(html);
+  // GREEDY, to the LAST </article>. The post is the outermost <article> on the
+  // page, and since 2026-09-03 it can contain more: a `:::card` renders an
+  // <article> of its own, because that is what a self-contained composition is.
+  // With a non-greedy match the body ended at the first card's closing tag, so
+  // this gate silently read a fraction of the page and reported every directive
+  // below the first card as "lost between source and page" — a false failure
+  // that looks exactly like the real one it exists to catch.
+  const bodyMatch = /<article[^>]*>([\s\S]*)<\/article>/.exec(html);
   const body = bodyMatch ? bodyMatch[1] : html;
   const prose = body.replace(/<h1[^>]*>[\s\S]*?<\/h1>/, '').replace(/<[^>]+>/g, '').trim();
   if (prose.length === 0) {

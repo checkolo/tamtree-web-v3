@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import '../../brand/prose.css';
 import { getCollection, render } from 'astro:content';
 import { category as lookup, categoryHref } from '../../lib/categories';
 
@@ -25,17 +26,23 @@ const cat = lookup(post.data.category);
 >
   <article class="post">
     <div class="wrap">
-      {/* The category is a route now, so the eyebrow is a way back to it rather
-          than a label of the slug. */}
-      <p class="eyebrow"><a href={categoryHref(post.data.category)}>{cat.label}</a></p>
-      <h1>{post.data.title}</h1>
-      <p class="post__meta">
-        <time datetime={published.toISOString()}>
-          {published.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-        </time>
-      </p>
-      <div class="post__body">
-        <Content />
+      {/* The reading sheet. The constellation is back behind the blog, and a
+          moving dot-network directly under body copy is what made a post hard
+          to read — so the words sit on an opaque surface and the network stays
+          visible around it, framing the page instead of competing with it. */}
+      <div class="post__sheet">
+        {/* The category is a route now, so the eyebrow is a way back to it
+            rather than a label of the slug. */}
+        <p class="eyebrow"><a href={categoryHref(post.data.category)}>{cat.label}</a></p>
+        <h1>{post.data.title}</h1>
+        <p class="post__meta">
+          <time datetime={published.toISOString()}>
+            {published.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </time>
+        </p>
+        <div class="post__body">
+          <Content />
+        </div>
       </div>
     </div>
   </article>
@@ -44,6 +51,20 @@ const cat = lookup(post.data.category);
 <style>
   .post {
     padding-block: var(--sec-y);
+  }
+
+  /* Opaque, deliberately. The constellation is a backdrop for the blog, not a
+     texture under the paragraphs: --page is the token every solid surface is
+     measured against, so this is the same ground the site uses everywhere the
+     eye has to rest. */
+  .post__sheet {
+    max-width: 820px;
+    margin-inline: auto;
+    padding: 56px 64px 68px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--page);
+    box-shadow: var(--card-shadow);
   }
 
   .eyebrow a {
@@ -57,12 +78,14 @@ const cat = lookup(post.data.category);
 
   h1 {
     margin-top: 14px;
-    font-size: clamp(34px, 5vw, 62px);
-    max-width: 18ch;
+    font-size: clamp(32px, 4.4vw, 52px);
+    max-width: 20ch;
   }
 
   .post__meta {
     margin-top: 18px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--line);
     font-family: var(--mono);
     font-size: 12.5px;
     letter-spacing: 0.08em;
@@ -72,35 +95,101 @@ const cat = lookup(post.data.category);
   /* Long-form measure. Everything the Markdown pipeline emits lands here, so
      this is where the reading rhythm is set rather than in each directive. */
   .post__body {
-    margin-top: 44px;
-    max-width: 68ch;
+    margin-top: 36px;
     font-size: 17px;
     line-height: 1.7;
     color: var(--ink-2);
   }
 
-  .post__body :global(p),
-  .post__body :global(ul),
-  .post__body :global(ol),
-  .post__body :global(table),
-  .post__body :global(tt-callout),
-  .post__body :global(tt-ledger),
-  .post__body :global(tt-steps),
-  .post__body :global(tt-stat),
-  .post__body :global(.expressive-code) {
-    display: block;
+  /* Direct children only.
+     These rules used to match at any depth, which meant they also reached the
+     <p> inside a callout and the <h3> a card generates — a class selector beats
+     prose.css's element selectors, so the components silently lost their own
+     spacing and type scale to the page's. The child combinator keeps this
+     owning the rhythm of the post's own blocks and nothing nested inside a
+     directive, which owns its own. */
+  .post__body > :global(p),
+  .post__body > :global(ul),
+  .post__body > :global(ol),
+  .post__body > :global(blockquote),
+  .post__body > :global(.expressive-code) {
     margin-block: 22px;
   }
 
-  .post__body :global(h2) {
+  .post__body > :global(h2) {
     margin-block: 44px 14px;
     font-size: 30px;
+    line-height: 1.2;
     color: var(--ink);
   }
 
-  .post__body :global(h3) {
+  .post__body > :global(h3) {
     margin-block: 32px 12px;
     font-size: 22px;
+    line-height: 1.25;
     color: var(--ink);
+  }
+
+  /* A bare Markdown table, outside :::ledger. It gets the same treatment as a
+     ledger rather than browser defaults — a post should not look broken because
+     the author wrote a plain table. */
+  .post__body > :global(table) {
+    width: 100%;
+    margin-block: 30px;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  .post__body > :global(table) :global(th),
+  .post__body > :global(table) :global(td) {
+    padding: 12px 14px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .post__body > :global(table) :global(th) {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+
+  /* Links in prose are underlined. Colour alone would not distinguish them for
+     a reader who cannot see the hue (C3), and body copy is exactly where that
+     matters most. */
+  .post__body :global(a) {
+    color: var(--brand-ink);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  /* …except a button, which is unmistakably a control already. */
+  .post__body :global(tt-button a) {
+    text-decoration: none;
+  }
+
+  .post__body :global(strong) { color: var(--ink); }
+
+  .post__body :global(blockquote) {
+    margin-inline: 0;
+    padding-left: 22px;
+    border-left: 3px solid var(--brand);
+    color: var(--ink-3);
+    font-size: 1.03em;
+  }
+
+  @media (max-width: 860px) {
+    .post__sheet {
+      padding: 34px 24px 44px;
+      border-radius: 16px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .post__body { font-size: 16px; }
+    .post__body > :global(h2) { margin-block: 34px 12px; font-size: 25px; }
+    .post__body > :global(h3) { font-size: 19px; }
   }
 </style>

@@ -1,0 +1,328 @@
+/* The directive vocabulary, rendered.
+ *
+ * Every selector here targets a `<tt-*>` custom element emitted by
+ * src/plugins/directives.mjs. There is no JavaScript behind any of them: an
+ * unknown element is an inline HTMLUnknownElement with no default styling, so
+ * `display: block` and a ruleset is the whole of "implementing" one.
+ *
+ * Two rules govern the file:
+ *
+ *   1. **The semantic element inside does the work.** A callout's <aside>, a
+ *      ledger's <table>, a card's <article> and <h3> are all real HTML. These
+ *      styles decorate; strip them and the document still says what it means.
+ *      That is C2, and it is why nothing here uses ::before to inject content
+ *      that carries meaning — a severity word or a figure painted by CSS is
+ *      absent from the .md corpus, from find-in-page and from a screen reader.
+ *
+ *   2. **Colour is never the only signal.** Each callout severity has a label
+ *      and a distinct left rule as well as a hue (C3, and axe's contrast rule).
+ */
+
+/* ── callouts ───────────────────────────────────────────────────────────── */
+
+tt-callout {
+  display: block;
+  margin: 30px 0;
+}
+
+tt-callout > aside {
+  position: relative;
+  padding: 20px 24px 20px 22px;
+  border: 1px solid var(--cal-line);
+  border-left: 3px solid var(--cal-edge);
+  border-radius: 12px;
+  background: var(--cal-bg);
+}
+
+/* The severity, as text. A reader who cannot see the hue still gets the word,
+   and an extractor pulling the .md gets it too because it is in the source
+   nowhere — so it is added here as a generated label that is explicitly
+   decorative, with the severity ALSO carried by the border and the hue.
+   The word itself is redundant to the prose, never load-bearing: a callout
+   whose meaning depends on reading "Warning" is a callout written wrong. */
+tt-callout > aside::before {
+  content: var(--cal-word);
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cal-edge);
+}
+
+tt-callout > aside > :first-child { margin-top: 0; }
+tt-callout > aside > :last-child { margin-bottom: 0; }
+
+tt-callout[kind='note'] {
+  --cal-word: 'Note';
+  --cal-edge: var(--compose-ink);
+  --cal-line: color-mix(in srgb, var(--compose) 30%, transparent);
+  --cal-bg: color-mix(in srgb, var(--compose) 7%, transparent);
+}
+
+tt-callout[kind='tip'] {
+  --cal-word: 'Tip';
+  --cal-edge: var(--good-ink);
+  --cal-line: color-mix(in srgb, var(--good) 30%, transparent);
+  --cal-bg: color-mix(in srgb, var(--good) 7%, transparent);
+}
+
+tt-callout[kind='warn'] {
+  --cal-word: 'Warning';
+  --cal-edge: var(--warn-ink);
+  --cal-line: color-mix(in srgb, var(--warn) 38%, transparent);
+  --cal-bg: color-mix(in srgb, var(--warn) 9%, transparent);
+}
+
+tt-callout[kind='error'] {
+  --cal-word: 'Error';
+  --cal-edge: var(--danger-ink);
+  --cal-line: color-mix(in srgb, var(--danger) 38%, transparent);
+  --cal-bg: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+
+/* ── aside ──────────────────────────────────────────────────────────────── */
+
+tt-aside {
+  display: block;
+  margin: 34px 0;
+}
+
+tt-aside > aside {
+  padding: 4px 0 4px 22px;
+  border-left: 2px solid var(--line-2);
+  color: var(--ink-3);
+  font-size: 0.96em;
+}
+
+tt-aside > aside > :first-child { margin-top: 0; }
+tt-aside > aside > :last-child { margin-bottom: 0; }
+
+/* ── steps ──────────────────────────────────────────────────────────────── */
+
+tt-steps {
+  display: block;
+  margin: 30px 0;
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+tt-steps > ol,
+tt-steps > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: 16px;
+}
+
+tt-steps > ol > li,
+tt-steps > ul > li {
+  position: relative;
+  padding-left: 42px;
+  counter-increment: step;
+}
+
+/* The numeral is decorative here: an <ol> already carries the enumeration, and
+   a screen reader announces "1 of 3" from the list itself. Painting it would
+   duplicate that, so it is marked aria-hidden by being CSS-generated content
+   on a list that already numbers itself. An <ul> under :::steps gets a dot. */
+tt-steps > ol > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--brand) 45%, transparent);
+  background: color-mix(in srgb, var(--brand) 10%, transparent);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--brand-ink);
+}
+
+tt-steps > ul > li::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+
+tt-steps li > :first-child { margin-top: 0; }
+tt-steps li > :last-child { margin-bottom: 0; }
+
+/* ── tables: ledger and compare ─────────────────────────────────────────── */
+
+/* Both wrap a real <table>. The scroll container is on the custom element so a
+   wide table scrolls itself instead of the page — the one responsive failure
+   that makes a post unreadable on a phone rather than merely awkward. */
+tt-ledger,
+tt-compare {
+  display: block;
+  margin: 32px 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+tt-ledger > table,
+tt-compare > table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+tt-ledger th,
+tt-compare th {
+  padding: 13px 18px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 3.5%, transparent);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  /* --ink-2, not --ink-3. Measured against the header's own ground (--surface
+     with 3.5% --ink mixed in, #eeeae5) --ink-3 lands at 4.21:1 — under AA's
+     4.5:1 for an 11px label, and caught by gate:axe on three posts at once.
+     --ink-2 is 8.65:1 on the same ground. */
+  color: var(--ink-2);
+}
+
+tt-ledger td,
+tt-compare td {
+  padding: 14px 18px;
+  vertical-align: top;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+  color: var(--ink-2);
+}
+
+tt-ledger tr:last-child td,
+tt-compare tr:last-child td { border-bottom: 0; }
+
+/* The row label carries the question being compared, so it reads as a header
+   even though Markdown cannot mark it up as one. */
+tt-compare td:first-child {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* A comparison is worth nothing if the reader cannot tell which column is which
+   at a glance, and worth less than nothing if the styling flatters one column.
+   Every column gets the same treatment; only the first is emphasised, because
+   it names the row. */
+tt-compare th:first-child { min-width: 190px; }
+
+/* ── stat ───────────────────────────────────────────────────────────────── */
+
+tt-stat {
+  display: block;
+  margin: 34px 0;
+  padding: 26px 28px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink-3);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+tt-stat > strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--display, var(--body));
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* ── cards ──────────────────────────────────────────────────────────────── */
+
+tt-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin: 34px 0;
+}
+
+tt-card { display: block; }
+
+tt-card > article {
+  height: 100%;
+  padding: 24px 24px 22px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--card-edge, var(--line-2));
+  border-radius: 14px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+}
+
+tt-card h3 {
+  margin: 0 0 10px;
+  font-size: 19px;
+  line-height: 1.25;
+}
+
+tt-card h3 a { color: inherit; text-decoration: none; }
+tt-card h3 a:hover { color: var(--brand-ink); }
+
+tt-card p {
+  margin: 0 0 10px;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+tt-card > article > :last-child { margin-bottom: 0; }
+
+tt-card[tone='brand'] { --card-edge: var(--brand); }
+tt-card[tone='compose'] { --card-edge: var(--compose); }
+tt-card[tone='good'] { --card-edge: var(--good); }
+tt-card[tone='warn'] { --card-edge: var(--warn); }
+tt-card[tone='danger'] { --card-edge: var(--danger); }
+
+/* ── button ─────────────────────────────────────────────────────────────── */
+
+/* One Markdown link, rendered loudly. The anchor itself is given `.btn
+   .btn--primary` by the resolver, so everything about how it looks lives in
+   base.css with every other button — this only owns the block's rhythm. */
+tt-button {
+  display: block;
+  margin: 30px 0;
+}
+
+tt-button > p { margin: 0; }
+
+@media (max-width: 700px) {
+  tt-callout > aside { padding: 17px 18px 17px 17px; }
+  tt-steps { padding: 20px 18px; }
+  tt-steps > ol > li,
+  tt-steps > ul > li { padding-left: 38px; }
+  tt-stat { padding: 20px 20px; }
+  tt-stat > strong { font-size: 33px; }
+  tt-ledger > table,
+  tt-compare > table { font-size: 14px; }
+  tt-ledger th, tt-compare th,
+  tt-ledger td, tt-compare td { padding: 11px 14px; }
+  tt-cards { grid-template-columns: 1fr; gap: 14px; }
+  tt-card > article { padding: 20px; }
+}

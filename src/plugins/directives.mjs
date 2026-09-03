@@ -32,8 +32,31 @@ const VOCABULARY = {
   note: { kind: 'container', element: 'tt-callout', wrap: 'aside', fixed: { kind: 'note' } },
   warn: { kind: 'container', element: 'tt-callout', wrap: 'aside', fixed: { kind: 'warn' } },
   tip: { kind: 'container', element: 'tt-callout', wrap: 'aside', fixed: { kind: 'tip' } },
+  // A fourth severity, added 2026-09-03. `warn` is "this will bite you";
+  // `error` is "this is broken". Collapsing the two costs the reader the
+  // distinction that tells them whether to keep reading or stop and fix.
+  error: { kind: 'container', element: 'tt-callout', wrap: 'aside', fixed: { kind: 'error' } },
 
   aside: { kind: 'container', element: 'tt-aside', wrap: 'aside' },
+
+  // Cards, added 2026-09-03. `cards` is the grid and may contain nothing but
+  // `card`s; a card is a self-contained composition, which is what <article>
+  // means, and `title` becomes a real heading rather than a styled first line.
+  cards: { kind: 'container', element: 'tt-cards', wrap: null, expect: 'cards' },
+  card: {
+    kind: 'container',
+    element: 'tt-card',
+    wrap: 'article',
+    attrs: ['title', 'href', 'tone'],
+    require: ['title'],
+  },
+
+  // A button, added 2026-09-03 — and deliberately not a leaf directive.
+  // ::button{href=… label=…} would put the destination and the words in
+  // attributes, where the raw .md shows a reader machinery instead of a link.
+  // C1 says the markdown IS the artifact, so a button is written as an ordinary
+  // Markdown link and the directive only says "render this one loudly".
+  button: { kind: 'container', element: 'tt-button', wrap: null, expect: 'paragraph' },
 
   steps: { kind: 'container', element: 'tt-steps', wrap: null, expect: 'list' },
   ledger: { kind: 'container', element: 'tt-ledger', wrap: null, expect: 'table' },
@@ -94,9 +117,59 @@ function resolve(node, ctx, kind) {
     if (attributes[key] != null) hProperties[key] = attributes[key];
   }
 
-  // Leaf directives have no block content to keep semantic — the element is
-  // rendered wholly by its component in Phase 4, from its attributes.
   if (kind === 'leaf') {
+    ctx.setProperty(node, 'data', { hName: spec.element, hProperties });
+
+    // `stat` is rendered here rather than by CSS. `content: attr(value)` would
+    // paint the number without putting it in the document: it would be missing
+    // from the .md-to-text extraction C4 depends on, from find-in-page, and
+    // from a screen reader. The figure is the whole point of the block, so it
+    // is real text — <strong> for the number, plain text for what it counts.
+    if (node.name === 'stat') {
+      ctx.setProperty(node, 'children', [
+        { type: 'strong', children: [{ type: 'text', value: attributes.value }] },
+        { type: 'text', value: ` ${attributes.label}` },
+      ]);
+    }
+    return;
+  }
+
+  if (spec.expect === 'cards') {
+    // A grid that can contain anything is not a grid, it is a div. Children are
+    // checked whichever order the traversal reached them in: an unresolved card
+    // is still a containerDirective named "card", a resolved one has already
+    // become the <tt-card> wrapper.
+    const children = node.children ?? [];
+    const isCard = (c) =>
+      (c.type === 'containerDirective' && c.name === 'card') || c.data?.hName === 'tt-card';
+
+    // Two, not one — and the reason is a silent failure, not tidiness.
+    // Directive fences nest by LENGTH: `:::cards` is closed by the first `:::`
+    // it meets, which is the closing fence of the FIRST card. Everything after
+    // that lands outside the grid and a stray ":::" renders as a paragraph.
+    // The build stays green and the page quietly loses most of its cards.
+    // A grid of one is never what an author meant, so requiring two turns that
+    // exact mistake into a build failure that says what to do about it.
+    if (children.length < 2) {
+      fail(
+        node,
+        ctx,
+        `"cards" holds ${children.length === 1 ? 'a single card' : 'nothing'}. A grid needs at ` +
+          `least two — and if you wrote more than one, the outer fence is the problem: nested ` +
+          `directives need a LONGER fence, so open the grid with "::::cards" and close it with ` +
+          `"::::". With ":::cards" the first card's ":::" closes the grid and the rest of the ` +
+          `cards fall outside it. For a single card, use ":::card" on its own.`
+      );
+    }
+    const stray = children.find((c) => !isCard(c));
+    if (stray) {
+      fail(
+        node,
+        ctx,
+        `"cards" may contain only ":::card" blocks — found a ${stray.type}. Prose between ` +
+          `cards belongs above or below the grid, where it can be read in the .md too.`
+      );
+    }
     ctx.setProperty(node, 'data', { hName: spec.element, hProperties });
     return;
   }
@@ -137,8 +210,59 @@ function resolve(node, ctx, kind) {
           `The custom element wraps real semantic HTML; it does not replace it.`
       );
     }
+
+    // A button is one link, loudly. Anything else in the paragraph would be
+    // painted as part of the control and lost to anyone reading the source.
+    if (node.name === 'button') {
+      const inline = (only.children ?? []).filter(
+        (c) => !(c.type === 'text' && !c.value.trim())
+      );
+      if (inline.length !== 1 || inline[0].type !== 'link') {
+        fail(
+          node,
+          ctx,
+          `"button" must contain exactly one Markdown link and nothing else — write it as ` +
+            `[Label](/destination/). It renders as a button; it stays a plain link in the .md, ` +
+            `which is the artifact (C1).`
+        );
+      }
+
+      // The link becomes the site's own button rather than a lookalike. Copying
+      // .btn--primary's rules into prose.css would fork them: the next change to
+      // the button forgets the copy, and — more concretely — gate:axe's excusal
+      // of the white-on-ember label is written against `.btn--primary`, so a
+      // lookalike would fail the gate for a colour pair the owner has already
+      // decided on. One class, one source of truth, one exemption.
+      const link = inline[0];
+      ctx.setProperty(link, 'data', {
+        ...(link.data ?? {}),
+        hProperties: { className: ['btn', 'btn--primary'] },
+      });
+    }
     ctx.setProperty(node, 'data', { hName: spec.element, hProperties });
     return;
+  }
+
+  // A card's title becomes a real heading inside the article, not a styled
+  // first line and not a lone attribute on the custom element. An attribute is
+  // invisible to the document outline and to anything that strips <tt-*>; a
+  // heading is the thing that makes an <article> self-contained. h3 because a
+  // card sits inside a post's h2 sections — see C3 on not skipping levels.
+  if (node.name === 'card') {
+    const label = { type: 'text', value: attributes.title };
+    ctx.setProperty(node, 'children', [
+      {
+        type: 'heading',
+        depth: 3,
+        children: attributes.href
+          ? [{ type: 'link', url: attributes.href, children: [label] }]
+          : [label],
+      },
+      ...(node.children ?? []),
+    ]);
+    // The title is now in the document; leaving it duplicated in an attribute
+    // would give an extractor two copies of it and gate:copy two hits.
+    delete hProperties.title;
   }
 
   // Content is prose, so the semantic element is ours to add: the directive
