@@ -22,6 +22,11 @@
  *     fixed-seed PRNG rather than Math.random, so frame zero is identical run
  *     to run at a given viewport size. Only the drift is unrepeatable.
  *
+ * Pointer response: on a fine pointer the particles lean toward where the
+ * cursor is heading (its position plus its own velocity), on a bounded
+ * per-frame pull that never touches their base velocity. Touch and reduced
+ * motion get none of it.
+ *
  * Colours live in tokens.css as --net-* channel triples; this reads them at
  * runtime and re-reads on a theme change, so the palette is stated in one place.
  */
@@ -61,12 +66,65 @@
     const DOT_R = 2.1;
     const LINE_W = 1.2;
 
-    type Particle = { x: number; y: number; vx: number; vy: number };
+    /* ── pointer response ──────────────────────────────────────────────────
+       Particles lean toward where the pointer is HEADING, not where it is: the
+       target is the cursor plus its own recent velocity, so the network opens
+       ahead of the movement rather than trailing it.
+
+       It is bounded twice over, deliberately. The pull never touches vx/vy, so
+       it cannot accumulate into speed — nothing here can make the network fast.
+       And it lands on a spring-loaded OFFSET rather than on the position, so it
+       cannot accumulate into shape either: let go and the particles return to
+       the drift they were always on. Both matter. A pull applied straight to
+       position is unbounded in the one direction nobody checks — a cursor
+       parked in one spot slowly harvests the whole field into a clump that
+       never disperses. */
+    /** How far ahead of the cursor to aim, in frames of its own velocity. */
+    const LEAD = 9;
+    /** Nothing further than this from the target is touched at all. */
+    const POINTER_R = 260;
+    /** Per-frame pull, px, added to a particle's OFFSET rather than to its
+        position. Paired with RETURN below it settles at pull/(1-RETURN) ≈ 33px
+        at the centre of the field, and less as the falloff bites. */
+    const POINTER_PULL = 2.0;
+    /** How much of the lean survives each frame. This is the restoring force,
+        and it is the reason the lean is a lean: a pull applied straight to
+        position has nothing pulling back, so a cursor parked in one place
+        gathers particles there permanently and never returns them. The offset
+        decays to nothing in under a second once the field moves away. */
+    const RETURN = 0.94;
+    /** Ramp rate for the influence envelope, per frame. Low on purpose: the
+        network should ease toward the cursor over about a second, not snap. */
+    const FADE_IN = 0.045;
+    const FADE_OUT = 0.02;
+
+    /**
+     * `x,y` is the particle's own drifting position and the pointer never
+     * touches it. `ox,oy` is the lean — a spring-loaded offset — and `rx,ry`
+     * is where the particle is actually drawn. Keeping the three separate is
+     * what makes the interaction non-destructive: the network the reader came
+     * back to is the one they left.
+     */
+    type Particle = {
+      x: number; y: number;
+      vx: number; vy: number;
+      ox: number; oy: number;
+      rx: number; ry: number;
+    };
 
     let W = 0;
     let H = 0;
     let particles: Particle[] = [];
     let frame = 0;
+
+    /* Pointer velocity is measured per FRAME, not per pointermove event:
+       pointermove fires irregularly (and in bursts on a trackpad), so
+       differencing inside the handler makes the lead jitter. Sampling the
+       position once per frame also means a stationary cursor decays its own
+       velocity to zero for free, and the lean settles onto the cursor. */
+    const pointer = { x: 0, y: 0, px: 0, py: 0, vx: 0, vy: 0, on: false };
+    /** 0-1 envelope, so the network eases in and out rather than snapping. */
+    let influence = 0;
 
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -110,7 +168,17 @@
         y: random() * H,
         vx: (random() - 0.5) * SPEED,
         vy: (random() - 0.5) * SPEED,
+        ox: 0,
+        oy: 0,
+        rx: 0,
+        ry: 0,
       }));
+      // Rendered position must be valid before the first draw — the
+      // reduced-motion path draws without ever running step().
+      for (const p of particles) {
+        p.rx = p.x;
+        p.ry = p.y;
+      }
     }
 
     /* ── sizing ────────────────────────────────────────────────────────────
@@ -130,22 +198,25 @@
     function draw() {
       ctx.clearRect(0, 0, W, H);
 
-      // Lines first, so the dots sit on top of their own connections.
+      // Lines first, so the dots sit on top of their own connections. Both
+      // loops read the RENDERED position, so the lean makes connections form
+      // and break as the network gathers — which is most of what reads as a
+      // response to the cursor.
       ctx.lineWidth = LINE_W;
       for (let i = 0; i < particles.length; i++) {
         const a = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
           const b = particles[j];
-          const dx = a.x - b.x;
-          const dy = a.y - b.y;
+          const dx = a.rx - b.rx;
+          const dy = a.ry - b.ry;
           const d2 = dx * dx + dy * dy;
           // Compared squared, so the sqrt is only paid by pairs that connect.
           if (d2 >= D * D) continue;
           const d = Math.sqrt(d2);
           ctx.strokeStyle = `rgb(${lineRGB} / ${lineA * (1 - d / D)})`;
           ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
+          ctx.moveTo(a.rx, a.ry);
+          ctx.lineTo(b.rx, b.ry);
           ctx.stroke();
         }
       }
@@ -153,18 +224,60 @@
       ctx.fillStyle = dotFill;
       for (const p of particles) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, DOT_R, 0, Math.PI * 2);
+        ctx.arc(p.rx, p.ry, DOT_R, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
     function step() {
+      // Smoothed pointer velocity, then the point it is heading for.
+      pointer.vx += (pointer.x - pointer.px - pointer.vx) * 0.18;
+      pointer.vy += (pointer.y - pointer.py - pointer.vy) * 0.18;
+      pointer.px = pointer.x;
+      pointer.py = pointer.y;
+
+      const target = pointer.on ? 1 : 0;
+      influence += (target - influence) * (target ? FADE_IN : FADE_OUT);
+
+      const tx = pointer.x + pointer.vx * LEAD;
+      const ty = pointer.y + pointer.vy * LEAD;
+      // Below this the pull is sub-pixel for every particle; skip the whole
+      // distance pass rather than paying for it on a page nobody is touching.
+      const leaning = influence > 0.004;
+
       for (const p of particles) {
         p.x += p.vx;
         p.y += p.vy;
+
+        if (leaning) {
+          const dx = tx - p.x;
+          const dy = ty - p.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < POINTER_R * POINTER_R && d2 > 1) {
+            const d = Math.sqrt(d2);
+            // Linear falloff. Squared was tried first and is wrong here: it
+            // collapses to a quarter strength at half the radius, so only the
+            // handful of particles nearly under the cursor moved at all and
+            // the effect read as noise. Linear spreads the lean across the
+            // whole field, which is what makes it legible as a response.
+            const f = (1 - d / POINTER_R) * POINTER_PULL * influence;
+            p.ox += (dx / d) * f;
+            p.oy += (dy / d) * f;
+          }
+        }
+
+        p.ox *= RETURN;
+        p.oy *= RETURN;
+        p.rx = p.x + p.ox;
+        p.ry = p.y + p.oy;
+
+        // Bounce reads the particle's OWN position, which the pointer never
+        // moved — so the lean can never push anything permanently out of
+        // bounds, and the drift is unchanged by any of this.
         if (p.x < 0 || p.x > W) p.vx = -p.vx;
         if (p.y < 0 || p.y > H) p.vy = -p.vy;
       }
+
       draw();
       frame = requestAnimationFrame(step);
     }
@@ -195,6 +308,43 @@
       }, 150);
     });
 
+    /* Fine pointers only. A touch screen has no hover: every "move" is the
+       start of a tap or a scroll, so the network would lurch at the moment the
+       reader is trying to read. `pointer: fine` is the honest test for "there
+       is a cursor to follow" — better than a width breakpoint, which says
+       nothing about the input device. */
+    if (matchMedia('(pointer: fine)').matches) {
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          // Reduced motion draws one still frame and never enters step(), so
+          // there is nothing for a pointer to lean. Bail before storing state.
+          if (reduced.matches || e.pointerType !== 'mouse') return;
+          if (!pointer.on) {
+            // First contact: seed the previous sample at the same place, or the
+            // first frame reads the whole jump from 0,0 as velocity and the
+            // network lunges off-screen.
+            pointer.px = e.clientX;
+            pointer.py = e.clientY;
+            pointer.vx = 0;
+            pointer.vy = 0;
+            pointer.on = true;
+          }
+          pointer.x = e.clientX;
+          pointer.y = e.clientY;
+        },
+        { passive: true }
+      );
+
+      // Cursor gone, or the window lost focus: release, and let the envelope
+      // carry the network back to its own drift.
+      const release = () => {
+        pointer.on = false;
+      };
+      document.addEventListener('pointerleave', release);
+      window.addEventListener('blur', release);
+    }
+
     // The theme toggle sets data-theme on <html>; with no stored choice the
     // attribute never appears and the media query decides. Watch both rather
     // than coupling to the toggle's internals.
@@ -213,8 +363,12 @@
     // A hidden tab should not be animating. rAF already throttles hard when
     // backgrounded, but stopping outright is the honest version of "calm".
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) stop();
-      else run();
+      if (document.hidden) {
+        pointer.on = false;
+        stop();
+      } else {
+        run();
+      }
     });
 
     readPalette();
