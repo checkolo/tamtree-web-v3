@@ -38,6 +38,25 @@ header, so accept what it detects and change nothing.
 
 Confirm the **Production Branch** is `main`.
 
+**Why each header block exists** (`vercel.json`'s schema rejects `//` comment
+keys inside a header entry, so the rationale lives here instead):
+
+- `/blog/:slug/` → `Link: </blog/:slug.md>; rel="alternate"`. Astro's
+  `output: 'static'` writes files, not response headers, so this RFC 8288
+  pointer to the markdown sibling is host configuration and can only live
+  here — without it, the sibling `.md` is undiscoverable to anything that
+  doesn't already know the convention.
+- `/(.*).md` → served as `text/markdown` so a fetch renders as source rather
+  than downloading, and `noindex` since the `.md` is a sibling of the real
+  page, not a second page to rank.
+- `/(llms|llms-full).txt` → `text/plain`, deliberately crawlable — these
+  exist to be read by machines.
+- `/(.*)` → the CSP's `form-action` allows `buttondown.email` because the
+  waitlist form POSTs there directly (no runtime or database of ours sits
+  between); `style-src 'unsafe-inline'` is for Expressive Code, which sets
+  per-token colours as style attributes; `script-src` does **not** allow
+  inline — the site ships no inline script beyond the pre-paint theme block.
+
 ### 2. Nothing to authenticate — the content repo is public
 
 `tamtree-ai/blog` is a public repo, so `scripts/content/sync.mjs` clones it
