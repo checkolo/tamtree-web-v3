@@ -7,10 +7,15 @@ import { z } from 'zod';
 import { CATEGORY_SLUGS } from './lib/categories';
 
 /**
- * Posts live in `content/`, which is a git submodule (`tamtree-blog-content`)
- * so a writer can clone a repo of nothing but Markdown. The loader treats it as
- * an ordinary directory, so local dev against a plain checkout is identical to
- * CI against the submodule.
+ * Posts live in `content/`, a separate repo (`tamtree-blog-content`) so a writer
+ * can clone nothing but Markdown. It is *not* a submodule: a submodule pins a
+ * SHA here, so publishing a post would need a pointer bump committed to this
+ * repo. `scripts/content/sync.mjs` clones it at HEAD before every build
+ * instead, and pushing to the content repo triggers that build.
+ *
+ * The loader neither knows nor cares — `content/` is an ordinary directory by
+ * the time Astro looks at it, which is what keeps local dev against a plain
+ * checkout identical to CI.
  */
 const posts = defineCollection({
   loader: glob({ base: './content/posts', pattern: '**/*.md' }),

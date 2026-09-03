@@ -1,5 +1,12 @@
 node_modules/
 dist/
+
+# Blog content is a separate repo (tamtree-blog-content), fetched at build time
+# by scripts/content/sync.mjs rather than pinned as a submodule — a submodule
+# records a SHA, so publishing a post would need a pointer bump committed here.
+# The whole point is that it does not.
+content/
+
 .astro/
 .vercel/
 shots/

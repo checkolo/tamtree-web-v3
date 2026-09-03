@@ -8,8 +8,9 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
+    "dev": "pnpm content:sync && astro dev",
+    "build": "pnpm content:sync && astro build",
+    "content:sync": "node scripts/content/sync.mjs",
     "preview": "astro preview --port 4330",
     "check": "astro check",
     "serve": "node scripts/serve.mjs",
