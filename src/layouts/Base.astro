@@ -15,10 +15,17 @@ interface Props {
   description: string;
   /** Absolute path of a machine-readable sibling, when one exists (C1/C4). */
   markdownHref?: string;
+  /**
+   * Site-root path of the share image. `twitter:card` has always claimed
+   * `summary_large_image` here; until something fills this in, that claim is a
+   * promise of a picture that does not exist and the card renders as a bare
+   * link. A post with a hero passes its built src.
+   */
+  image?: string;
   bodyClass?: string;
 }
 
-const { title, description, markdownHref, bodyClass } = Astro.props;
+const { title, description, markdownHref, bodyClass, image } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
 ---
@@ -41,7 +48,8 @@ const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
     <meta property="og:title" content={full} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary_large_image" />
+    {image && <meta property="og:image" content={new URL(image, Astro.site).href} />}
+    <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

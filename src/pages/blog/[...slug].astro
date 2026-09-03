@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import '../../brand/prose.css';
+import { Image, getImage } from 'astro:assets';
 import { getCollection, render } from 'astro:content';
 import { category as lookup, categoryHref } from '../../lib/categories';
 
@@ -17,12 +18,25 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const published = post.data.publishDate;
 const cat = lookup(post.data.category);
+
+/**
+ * The hero, twice: once for the page and once for the share card.
+ *
+ * The card gets JPEG rather than the WebP the page uses. WebP is the right
+ * format to send a browser and the wrong one to hand a social crawler — several
+ * still refuse it and fall back to no image at all, which is exactly the empty
+ * card `twitter:card` was promising before this existed. 1200px is the width
+ * every card spec asks for.
+ */
+const { hero, heroAlt } = post.data;
+const share = hero ? await getImage({ src: hero, width: 1200, format: 'jpeg' }) : null;
 ---
 
 <Base
   title={post.data.title}
   description={post.data.description}
   markdownHref={`/blog/${post.id}.md`}
+  image={share?.src}
 >
   <article class="post">
     <div class="wrap">
@@ -40,6 +54,19 @@ const cat = lookup(post.data.category);
             {published.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
           </time>
         </p>
+        {
+          hero && (
+            <Image
+              class="post__hero"
+              src={hero}
+              alt={heroAlt ?? ''}
+              widths={[640, 960, 1280]}
+              sizes="(max-width: 860px) 92vw, 700px"
+              loading="eager"
+            />
+          )
+        }
+
         <div class="post__body">
           <Content />
         </div>
@@ -90,6 +117,20 @@ const cat = lookup(post.data.category);
     font-size: 12.5px;
     letter-spacing: 0.08em;
     color: var(--ink-4);
+  }
+
+  /* The hero sits under the meta rule, not above the title. A picture before
+     the headline pushes the one thing the reader came for below the fold, and
+     the eyebrow/title/date block is what tells them they are in the right
+     place. */
+  .post__hero {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: 34px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--field-bg);
   }
 
   /* Long-form measure. Everything the Markdown pipeline emits lands here, so

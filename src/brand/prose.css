@@ -312,6 +312,61 @@ tt-button {
 
 tt-button > p { margin: 0; }
 
+/* ── images and figures ─────────────────────────────────────────────────── */
+
+/* One look for every picture in a post, whether it was written as a bare
+   `![alt](…)` or wrapped in `:::figure`. The bare-image selector is the one
+   rule in this file that is not about a directive, and it is here on purpose:
+   splitting "how an image looks" across two stylesheets is how a captioned
+   picture and an uncaptioned one end up with different corners.
+
+   Astro's pipeline emits real `width`/`height` attributes for a relative image,
+   so `height: auto` beside `max-width` is what keeps the intrinsic ratio while
+   the picture shrinks — without it the attributes fight the box and the image
+   squashes on a narrow screen. */
+.post__body img,
+tt-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--field-bg);
+}
+
+.post__body > p > img {
+  margin-inline: auto;
+}
+
+tt-figure {
+  display: block;
+  margin: 34px 0;
+}
+
+tt-figure > figure {
+  margin: 0;
+}
+
+tt-figure figcaption {
+  margin-top: 12px;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+}
+
+/* A caption is not a heading, and the rule under the picture is what says so —
+   it groups the words with the image above rather than the paragraph below,
+   which is the job the whitespace alone does badly at reading size. */
+tt-figure figcaption::before {
+  content: '';
+  display: block;
+  width: 34px;
+  height: 2px;
+  margin-bottom: 11px;
+  border-radius: 1px;
+  background: var(--brand);
+}
+
 @media (max-width: 700px) {
   tt-callout > aside { padding: 17px 18px 17px 17px; }
   tt-steps { padding: 20px 18px; }
@@ -325,4 +380,6 @@ tt-button > p { margin: 0; }
   tt-ledger td, tt-compare td { padding: 11px 14px; }
   tt-cards { grid-template-columns: 1fr; gap: 14px; }
   tt-card > article { padding: 20px; }
+  tt-figure { margin: 24px 0; }
+  tt-figure figcaption { font-size: 13.5px; }
 }

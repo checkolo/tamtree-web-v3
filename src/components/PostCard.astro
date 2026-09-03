@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { category, categoryHref } from '../lib/categories';
 import { readingMinutes, type Post } from '../lib/posts';
 
@@ -16,7 +17,7 @@ interface Props {
   post: Post;
 }
 const { post } = Astro.props;
-const { title, description, publishDate, category: slug } = post.data;
+const { title, description, publishDate, category: slug, hero, heroAlt } = post.data;
 const cat = category(slug);
 const mins = readingMinutes(post.body);
 const iso = publishDate.toISOString();
@@ -27,7 +28,24 @@ const shown = publishDate.toLocaleDateString('en-GB', {
 });
 ---
 
-<article class="pcard">
+<article class:list={['pcard', hero && 'pcard--hero']}>
+  {
+    hero && (
+      /* Decorative here, and `alt=""` says so. The picture is *repeating* the
+         title and description directly beneath it; announcing heroAlt as well
+         would make a screen reader read the same post three times over. The
+         real description lives on the post page, where the image is content. */
+      <Image
+        class="pcard__thumb"
+        src={hero}
+        alt=""
+        widths={[420, 720]}
+        sizes="(max-width: 700px) 92vw, 380px"
+        loading="lazy"
+      />
+    )
+  }
+
   <div class="pcard__meta">
     <a class:list={['pcard__cat', `pcard__cat--${cat.tone}`]} href={categoryHref(slug)}>
       {cat.label}
@@ -60,10 +78,25 @@ const shown = publishDate.toLocaleDateString('en-GB', {
     flex-direction: column;
     gap: 16px;
     padding: 30px;
+    overflow: hidden;
     border-radius: 20px;
     background: var(--card-bg);
     border: 1px solid var(--line);
     box-shadow: var(--card-shadow);
+  }
+
+  /* Pulled out to the card's edges: the padding is the reading margin for the
+     text, and a photo inset by 30px on three sides reads as a mistake. The
+     negative margins are the whole trick, and `overflow: hidden` on the card is
+     what keeps the top corners with the border radius. */
+  .pcard__thumb {
+    display: block;
+    width: calc(100% + 60px);
+    height: 180px;
+    margin: -30px -30px 4px;
+    object-fit: cover;
+    border-bottom: 1px solid var(--line);
+    background: var(--field-bg);
   }
 
   .pcard__meta {
@@ -157,6 +190,7 @@ const shown = publishDate.toLocaleDateString('en-GB', {
 
   @media (max-width: 700px) {
     .pcard { padding: 22px; gap: 14px; }
+    .pcard__thumb { width: calc(100% + 44px); height: 150px; margin: -22px -22px 2px; }
     .pcard__title { font-size: 20px; }
     .pcard__desc { font-size: 15.5px; }
     .pcard__foot { padding-top: 12px; }

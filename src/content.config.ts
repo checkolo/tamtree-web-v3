@@ -34,7 +34,24 @@ const posts = defineCollection({
       heroAlt: z.string().optional(),
       draft: z.boolean().default(false),
       featured: z.boolean().default(false),
-    }),
+    })
+      /**
+       * A hero without alt text is a build failure, not a warning.
+       *
+       * `heroAlt` cannot simply be required — it is meaningless without a hero
+       * — and it cannot be defaulted, because every default anyone would reach
+       * for ("", the title) is worse than nothing: an empty alt is valid HTML
+       * meaning *decorative, skip me*, and the title repeats what the screen
+       * reader just read. So the pair is validated together, which is the only
+       * place the "hero set, alt missing" state is visible at all.
+       */
+      .refine((d) => !d.hero || (d.heroAlt ?? '').trim().length > 0, {
+        path: ['heroAlt'],
+        message:
+          'heroAlt is required when hero is set — describe what the image shows. ' +
+          'An empty alt tells a screen reader to skip the image; the title tells it ' +
+          'the same thing twice.',
+      }),
 });
 
 const authors = defineCollection({

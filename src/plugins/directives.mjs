@@ -51,6 +51,13 @@ const VOCABULARY = {
     require: ['title'],
   },
 
+  // A captioned image, added 2026-09-03. Plain `![alt](src)` already works and
+  // stays the right way to drop a picture into a paragraph; what Markdown
+  // cannot express is the *association* between a picture and its caption.
+  // <figure>/<figcaption> is exactly that association, and it is the reason
+  // this directive exists rather than a styled paragraph under the image.
+  figure: { kind: 'container', element: 'tt-figure', wrap: 'figure', expect: 'figure' },
+
   // A button, added 2026-09-03 — and deliberately not a leaf directive.
   // ::button{href=… label=…} would put the destination and the words in
   // attributes, where the raw .md shows a reader machinery instead of a link.
@@ -243,6 +250,52 @@ function resolve(node, ctx, kind) {
     return;
   }
 
+  // A figure is an image and, optionally, the caption that belongs to it. The
+  // image is hoisted out of its paragraph: <figure><p><img></p></figure> is
+  // legal but puts a text block's margins around a picture, and the <p> carries
+  // no meaning here — the <figure> is already the container.
+  if (node.name === 'figure') {
+    const children = node.children ?? [];
+    const head = children[0];
+    const inline =
+      head?.type === 'paragraph'
+        ? (head.children ?? []).filter((c) => !(c.type === 'text' && !c.value.trim()))
+        : [];
+
+    if (inline.length !== 1 || inline[0].type !== 'image') {
+      fail(
+        node,
+        ctx,
+        `"figure" must open with a single Markdown image — write it as ![Alt text](../images/…). ` +
+          `Everything about the picture stays ordinary Markdown; the directive only says that ` +
+          `the paragraph under it is its caption.`
+      );
+    }
+    if (children.length > 2) {
+      fail(
+        node,
+        ctx,
+        `"figure" holds an image and at most one caption paragraph — got ${children.length} ` +
+          `blocks. A caption that needs two paragraphs is prose, and prose belongs under the ` +
+          `figure where it can be read in the .md as prose.`
+      );
+    }
+    const caption = children[1];
+    if (caption && caption.type !== 'paragraph') {
+      fail(node, ctx, `"figure"'s caption must be a paragraph — got a ${caption.type}.`);
+    }
+
+    const parts = [inline[0]];
+    if (caption) {
+      // <figcaption> is the whole point: it is what ties the words to the
+      // picture for a screen reader, which a styled paragraph underneath does
+      // not do however small the type is.
+      ctx.setProperty(caption, 'data', { ...(caption.data ?? {}), hName: 'figcaption' });
+      parts.push(caption);
+    }
+    ctx.setProperty(node, 'children', parts);
+  }
+
   // A card's title becomes a real heading inside the article, not a styled
   // first line and not a lone attribute on the custom element. An attribute is
   // invisible to the document outline and to anything that strips <tt-*>; a
@@ -286,6 +339,30 @@ export function ttDirectives() {
 
     leafDirective(node, ctx) {
       resolve(node, ctx, 'leaf');
+    },
+
+    /**
+     * Alt text is not optional, and this is the only place it can be made
+     * mandatory before the page exists.
+     *
+     * gate:axe reads the built HTML and would catch a missing `alt` attribute —
+     * but `![](x.png)` emits `alt=""`, which is *valid* HTML meaning "this
+     * picture is decorative, skip it". A blog image is never decorative, so the
+     * gate sees nothing wrong and the reader on a screen reader gets silence.
+     * The only moment the distinction is still visible is here, in the source,
+     * where an empty alt is a person who did not write one.
+     */
+    image(node, ctx) {
+      if (!node.alt || !node.alt.trim()) {
+        fail(
+          node,
+          ctx,
+          `image "${node.url}" has no alt text. Write what the picture shows — ` +
+            `![The run ledger after a retry](../images/ledger.png). An empty alt is valid HTML ` +
+            `that means "decorative, ignore me", so no gate downstream can tell it apart from ` +
+            `one you meant.`
+        );
+      }
     },
 
     textDirective(node, ctx) {
