@@ -7,7 +7,7 @@ subdomain, and no edge rewrite stitching two sites together.
 | Repo | Holds | Triggers a deploy? |
 |---|---|---|
 | `checkolo/tamtree-web-v3` | The Astro site — every page, component, style and gate | Yes, on push to `main` (Vercel's own git integration) |
-| `checkolo/tamtree-blog-content` | Markdown posts, authors, images — nothing else | Yes, on push to `main`, via a deploy hook |
+| `tamtree-ai/blog` | Markdown posts, authors, images — nothing else. Public, read-only to the world | Yes, on push to `main`, via a deploy hook |
 
 `/blog/` is therefore an ordinary part of the site, not an integration. It
 shares the origin, so the theme toggle survives navigating between the homepage
@@ -38,27 +38,27 @@ header, so accept what it detects and change nothing.
 
 Confirm the **Production Branch** is `main`.
 
-### 2. Give the build read access to the content repo
+### 2. Nothing to authenticate — the content repo is public
 
-The content repo is private, so the build must authenticate to clone it.
+`tamtree-ai/blog` is a public repo, so `scripts/content/sync.mjs` clones it
+over a plain `https://` URL with no credential. No Vercel environment variable
+is required for this step.
 
-Create a GitHub token with **read-only access to `checkolo/tamtree-blog-content`
-and nothing else** — a fine-grained personal access token with `Contents: Read`,
-or a machine user's token if you prefer the access not to be tied to a person.
-
-In Vercel → the project → **Settings → Environment Variables**, add:
-
-| Name | Value | Environments |
-|---|---|---|
-| `TT_CONTENT_TOKEN` | the token | Production, Preview, Development |
+Public means **readable, not writable** — GitHub does not grant outsiders push
+access just because a repo can be cloned. Only org members/collaborators with
+Write can push, and the org's default repository permission is `read`. The
+trade-off worth knowing: since the repo is public, unpublished (`draft: true`)
+posts are readable by anyone who looks at the repo directly, even though they
+never render on the site.
 
 Two optional overrides exist and should normally be left unset:
-`TT_CONTENT_REPO` (default `github.com/checkolo/tamtree-blog-content.git`) and
-`TT_CONTENT_REF` (default `main`). Point `TT_CONTENT_REF` at a branch if you ever
-want a preview deploy to build against draft content.
+`TT_CONTENT_REPO` (default `github.com/tamtree-ai/blog.git`) and
+`TT_CONTENT_REF` (default `main`). Point `TT_CONTENT_REF` at a branch if you
+ever want a preview deploy to build against draft content.
 
-> Without this variable the build **fails**, loudly and on purpose. A missing
-> token must not produce a green deploy of a blog with no posts in it.
+A `TT_CONTENT_TOKEN` environment variable is still supported as an escape
+hatch (e.g. cloning a private fork for a sensitive preview), but is not needed
+for the normal public-repo path.
 
 ### 3. Create the deploy hook
 
@@ -72,7 +72,7 @@ trigger builds.
 
 ### 4. Give the content repo that hook
 
-GitHub → `checkolo/tamtree-blog-content` → **Settings → Secrets and variables →
+GitHub → `tamtree-ai/blog` → **Settings → Secrets and variables →
 Actions → New repository secret**.
 
 - Name: `VERCEL_DEPLOY_HOOK`
@@ -107,7 +107,7 @@ Then check the build log for the sync line, which names the exact content commit
 the site was built from:
 
 ```
-content sync: github.com/checkolo/tamtree-blog-content.git@main → 7cd0156 (2026-09-03)
+content sync: github.com/tamtree-ai/blog.git@main → 7cd0156 (2026-09-03)
 ```
 
 That line is the answer to "which version of the content is live?", and it is
@@ -119,7 +119,7 @@ worth knowing where to find it before you need it.
 |---|---|
 | Action fails, "VERCEL_DEPLOY_HOOK is not set" | Step 4 not done |
 | Action green, no Vercel build | Hook was deleted or points at another project — recreate it (steps 3–4) |
-| Build fails, "content sync FAILED" | `TT_CONTENT_TOKEN` missing, expired, or lacking read access to the content repo |
+| Build fails, "content sync FAILED" | Network/GitHub outage, or `tamtree-ai/blog` was made private without setting `TT_CONTENT_TOKEN` |
 | Post pushed but not on the site | It is `draft: true`; drafts never ship to production |
 | Build fails on an unknown directive | The vocabulary is closed. The error names the line and lists the valid names |
 | Build fails, `gate:links` | A post links to a page that does not exist yet |

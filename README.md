@@ -4,7 +4,7 @@ The Tamtree marketing site — Astro 7, static output, zero JavaScript on the
 critical path. This repo is the **build**; the plan it is built from lives in
 `~/sites/agent-orchestrator/changes/2026-09-01-tamtree-web2-implementation/`.
 
-Blog **content** lives in a second repo, `checkolo/tamtree-blog-content`, which
+Blog **content** lives in a second repo, `tamtree-ai/blog`, which
 this build clones into `content/` before every run. One site, one domain, one
 deploy — **[DEPLOYMENT.md](DEPLOYMENT.md)** is how to configure it, and is what
 you want if you are setting up Vercel.

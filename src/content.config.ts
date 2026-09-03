@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { CATEGORY_SLUGS } from './lib/categories';
 
 /**
- * Posts live in `content/`, a separate repo (`tamtree-blog-content`) so a writer
+ * Posts live in `content/`, a separate repo (`tamtree-ai/blog`) so a writer
  * can clone nothing but Markdown. It is *not* a submodule: a submodule pins a
  * SHA here, so publishing a post would need a pointer bump committed to this
  * repo. `scripts/content/sync.mjs` clones it at HEAD before every build
