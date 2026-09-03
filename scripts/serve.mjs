@@ -4,7 +4,10 @@ import { readFile, stat } from 'node:fs/promises';
 import { join, extname, normalize } from 'node:path';
 
 const root = new URL('../dist', import.meta.url).pathname;
-const port = Number(process.env.PORT ?? 4321);
+// 4330, NOT 4321: 4321 belongs to `astro dev`. A static server squatting on
+// the dev port is the one way to make hot reload look dead. Gates pass their
+// own port to start() and are unaffected.
+const port = Number(process.env.PORT ?? 4330);
 
 const types = {
   '.html': 'text/html; charset=utf-8',

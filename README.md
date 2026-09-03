@@ -28,9 +28,18 @@ straight to Buttondown's public embed endpoint, and no key is read at build time
 ```sh
 pnpm dev        # http://localhost:4321, hot reload
 pnpm build      # → dist/
-pnpm preview    # serve the built dist/ the way Astro will
+pnpm preview    # serve the built dist/ on :4330, the way Astro will
 pnpm check      # astro check — types + template diagnostics
 ```
+
+**Develop against `pnpm dev`, not against a build.** Every source edit —
+`.astro`, CSS, content — reaches the browser without `pnpm build`. If a page
+seems to need a rebuild to change, you are almost certainly looking at built
+output rather than the dev server: check that `astro dev` is the process on
+4321 (`lsof -nP -iTCP:4321 -sTCP:LISTEN`) and that the tab is not on `dist/`
+over `file://`. `dev` now holds 4321 with `strictPort`, so a collision fails
+loudly instead of moving the dev server to a port nobody has open; `preview`,
+`serve` and the gates all live on 4322+.
 
 `pnpm dev` shows drafts; a production build hides them. To include them in a
 build, put `TT_INCLUDE_DRAFTS=1` in a `.env` file — it is read through

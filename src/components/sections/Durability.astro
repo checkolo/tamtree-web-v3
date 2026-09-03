@@ -35,26 +35,28 @@ import Chip from '../Chip.astro';
     </div>
 
     <figure class="rv durability__figure">
-      <span class="durability__watermark" aria-hidden="true">$0.00</span>
-
       <p class="durability__clock" aria-hidden="true">
         <span class="is-start">FRI 18:04</span><span>SAT</span><span>SUN</span><span>MON 09:12</span>
       </p>
 
-      <div class="durability__track">
-        <div class="grow durability__phase durability__phase--run"></div>
-        <div class="grow durability__phase durability__phase--sleep">
-          <span class="durability__pulse" aria-hidden="true"></span>
-          <span class="durability__asleep">asleep · zero compute · $0.00</span>
-          <span class="durability__pulse durability__pulse--late" aria-hidden="true"></span>
+      <div class="durability__bar">
+        <div class="durability__track">
+          <div class="grow durability__phase durability__phase--run"></div>
+          <div class="grow durability__phase durability__phase--sleep">
+            <span class="durability__pulse" aria-hidden="true"></span>
+            <span class="durability__asleep">asleep · zero compute · $0.00</span>
+            <span class="durability__pulse durability__pulse--late" aria-hidden="true"></span>
+          </div>
+          <div class="grow durability__phase durability__phase--resume"></div>
         </div>
-        <div class="grow durability__phase durability__phase--resume"></div>
+
+        <p class="durability__labels">
+          <span class="is-start">running · step 7</span>
+          <span class="is-end">resumed · nothing lost</span>
+        </p>
       </div>
 
-      <p class="durability__labels">
-        <span class="is-start">running · step 7</span>
-        <span class="is-end">resumed · nothing lost</span>
-      </p>
+      <span class="durability__watermark" aria-hidden="true">$0.00</span>
 
       <ul class="durability__chips">
         <li><Chip>process crashed</Chip></li>
@@ -117,18 +119,21 @@ import Chip from '../Chip.astro';
     margin: 78px 0 0;
   }
 
+  /* Under the bar rather than behind it (owner call, 2026-09-03). Sitting
+     centred over the track it was both illegible at 13% and fighting the
+     timeline for the same pixels; below it, it reads as the figure's payoff
+     line and can carry real contrast. */
   .durability__watermark {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
+    margin: 20px 0 0;
+    text-align: center;
     pointer-events: none;
     font-family: var(--display);
-    font-size: 190px;
+    font-size: 124px;
     font-weight: 800;
+    line-height: 1;
     letter-spacing: -0.06em;
-    color: color-mix(in srgb, var(--live) 13%, transparent);
+    color: color-mix(in srgb, var(--live) 46%, transparent);
   }
 
   .durability__clock {
@@ -200,13 +205,14 @@ import Chip from '../Chip.astro';
     color: var(--ink-3);
   }
 
-  /* Mobile's position is the DOM position; desktop overlays it on the track. */
+  .durability__bar { position: relative; }
+
+  /* Mobile's position is the DOM position; desktop overlays it on the track.
+     Anchored to the bar wrapper rather than measured up from the figure's
+     bottom edge, so adding anything below the track cannot shift it. */
   .durability__labels {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 84px;
-    height: 86px;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -246,10 +252,8 @@ import Chip from '../Chip.astro';
     .durability__figure { margin-top: 50px; }
 
     .durability__watermark {
-      inset: 28px 0 auto;
-      height: 78px;
-      font-size: 104px;
-      color: color-mix(in srgb, var(--live) 14%, transparent);
+      margin-top: 16px;
+      font-size: 76px;
     }
 
     .durability__clock {

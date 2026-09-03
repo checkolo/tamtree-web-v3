@@ -47,6 +47,19 @@ export default defineConfig({
     sitemap(),
   ],
 
+  /**
+   * `strictPort` is the point of this block, not the port number.
+   *
+   * Without it, a `pnpm preview` or `pnpm serve` already holding 4321 makes
+   * `astro dev` step quietly onto 4322 — and the tab left open at
+   * localhost:4321 then shows a STATIC BUILD that never reloads, which reads
+   * exactly like "HMR is broken" while the dev server is happily hot-reloading
+   * on a port nobody is looking at. 4322 is also the screenshots gate's port,
+   * so the drift lands on a second collision. Fail on the first one instead.
+   */
+  server: { port: 4321, host: true },
+  vite: { server: { strictPort: true } },
+
   build: {
     // `/blog/<slug>.md` siblings (C1) are emitted as real files, so directory
     // -style page output must not swallow the extension.

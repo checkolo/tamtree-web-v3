@@ -36,11 +36,15 @@ import Eyebrow from '../Eyebrow.astro';
     </div>
 
     <figure class="rv primitives__figure">
-      <div class="primitives__card">
+      <div class="primitives__card" id="tt-primitives-card" data-mode="crew">
         <div class="primitives__head">
-          <div class="primitives__modes">
-            <span>pipeline mode</span>
-            <span class="is-active">crew mode</span>
+          <div class="primitives__modes" role="group" aria-label="Run mode">
+            <button class="primitives__mode" type="button" data-mode="pipeline" aria-pressed="false">
+              pipeline mode
+            </button>
+            <button class="primitives__mode" type="button" data-mode="crew" aria-pressed="true">
+              crew mode
+            </button>
           </div>
           <span class="primitives__label">SAME RUN, DIFFERENT BRAIN</span>
         </div>
@@ -53,7 +57,20 @@ import Eyebrow from '../Eyebrow.astro';
 
           <span class="conn primitives__conn" aria-hidden="true"><span class="pip"></span></span>
 
-          <div class="primitives__crew">
+          <div class="primitives__middle primitives__pipe">
+            <span class="primitives__tag">step = pipeline</span>
+            <div class="node primitives__subnode">
+              <span class="node__title">enrich records</span>
+              <p class="node__meta">deterministic</p>
+            </div>
+            <span class="conn conn--v primitives__subconn" aria-hidden="true"><span class="pip"></span></span>
+            <div class="node primitives__subnode">
+              <span class="node__title">validate</span>
+              <p class="node__meta">same order, every run</p>
+            </div>
+          </div>
+
+          <div class="primitives__middle primitives__crew">
             <span class="primitives__tag">step = crew</span>
             <svg viewBox="0 0 262 212" role="img">
               <title>A crew: a lead agent at the centre with four members, one of them active.</title>
@@ -77,8 +94,9 @@ import Eyebrow from '../Eyebrow.astro';
         </div>
       </div>
       <figcaption class="visually-hidden">
-        The same run with a deterministic step either side of a step that is itself a crew — a
-        lead agent delegating to four members.
+        The same run with a deterministic step either side of a middle step that switches between
+        two brains: in pipeline mode a fixed pair of deterministic sub-steps, in crew mode a lead
+        agent delegating to four members.
       </figcaption>
     </figure>
   </div>
@@ -158,18 +176,42 @@ import Eyebrow from '../Eyebrow.astro';
     width: max-content;
   }
 
-  .primitives__modes span {
+  .primitives__mode {
     padding: 8px 16px;
+    border: 0;
     border-radius: var(--r-pill);
+    background: transparent;
     font-family: var(--mono);
     font-size: 11.5px;
     color: var(--brand-ink);
+    cursor: pointer;
+    transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
   }
 
-  .primitives__modes .is-active {
+  .primitives__mode:hover {
+    background: color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  .primitives__mode:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  /* The selected mode is driven by aria-pressed, so the paint cannot drift
+     from what a screen reader is told. */
+  .primitives__mode[aria-pressed='true'] {
+    font-weight: 700;
+    cursor: default;
+  }
+
+  .primitives__mode[data-mode='crew'][aria-pressed='true'] {
     background: var(--compose);
     color: #1e1035;
-    font-weight: 700;
+  }
+
+  .primitives__mode[data-mode='pipeline'][aria-pressed='true'] {
+    background: var(--brand);
+    color: #160a02;
   }
 
   .primitives__label {
@@ -193,14 +235,49 @@ import Eyebrow from '../Eyebrow.astro';
 
   .primitives__conn { width: 40px; }
 
-  .primitives__crew {
+  /* Both middles are laid out identically and one is hidden, so the flow's
+     width does not jump when the mode changes. `display: none` rather than
+     visibility: the hidden one must be out of the accessibility tree too. */
+  .primitives__middle {
     position: relative;
     width: 262px;
     height: 212px;
     border-radius: 18px;
+    flex: none;
+  }
+
+  .primitives__crew {
     border: 1px dashed color-mix(in srgb, var(--compose-ink) 50%, transparent);
     background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--compose) 16%, transparent), transparent 68%);
-    flex: none;
+  }
+
+  .primitives__pipe {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    border: 1px dashed color-mix(in srgb, var(--brand) 55%, transparent);
+    background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--brand) 13%, transparent), transparent 68%);
+  }
+
+  .primitives__subnode {
+    width: 186px;
+    padding: 11px 14px;
+    border-color: color-mix(in srgb, var(--brand) 42%, transparent);
+  }
+
+  .primitives__pipe .primitives__tag {
+    border-color: color-mix(in srgb, var(--brand) 55%, transparent);
+    color: var(--brand-ink);
+  }
+
+  /* `:not(pipeline)` rather than `[data-mode='crew']` so that a missing or
+     unknown attribute — the no-JS case included — falls back to the crew
+     middle the artboards draw, never to no middle at all. */
+  .primitives__card:not([data-mode='pipeline']) .primitives__pipe,
+  .primitives__card[data-mode='pipeline'] .primitives__crew {
+    display: none;
   }
 
   .primitives__crew svg {
@@ -283,7 +360,7 @@ import Eyebrow from '../Eyebrow.astro';
       animation-name: flow-y-sm;
     }
 
-    .primitives__crew { width: 100%; height: 200px; }
+    .primitives__middle { width: 100%; height: 200px; }
     .primitives__tag { left: 14px; font-size: 9.5px; }
   }
 
@@ -294,3 +371,24 @@ import Eyebrow from '../Eyebrow.astro';
     100% { top: 26px; opacity: 0; }
   }
 </style>
+
+<script>
+  // Progressive enhancement: without this the card stays in crew mode and the
+  // buttons are inert, which is the artboard's own state — nothing is lost,
+  // only the switch.
+  const card = document.getElementById('tt-primitives-card');
+  const modes = card?.querySelectorAll<HTMLButtonElement>('.primitives__mode');
+
+  if (card && modes) {
+    for (const button of modes) {
+      button.addEventListener('click', () => {
+        const mode = button.dataset.mode;
+        if (!mode || card.dataset.mode === mode) return;
+        card.dataset.mode = mode;
+        for (const other of modes) {
+          other.setAttribute('aria-pressed', String(other.dataset.mode === mode));
+        }
+      });
+    }
+  }
+</script>

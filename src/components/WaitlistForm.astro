@@ -231,7 +231,13 @@ const frameId = `${id}-sink`;
   @media (max-width: 700px) {
     .wl { width: 100%; }
 
-    .wl__row {
+    /* `.wl--lg .wl__row` above is (0,2,0); a media query adds no specificity,
+       so a bare `.wl__row` here loses to it and the stacked rows keep the
+       desktop 60px/52px height — which crushes the submit button to a sliver.
+       The size selectors are repeated so the stacked height actually wins. */
+    .wl__row,
+    .wl--lg .wl__row,
+    .wl--md .wl__row {
       height: auto;
       flex-direction: column;
       align-items: stretch;
@@ -248,6 +254,7 @@ const frameId = `${id}-sink`;
 
     .wl__row :global(.btn) {
       width: 100%;
+      flex: none;
     }
 
     /* The finale keeps its field a pill on mobile and drops the button below
