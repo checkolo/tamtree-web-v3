@@ -4,6 +4,7 @@ import { glob } from 'astro/loaders';
 // real package, which is a direct dependency so the schema and the validator
 // cannot drift to different majors.
 import { z } from 'zod';
+import { CATEGORY_SLUGS } from './lib/categories';
 
 /**
  * Posts live in `content/`, which is a git submodule (`tamtree-blog-content`)
@@ -19,7 +20,9 @@ const posts = defineCollection({
       description: z.string().min(40).max(300),
       publishDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
-      category: z.string(),
+      // Closed, because a category is a route. See lib/categories.ts for why
+      // this is an enum and tags are not.
+      category: z.enum(CATEGORY_SLUGS),
       tags: z.array(z.string()).default([]),
       author: reference('authors'),
       hero: image().optional(),

@@ -1,0 +1,72 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Eyebrow from '../../../components/Eyebrow.astro';
+import CategoryFilter from '../../../components/CategoryFilter.astro';
+import PostGrid from '../../../components/PostGrid.astro';
+import { CATEGORIES, type CategorySlug } from '../../../lib/categories';
+import { publishedPosts } from '../../../lib/posts';
+
+/**
+ * A category page per entry in CATEGORIES — every one of them, whether or not a
+ * post uses it yet. Building only the categories that currently have posts would
+ * make the filter on /blog/ lie: a chip pointing at a 404 is worse than a chip
+ * pointing at an honest empty state, which is what PostGrid renders.
+ */
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { category: c.slug }, props: { cat: c } }));
+}
+
+type Category = (typeof CATEGORIES)[number];
+interface Props {
+  cat: Category;
+}
+const { cat } = Astro.props;
+
+const posts = (await publishedPosts()).filter((p) => p.data.category === cat.slug);
+---
+
+<Base title={`${cat.label} — Writing`} description={cat.blurb}>
+  <section class="sec cat-head">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="wrap">
+      <Eyebrow>Writing</Eyebrow>
+      <h1>{cat.label}</h1>
+      <p class="cat-head__lede">{cat.blurb}</p>
+      <CategoryFilter current={cat.slug as CategorySlug} />
+    </div>
+  </section>
+
+  <section class="sec cat-list">
+    <div class="wrap">
+      <h2 class="visually-hidden">{cat.label} posts</h2>
+      <PostGrid posts={posts} label={`${cat.label} posts`} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cat-head { padding: 96px 0 0; }
+
+  h1 {
+    margin: 20px 0 0;
+    font-size: 64px;
+    font-weight: 700;
+  }
+
+  .cat-head__lede {
+    margin: 22px 0 34px;
+    max-width: 620px;
+    font-size: 18px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  .cat-list { padding: 48px 0 110px; }
+
+  @media (max-width: 700px) {
+    .cat-head { padding: 52px 0 0; }
+    h1 { margin-top: 16px; font-size: 38px; }
+    .cat-head__lede { margin: 18px 0 24px; font-size: 16px; line-height: 1.64; }
+    .cat-list { padding: 26px 0 72px; }
+  }
+</style>

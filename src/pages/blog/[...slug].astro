@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { getCollection, render } from 'astro:content';
+import { category as lookup, categoryHref } from '../../lib/categories';
 
 export async function getStaticPaths() {
   // Drafts are visible in dev, and in a build made with TT_INCLUDE_DRAFTS=1 —
@@ -14,6 +15,7 @@ export async function getStaticPaths() {
 const { post } = Astro.props;
 const { Content } = await render(post);
 const published = post.data.publishDate;
+const cat = lookup(post.data.category);
 ---
 
 <Base
@@ -23,7 +25,9 @@ const published = post.data.publishDate;
 >
   <article class="post">
     <div class="wrap">
-      <p class="eyebrow">{post.data.category}</p>
+      {/* The category is a route now, so the eyebrow is a way back to it rather
+          than a label of the slug. */}
+      <p class="eyebrow"><a href={categoryHref(post.data.category)}>{cat.label}</a></p>
       <h1>{post.data.title}</h1>
       <p class="post__meta">
         <time datetime={published.toISOString()}>
@@ -40,6 +44,15 @@ const published = post.data.publishDate;
 <style>
   .post {
     padding-block: var(--sec-y);
+  }
+
+  .eyebrow a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .eyebrow a:hover {
+    color: var(--brand-ink);
   }
 
   h1 {

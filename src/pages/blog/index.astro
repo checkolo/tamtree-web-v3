@@ -1,0 +1,296 @@
+---
+import Base from '../../layouts/Base.astro';
+import Eyebrow from '../../components/Eyebrow.astro';
+import Button from '../../components/Button.astro';
+import Chip from '../../components/Chip.astro';
+import CategoryFilter from '../../components/CategoryFilter.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import { category, categoryHref } from '../../lib/categories';
+import { lead, publishedPosts, readingMinutes } from '../../lib/posts';
+
+const posts = await publishedPosts();
+const featured = lead(posts);
+const rest = featured ? posts.filter((p) => p.id !== featured.post.id) : posts;
+
+const fm = featured?.post.data;
+const fmCat = fm ? category(fm.category) : null;
+---
+
+<Base
+  title="Writing"
+  description="Notes from building a durable agent runtime — written for the people who will have to operate one. Every post ships its markdown source."
+>
+  <section class="sec blog-head">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="blog-head__wash" aria-hidden="true"></div>
+    <div class="wrap blog-head__inner">
+      <Eyebrow>Writing</Eyebrow>
+      <h1>Notes from inside a run.</h1>
+      <p class="blog-head__lede">
+        What we learned building a runtime that has to survive its own failures — written for
+        the people who will have to operate one.
+        <strong>Every post ships its markdown source.</strong>
+      </p>
+      <CategoryFilter />
+    </div>
+  </section>
+
+  {
+    featured && fm && fmCat && (
+      <section class="sec blog-lead">
+        <div class="wrap">
+          <article class="blog-lead__card">
+            <div class="blog-lead__body">
+              <div class="blog-lead__meta">
+                <Chip tone="brand" size="sm">
+                  {featured.reason === 'featured' ? 'Featured' : 'Latest'}
+                </Chip>
+                <a
+                  class:list={['blog-lead__cat', `blog-lead__cat--${fmCat.tone}`]}
+                  href={categoryHref(fm.category)}
+                >
+                  {fmCat.label}
+                </a>
+                <span class="blog-lead__sep" aria-hidden="true" />
+                <span class="blog-lead__mins">{readingMinutes(featured.post.body)} min</span>
+              </div>
+
+              <h2 class="blog-lead__title">
+                <a href={`/blog/${featured.post.id}/`}>{fm.title}</a>
+              </h2>
+
+              <p class="blog-lead__desc">{fm.description}</p>
+
+              <div class="blog-lead__actions">
+                <Button href={`/blog/${featured.post.id}/`}>Read the post</Button>
+                <a class="blog-lead__md" href={`/blog/${featured.post.id}.md`}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false">
+                    <path d="M12 3v12M7 10l5 5 5-5M4 20h16" />
+                  </svg>
+                  .md source
+                </a>
+              </div>
+            </div>
+
+            {/* The front matter of the post itself. C1 says the markdown is the
+                artifact; showing it beats asserting it. Decorative — the same
+                facts are all in the copy beside it. */}
+            <div class="blog-lead__fm" aria-hidden="true">
+              <div class="blog-lead__fmbar">
+                <span class="blog-lead__fmdot"></span>
+                <span>{featured.post.id}.md</span>
+              </div>
+              <div class="blog-lead__fmbody">
+                <div class="blog-lead__fmrule">---</div>
+                <div><span>title:</span> <em>"{fm.title}"</em></div>
+                <div><span>publishDate:</span> <em>{fm.publishDate.toISOString().slice(0, 10)}</em></div>
+                <div><span>category:</span> <em>{fm.category}</em></div>
+                <div><span>author:</span> <em>{fm.author.id}</em></div>
+                <div class="blog-lead__fmrule">---</div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="sec blog-list">
+    <div class="wrap">
+      <h2 class="visually-hidden">All posts</h2>
+      <PostGrid posts={rest} label="Posts" />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .blog-head { padding: 96px 0 0; }
+
+  .blog-head__inner { position: relative; }
+
+  .blog-head__wash {
+    position: absolute;
+    width: 900px;
+    height: 380px;
+    left: -160px;
+    top: -90px;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--brand) 15%, transparent),
+      transparent 68%
+    );
+  }
+
+  h1 {
+    margin: 20px 0 0;
+    max-width: 900px;
+    font-size: 76px;
+    font-weight: 700;
+  }
+
+  .blog-head__lede {
+    margin: 26px 0 38px;
+    max-width: 660px;
+    font-size: 19px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  .blog-head__lede strong {
+    color: var(--brand-ink);
+    font-weight: 600;
+  }
+
+  .blog-lead { padding: 52px 0 0; }
+
+  .blog-lead__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 56px;
+    align-items: center;
+    padding: 44px;
+    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  .blog-lead__body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .blog-lead__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .blog-lead__cat {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .blog-lead__cat--brand { color: var(--brand-ink); }
+  .blog-lead__cat--compose { color: var(--compose-ink); }
+  .blog-lead__cat--good { color: var(--good-ink); }
+
+  .blog-lead__sep {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--line-2);
+    flex: none;
+  }
+
+  .blog-lead__mins {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-4);
+  }
+
+  .blog-lead__title {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1.04;
+  }
+
+  .blog-lead__title a { color: var(--ink); text-decoration: none; }
+  .blog-lead__title a:hover { color: var(--brand-ink); }
+
+  .blog-lead__desc {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  .blog-lead__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 6px;
+  }
+
+  .blog-lead__md {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+
+  .blog-lead__md:hover { color: var(--brand-ink); }
+
+  .blog-lead__fm {
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--field-bg);
+    overflow: hidden;
+  }
+
+  .blog-lead__fmbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+
+  .blog-lead__fmdot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brand);
+    flex: none;
+  }
+
+  .blog-lead__fmbody {
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.85;
+    color: var(--compose-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .blog-lead__fmbody em { font-style: normal; color: var(--ink-2); }
+  .blog-lead__fmrule { color: var(--ink-4); }
+
+  .blog-list { padding: 56px 0 110px; }
+
+  @media (max-width: 1000px) {
+    .blog-lead__card { grid-template-columns: 1fr; gap: 28px; }
+  }
+
+  @media (max-width: 700px) {
+    .blog-head { padding: 52px 0 0; }
+    .blog-head__wash { width: 460px; height: 280px; left: -120px; top: -70px; }
+    h1 { margin-top: 16px; font-size: 42px; }
+    .blog-head__lede { margin: 20px 0 26px; font-size: 16px; line-height: 1.64; }
+
+    .blog-lead { padding: 34px 0 0; }
+    .blog-lead__card { padding: 24px; gap: 18px; }
+    .blog-lead__body { gap: 18px; }
+    .blog-lead__meta { flex-wrap: wrap; gap: 9px; }
+    .blog-lead__title { font-size: 31px; line-height: 1.06; }
+    .blog-lead__desc { font-size: 16px; line-height: 1.64; }
+    .blog-lead__actions { flex-direction: column; align-items: stretch; }
+    .blog-lead__fmbody, .blog-lead__fmbar { font-size: 11px; }
+
+    .blog-list { padding: 28px 0 72px; }
+  }
+</style>

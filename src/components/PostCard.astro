@@ -1,0 +1,164 @@
+---
+import { category, categoryHref } from '../lib/categories';
+import { readingMinutes, type Post } from '../lib/posts';
+
+/**
+ * One post in the index grid.
+ *
+ * The whole card is not a link. The artboard draws a card with a "Read" affordance
+ * in its footer, and wrapping the lot in an `<a>` would put the category link
+ * inside it — a nested anchor, which is invalid and which browsers recover from
+ * unpredictably. Instead the title carries the link and a `::after` overlay
+ * stretches its hit area across the card, so a pointer gets the whole card and
+ * a screen reader gets one link with the title as its name.
+ */
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const { title, description, publishDate, category: slug } = post.data;
+const cat = category(slug);
+const mins = readingMinutes(post.body);
+const iso = publishDate.toISOString();
+const shown = publishDate.toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
+---
+
+<article class="pcard">
+  <div class="pcard__meta">
+    <a class:list={['pcard__cat', `pcard__cat--${cat.tone}`]} href={categoryHref(slug)}>
+      {cat.label}
+    </a>
+    <span class="pcard__sep" aria-hidden="true"></span>
+    <span class="pcard__mins">{mins} min</span>
+  </div>
+
+  <h3 class="pcard__title">
+    <a href={`/blog/${post.id}/`}>{title}</a>
+  </h3>
+
+  <p class="pcard__desc">{description}</p>
+
+  <div class="pcard__foot">
+    <time datetime={iso}>{shown}</time>
+    <span class="pcard__read" aria-hidden="true">
+      Read
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <path d="M5 12h13M13 6l6 6-6 6"></path>
+      </svg>
+    </span>
+  </div>
+</article>
+
+<style>
+  .pcard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 30px;
+    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  .pcard__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .pcard__cat {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .pcard__cat--brand { color: var(--brand-ink); }
+  .pcard__cat--compose { color: var(--compose-ink); }
+  .pcard__cat--good { color: var(--good-ink); }
+
+  .pcard__sep {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--line-2);
+    flex: none;
+  }
+
+  .pcard__mins {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-4);
+  }
+
+  .pcard__title {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.08;
+  }
+
+  .pcard__title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* The card-wide hit area. It sits under .pcard__cat's z-index so the category
+     link stays clickable inside it. */
+  .pcard__title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+  }
+
+  .pcard__title a:hover { color: var(--brand-ink); }
+
+  .pcard__desc {
+    margin: 0;
+    font-size: 16.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .pcard__foot {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-4);
+    text-transform: uppercase;
+  }
+
+  .pcard__read {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--brand-ink);
+  }
+
+  @media (max-width: 700px) {
+    .pcard { padding: 22px; gap: 14px; }
+    .pcard__title { font-size: 20px; }
+    .pcard__desc { font-size: 15.5px; }
+    .pcard__foot { padding-top: 12px; }
+  }
+</style>

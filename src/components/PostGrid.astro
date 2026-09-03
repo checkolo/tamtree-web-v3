@@ -1,0 +1,68 @@
+---
+import PostCard from './PostCard.astro';
+import type { Post } from '../lib/posts';
+
+/**
+ * The three-up card grid, and the empty state that has to exist because a
+ * category route can legitimately have nothing in it the day it is added.
+ */
+interface Props {
+  posts: Post[];
+  /** Named so a screen reader knows what the list is, without a visible heading. */
+  label: string;
+}
+const { posts, label } = Astro.props;
+---
+
+{
+  posts.length ? (
+    <ul class="pgrid" aria-label={label}>
+      {posts.map((post) => (
+        <li>
+          <PostCard post={post} />
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="pgrid__empty">
+      Nothing here yet. <a href="/blog/">All posts</a> has everything that is written so far.
+    </p>
+  )
+}
+
+<style>
+  .pgrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 34px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The card stretches to the row, so its footer rule can sit on the bottom
+     edge rather than wherever the copy happened to end. */
+  .pgrid > li {
+    display: flex;
+  }
+
+  .pgrid > li > :global(*) {
+    flex: 1;
+  }
+
+  .pgrid__empty {
+    margin: 0;
+    padding: 44px 0;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 1000px) {
+    .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  }
+
+  @media (max-width: 700px) {
+    .pgrid { grid-template-columns: 1fr; gap: 18px; }
+  }
+</style>

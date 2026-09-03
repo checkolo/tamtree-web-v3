@@ -1,0 +1,78 @@
+---
+import { CATEGORIES, categoryHref, type CategorySlug } from '../lib/categories';
+
+/**
+ * The category filter — real links to real routes, not a painted control.
+ *
+ * The artboard draws these as chips with one lit, which is exactly the shape
+ * that produced the homepage's §01 defect: two spans with `.is-active` on one,
+ * a picture of a switch that could not be operated. Here each chip navigates to
+ * a page that exists, the current one is marked with `aria-current="page"`
+ * rather than by colour alone, and the whole thing works with no JavaScript.
+ *
+ * `current` is undefined on /blog/, which is what lights "All".
+ */
+interface Props {
+  current?: CategorySlug;
+}
+const { current } = Astro.props;
+---
+
+<nav class="cfilter" aria-label="Filter posts by category">
+  <ul class="cfilter__list">
+    <li>
+      <a
+        href="/blog/"
+        class:list={['chip', 'cfilter__chip', !current && 'cfilter__chip--on']}
+        aria-current={!current ? 'page' : undefined}
+      >
+        All
+      </a>
+    </li>
+    {
+      CATEGORIES.map((c) => (
+        <li>
+          <a
+            href={categoryHref(c.slug)}
+            class:list={['chip', 'cfilter__chip', current === c.slug && 'cfilter__chip--on']}
+            aria-current={current === c.slug ? 'page' : undefined}
+          >
+            {c.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .cfilter__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .cfilter__chip {
+    text-decoration: none;
+    color: var(--ink-2);
+  }
+
+  .cfilter__chip:hover {
+    border-color: var(--line-2);
+    color: var(--ink);
+  }
+
+  .cfilter__chip--on,
+  .cfilter__chip--on:hover {
+    border-color: var(--brand-ink);
+    color: var(--brand-ink);
+    background: color-mix(in srgb, var(--brand) 9%, transparent);
+  }
+
+  @media (max-width: 700px) {
+    .cfilter__list { gap: 8px; }
+  }
+</style>
