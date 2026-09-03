@@ -414,9 +414,6 @@
 
       <div class="rv" style="margin-top:50px;">
         <div style="position:relative;">
-        <div style="position:absolute; left:0; right:0; top:28px; height:78px; display:flex; align-items:center; justify-content:center; pointer-events:none;">
-          <span style="font-family:var(--display); font-size:104px; font-weight:800; letter-spacing:-0.06em; color:rgba(148,211,38,.14);">$0.00</span>
-        </div>
 
         <div style="position:relative; display:flex; justify-content:space-between; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; color:#64748b; padding:0 1px 10px;">
           <span style="color:#fdba74;">FRI 18:04</span><span>SAT</span><span>SUN</span><span>MON 09:12</span>
@@ -437,6 +434,12 @@
           <span style="color:#fdba74;">running · step 7</span>
           <span style="color:#b2e254;">resumed · nothing lost</span>
         </div>
+
+        <!-- Below the bar, not behind it (owner call, 2026-09-03). Centred over
+             the track it was illegible at 13% and fighting the timeline for the
+             same pixels; here it reads as the figure's payoff line and can carry
+             real contrast. -->
+        <span style="display:block; margin:16px 0 0; text-align:center; pointer-events:none; font-family:var(--display); font-size:76px; font-weight:800; line-height:1; letter-spacing:-0.06em; color:rgba(148,211,38,.46);">$0.00</span>
 
         <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-top:24px;">
           <span class="chip">process crashed</span>
@@ -727,7 +730,7 @@
         Agents you<br>can trust.
       </h2>
       <p style="margin:22px 0 0; font-family:var(--display); font-size:27px; font-weight:600; letter-spacing:-0.03em; line-height:1.1; color:rgba(22,10,2,.62);">
-        Because the runtime doesn’t trust them either.
+        Because the runtime never takes their word for it.
       </p>
 
       <p style="margin:30px 0 0; font-size:16px; line-height:1.64; color:rgba(22,10,2,.82);">

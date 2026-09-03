@@ -186,33 +186,72 @@ const year = new Date().getFullYear();
 
   @media (max-width: 700px) {
     .foot {
-      padding-top: 56px;
+      padding-top: 52px;
     }
 
     .foot__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 32px;
+      gap: 28px 20px;
     }
 
-    .foot__brand,
-    .foot__col,
-    .foot__col--legal {
+    .foot__brand {
       grid-column: span 2;
+      /* The artboard sets the tagline-to-links distance at 34px while the two
+         link rows sit 28px apart, so a single row gap cannot serve both. The
+         gap carries the rows and this makes up the remainder. */
+      margin-bottom: 6px;
+    }
+
+    .foot__blurb {
+      margin-top: 14px;
+      font-size: 15px;
+    }
+
+    .foot__col {
+      grid-column: span 1;
+    }
+
+    /* Two columns in 390px of width, so the links tighten a step: the artboard
+       sets 14.5px on an 11px rhythm where the desktop footer runs 15px on 12. */
+    .foot__col ul {
+      margin-top: 11px;
+      gap: 11px;
+    }
+
+    .foot__col a {
+      font-size: 14.5px;
+    }
+
+    /* Four cells on mobile, not three: the artboard puts Legal and the theme
+       toggle side by side in the second row rather than stacking them in one
+       column. `display: contents` promotes this wrapper's two children to grid
+       items and gets that layout without a second DOM for mobile — the class
+       stays on the element, so `.foot__col ul` and `.foot__col a` still reach
+       inside it. */
+    .foot__col--legal {
+      display: contents;
+    }
+
+    .foot__col--legal > .toggle {
+      align-self: start;
+      justify-self: start;
     }
 
     .foot__base {
       margin-top: 40px;
+      padding-top: 20px;
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
     }
 
     .foot__watermark {
-      height: 96px;
+      margin-top: 26px;
+      height: 76px;
     }
 
     .foot__watermark span {
-      font-size: 132px;
+      font-size: 106px;
     }
   }
 </style>
