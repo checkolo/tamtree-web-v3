@@ -27,11 +27,27 @@ html {
 
 body {
   margin: 0;
-  background: var(--page);
+  /* --scene-bg layers two ember glows over the ground; the ground's own solid
+     value is --page, still the token every opaque surface is measured against.
+     `fixed` is what makes it a backdrop rather than a very tall gradient: the
+     glows stay put while the page scrolls past them, which is also the only
+     way they agree with the fixed constellation canvas drawn on top. */
+  background: var(--scene-bg);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* The constellation canvas is `position: fixed; z-index: 0`, and positioned
+   elements paint above normal-flow inline content. Without these two rules the
+   dot network draws over the page text rather than behind it. Nav already
+   carries z-index 60 of its own. */
+main,
+body > footer {
+  position: relative;
+  z-index: 1;
 }
 
 a {

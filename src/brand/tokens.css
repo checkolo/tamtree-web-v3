@@ -215,6 +215,37 @@
      otherwise. Declared here so the hero's CSS has a value with no JS. */
   --mx: 50%;
   --my: 32%;
+  /* How much of its own ground a section keeps. The remainder is the
+     constellation backdrop showing through — every section on the page paints
+     an opaque ground, so without this the backdrop below is invisible and the
+     canvas may as well not exist. One value tunes the whole page; the ink-black
+     islands override it below.
+
+     60% is measured, not chosen. The veil multiplies the network's alpha, so at
+     82% the brief's 0.30 line reached the eye as 0.05 and the effect was
+     invisible in both themes. The --net-*-a values are therefore stated
+     PRE-veil: what is actually seen is roughly 0.4x each of them. */
+  --sec-veil: 60%;
+
+  /* ── constellation backdrop ──────────────────────────────────────────────
+     The full-viewport dot-network (components/Constellation.astro) reads
+     --net-* at runtime and re-reads them when the theme changes, so the two
+     palettes below are the only place its colours are stated. Channels are
+     space-separated rather than a finished colour because the renderer
+     multiplies the alpha per-particle: line opacity falls off with distance.
+
+     Light is the derived palette. Ember on paper cannot carry the dark
+     version's weight — 0.30 of a saturated orange on #fdfcfb reads as dirt —
+     so the line steps to --brand-ink's hue at a lower alpha and the dot keeps
+     --brand. Decorative and aria-hidden, so no contrast floor applies. */
+  --scene-bg:
+    radial-gradient(1200px 720px at 80% 8%, rgba(234, 88, 12, 0.07), transparent 58%),
+    radial-gradient(900px 640px at 6% 96%, rgba(234, 88, 12, 0.04), transparent 55%),
+    linear-gradient(180deg, #fdfcfb 0%, #faf6f1 45%, #f6f1ea 100%);
+  --net-line-rgb: 194 65 12;
+  --net-line-a: 0.42;
+  --net-dot-rgb: 234 88 12;
+  --net-dot-a: 0.78;
 }
 
 /* ── dark, by system preference ───────────────────────────────────────────
@@ -318,6 +349,15 @@
     --ladder-core-m: 90%;
     --grain-opacity: 0.5;
     --grain-blend: overlay;
+    /* ── constellation backdrop ───────────────────────────────────────────── */
+    --scene-bg:
+      radial-gradient(1200px 720px at 80% 8%, rgba(250, 15, 0, 0.15), transparent 58%),
+      radial-gradient(900px 640px at 6% 96%, rgba(250, 15, 0, 0.07), transparent 55%),
+      linear-gradient(180deg, #211d22 0%, #1a171c 45%, #151317 100%);
+    --net-line-rgb: 255 90 72;
+    --net-line-a: 0.62;
+    --net-dot-rgb: 255 170 158;
+    --net-dot-a: 0.95;
   }
 }
 
@@ -419,6 +459,15 @@
   --ladder-core-m: 90%;
   --grain-opacity: 0.5;
   --grain-blend: overlay;
+  /* ── constellation backdrop ───────────────────────────────────────────── */
+  --scene-bg:
+    radial-gradient(1200px 720px at 80% 8%, rgba(250, 15, 0, 0.15), transparent 58%),
+    radial-gradient(900px 640px at 6% 96%, rgba(250, 15, 0, 0.07), transparent 55%),
+    linear-gradient(180deg, #211d22 0%, #1a171c 45%, #151317 100%);
+  --net-line-rgb: 255 90 72;
+  --net-line-a: 0.62;
+  --net-dot-rgb: 255 170 158;
+  --net-dot-a: 0.95;
 }
 
 /* ── the ink-black islands ────────────────────────────────────────────────
@@ -514,7 +563,12 @@
   --grain-opacity: 0.5;
   --grain-blend: overlay;
 
-  background: var(--page);
+  /* Heavier than the page default. An island is a solid statement — at 60% on
+     paper it resolves to charcoal rather than ink, which is a different design.
+     The islands are the two places the network deliberately does not reach. */
+  --sec-veil: 90%;
+
+  background: color-mix(in srgb, var(--page) var(--sec-veil), transparent);
   color: var(--ink);
 }
 

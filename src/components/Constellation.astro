@@ -1,0 +1,224 @@
+---
+/**
+ * The constellation backdrop — a slow dot-network drawn across the whole
+ * viewport, behind everything.
+ *
+ * Three things about it are load-bearing rather than stylistic:
+ *
+ *  1. **It is decorative and says so.** `aria-hidden` plus `pointer-events:
+ *     none`, so it is absent from the accessibility tree and never eats a
+ *     click. A <canvas> with no fallback content would otherwise be announced
+ *     as an empty graphic.
+ *
+ *  2. **Reduced motion gets a finished frame, not a blank one.** The same rule
+ *     scene.css states for the scroll reveals: removing the animation must
+ *     leave the end state. Here that means seeding the particles and drawing
+ *     exactly one frame, with no rAF loop — a reader who asked for no motion
+ *     still gets the network, just still. That also makes the frame
+ *     deterministic, which is what `gate:visual` needs, since it captures with
+ *     `prefers-reduced-motion: reduce` emulated.
+ *
+ *  3. **Seeding is deterministic even when it animates.** Positions come from a
+ *     fixed-seed PRNG rather than Math.random, so frame zero is identical run
+ *     to run at a given viewport size. Only the drift is unrepeatable.
+ *
+ * Colours live in tokens.css as --net-* channel triples; this reads them at
+ * runtime and re-reads on a theme change, so the palette is stated in one place.
+ */
+---
+
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<style>
+  #bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    /* The canvas is sized in device pixels and scaled back down by the
+       transform; without this it would also be stretched by CSS. */
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<script>
+  const el = document.getElementById('bg') as HTMLCanvasElement | null;
+  const context = el?.getContext('2d');
+
+  if (el && context) {
+    // Re-bound inside the guard: TypeScript's narrowing of `el` does not reach
+    // into the function declarations below, and these two are used in all of them.
+    const canvas = el;
+    const ctx = context;
+
+    /** Connection radius, px. Lines fade to nothing as distance approaches it. */
+    const D = 175;
+    /** One particle per 12,000 px² of viewport, capped so a 4K desktop stays calm. */
+    const AREA_PER_PARTICLE = 12000;
+    const MAX_PARTICLES = 110;
+    const SPEED = 0.25;
+    const DOT_R = 2.1;
+    const LINE_W = 1.2;
+
+    type Particle = { x: number; y: number; vx: number; vy: number };
+
+    let W = 0;
+    let H = 0;
+    let particles: Particle[] = [];
+    let frame = 0;
+
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ── colour ────────────────────────────────────────────────────────────
+       Read once per theme rather than per frame: getComputedStyle forces style
+       resolution, and doing that 60 times a second for a value that changes
+       twice a session is the difference between free and not. */
+    let lineRGB = '255 90 72';
+    let lineA = 0.3;
+    let dotFill = 'rgb(255 170 158 / 0.62)';
+
+    function readPalette() {
+      const s = getComputedStyle(document.documentElement);
+      const get = (name: string, fallback: string) =>
+        s.getPropertyValue(name).trim() || fallback;
+
+      lineRGB = get('--net-line-rgb', '255 90 72');
+      lineA = parseFloat(get('--net-line-a', '0.30'));
+      dotFill = `rgb(${get('--net-dot-rgb', '255 170 158')} / ${get('--net-dot-a', '0.62')})`;
+    }
+
+    /* ── seeding ───────────────────────────────────────────────────────────
+       mulberry32, fixed seed. Deterministic positions mean the first painted
+       frame is reproducible for a given viewport, which is what lets the
+       reduced-motion path be diffed against a baseline at all. */
+    function rng(seed: number) {
+      return function () {
+        seed |= 0;
+        seed = (seed + 0x6d2b79f5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function seed() {
+      const random = rng(0x7a3c19);
+      const n = Math.round(Math.min(MAX_PARTICLES, (W * H) / AREA_PER_PARTICLE));
+      particles = Array.from({ length: n }, () => ({
+        x: random() * W,
+        y: random() * H,
+        vx: (random() - 0.5) * SPEED,
+        vy: (random() - 0.5) * SPEED,
+      }));
+    }
+
+    /* ── sizing ────────────────────────────────────────────────────────────
+       DPR is capped at 2: past that the extra pixels cost real fill rate on a
+       full-viewport canvas and buy nothing visible on a 2px dot. */
+    function resize() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      // Every drawing call below is therefore in CSS pixels.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      seed();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Lines first, so the dots sit on top of their own connections.
+      ctx.lineWidth = LINE_W;
+      for (let i = 0; i < particles.length; i++) {
+        const a = particles[i];
+        for (let j = i + 1; j < particles.length; j++) {
+          const b = particles[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const d2 = dx * dx + dy * dy;
+          // Compared squared, so the sqrt is only paid by pairs that connect.
+          if (d2 >= D * D) continue;
+          const d = Math.sqrt(d2);
+          ctx.strokeStyle = `rgb(${lineRGB} / ${lineA * (1 - d / D)})`;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+
+      ctx.fillStyle = dotFill;
+      for (const p of particles) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, DOT_R, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function step() {
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0 || p.x > W) p.vx = -p.vx;
+        if (p.y < 0 || p.y > H) p.vy = -p.vy;
+      }
+      draw();
+      frame = requestAnimationFrame(step);
+    }
+
+    function stop() {
+      if (frame) cancelAnimationFrame(frame);
+      frame = 0;
+    }
+
+    /** Animate, or draw the single finished frame — whichever the reader asked for. */
+    function run() {
+      stop();
+      if (reduced.matches) draw();
+      else frame = requestAnimationFrame(step);
+    }
+
+    /* ── wiring ──────────────────────────────────────────────────────────── */
+
+    // Resize re-seeds, per spec, so the density always matches the new area.
+    // Debounced because a desktop drag fires it continuously and reseeding is
+    // the one genuinely expensive thing here.
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        resize();
+        if (reduced.matches) draw();
+      }, 150);
+    });
+
+    // The theme toggle sets data-theme on <html>; with no stored choice the
+    // attribute never appears and the media query decides. Watch both rather
+    // than coupling to the toggle's internals.
+    new MutationObserver(() => {
+      readPalette();
+      if (reduced.matches) draw();
+    }).observe(document.documentElement, { attributeFilter: ['data-theme'] });
+
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      readPalette();
+      if (reduced.matches) draw();
+    });
+
+    reduced.addEventListener('change', run);
+
+    // A hidden tab should not be animating. rAF already throttles hard when
+    // backgrounded, but stopping outright is the honest version of "calm".
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else run();
+    });
+
+    readPalette();
+    resize();
+    run();
+  }
+</script>
