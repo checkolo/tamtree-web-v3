@@ -1,0 +1,211 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { legal } from '../data/legal';
+
+/**
+ * Terms of service, governed by Australian law.
+ *
+ * Two constraints shape the wording:
+ *
+ *   * The Australian Consumer Law. Its consumer guarantees cannot be excluded,
+ *     so the disclaimer and liability clauses are expressly subject to it
+ *     rather than "as is" without qualification — a blanket exclusion is not
+ *     merely unenforceable here, it is itself a contravention.
+ *   * gate:copy. Licensing, deployment model and pricing are undecided, so
+ *     the fees clause commits to notice before charging, not to a price or to
+ *     the absence of one.
+ *
+ * The platform clause names the YouTube Terms of Service, which YouTube API
+ * Services require an app's own terms to bind users to.
+ */
+const { entity, abn, contactEmail, governingState } = legal;
+const mail = `mailto:${contactEmail}`;
+
+const sections = [
+  { id: 'agreement', title: 'This agreement' },
+  { id: 'the-service', title: 'The service' },
+  { id: 'accounts', title: 'Your account' },
+  { id: 'your-content', title: 'Your content' },
+  { id: 'connected-platforms', title: 'Connected platforms' },
+  { id: 'acceptable-use', title: 'Acceptable use' },
+  { id: 'fees', title: 'Fees' },
+  { id: 'our-ip', title: 'Our intellectual property' },
+  { id: 'consumer-law', title: 'Australian Consumer Law' },
+  { id: 'liability', title: 'Liability' },
+  { id: 'termination', title: 'Suspension and termination' },
+  { id: 'changes', title: 'Changes to these terms' },
+  { id: 'law', title: 'Governing law' },
+  { id: 'contact', title: 'Contact' },
+];
+---
+
+<Legal
+  title="Terms of service"
+  description="The terms for using the Tamtree website, waitlist and product, including connecting YouTube, Facebook, Instagram and TikTok accounts."
+  sections={sections}
+>
+  <h2 id="agreement">This agreement</h2>
+  <p>
+    These terms are an agreement between you and {entity} (ABN {abn}) ("Tamtree", "we", "us").
+    They cover this website, the waitlist, and the Tamtree product (together, "the service"). By
+    using the service you agree to them. If you use it for an organisation, you agree on its behalf
+    and confirm that you are allowed to.
+  </p>
+  <p>
+    Our <a href="/privacy/">privacy policy</a> explains how we handle personal information and forms
+    part of these terms.
+  </p>
+
+  <h2 id="the-service">The service</h2>
+  <p>
+    Tamtree is an agent-first workflow orchestrator. It runs workflows you build, including steps
+    that call AI models and third-party services. Tamtree is in early development. Features may
+    change, be limited or be withdrawn, and access is given at our discretion. Joining the
+    waitlist does not guarantee access.
+  </p>
+  <p>
+    Workflows can produce outputs, including AI-generated content, that are wrong or unsuitable.
+    You decide what a workflow does and what it publishes, and you should review outputs before
+    relying on them.
+  </p>
+
+  <h2 id="accounts">Your account</h2>
+  <ul>
+    <li>You must be at least 18, or the age of majority where you live.</li>
+    <li>Keep your sign-in details and API keys secure, and tell us promptly about any unauthorised use.</li>
+    <li>You are responsible for what happens under your account, including the actions of workflows you run.</li>
+  </ul>
+
+  <h2 id="your-content">Your content</h2>
+  <p>
+    You keep ownership of everything you put into Tamtree and everything your workflows produce
+    ("your content"). You give us a limited licence to host, process, transmit and display your
+    content only as needed to provide the service to you. When you tell a workflow to publish
+    something, that includes sending it to the platform you chose.
+  </p>
+  <p>
+    You confirm that you have the rights to your content and that it does not break the law or
+    anyone else's rights. That includes the music, footage and likenesses in videos you upload.
+  </p>
+
+  <h2 id="connected-platforms">Connected platforms</h2>
+  <p>
+    You can connect accounts on other platforms, such as YouTube, Facebook, Instagram and TikTok,
+    using developer apps and tokens you create yourself. When you do:
+  </p>
+  <ul>
+    <li>
+      Your use of each platform remains subject to that platform's own terms. By using Tamtree's
+      YouTube features you agree to be bound by the{' '}
+      <a href="https://www.youtube.com/t/terms" rel="noopener">YouTube Terms of Service</a>. The{' '}
+      <a href="https://www.facebook.com/terms" rel="noopener">Meta</a>,{' '}
+      <a href="https://help.instagram.com/581066165581870" rel="noopener">Instagram</a> and{' '}
+      <a href="https://www.tiktok.com/legal/terms-of-service" rel="noopener">TikTok</a> terms apply
+      in the same way.
+    </li>
+    <li>
+      You are responsible for the developer apps you create and for meeting their requirements,
+      including any review, audit or disclosure a platform asks of you. One example is labelling
+      AI-generated content where the platform requires it.
+    </li>
+    <li>
+      Platforms decide how uploads behave. An unreviewed app's upload may be private, a draft, or
+      sent to your inbox until you publish it yourself. Platforms set rate limits and can change or
+      withdraw their APIs at any time. We are not responsible for a platform's actions, outages or
+      changes.
+    </li>
+    <li>
+      Where a platform cannot confirm whether an upload completed, Tamtree stops rather than retrying
+      automatically, so a video is not published twice. Check the platform before running the
+      workflow again.
+    </li>
+  </ul>
+
+  <h2 id="acceptable-use">Acceptable use</h2>
+  <p>You must not use the service to:</p>
+  <ul>
+    <li>break any law, or infringe anyone's intellectual property, privacy or other rights;</li>
+    <li>publish spam, misleading content, or content that is unlawful, harmful or abusive;</li>
+    <li>get around a platform's rules, limits or reviews;</li>
+    <li>
+      attack, probe or overload the service or its users, or try to access data that is not yours;
+    </li>
+    <li>
+      resell or provide the service to others, or copy it to build a competing product, without our
+      written permission.
+    </li>
+  </ul>
+
+  <h2 id="fees">Fees</h2>
+  <p>
+    There are currently no charges for the waitlist or for early access. If we introduce charges,
+    we will tell you the price and the terms before they apply to you. Nothing will be charged
+    without your agreement.
+  </p>
+
+  <h2 id="our-ip">Our intellectual property</h2>
+  <p>
+    The service, including its software, design and the Tamtree name and marks, belongs to us or
+    our licensors. These terms do not give you any rights in it beyond using the service as they
+    allow. If you send us feedback or suggestions, we may use them without owing you anything.
+  </p>
+
+  <h2 id="consumer-law">Australian Consumer Law</h2>
+  <p>
+    Nothing in these terms excludes, restricts or modifies any right or remedy you have under the
+    Australian Consumer Law, or any other law, that cannot lawfully be excluded, including the
+    consumer guarantees. Where the law lets us limit our liability for breaching such a guarantee,
+    our liability is limited to supplying the services again, or paying the cost of having them
+    supplied again.
+  </p>
+  <p>
+    Subject to that, and to the extent the law allows, the service is provided as it is and as
+    available. We do not promise that it will be uninterrupted or error-free, or that outputs will
+    be accurate or suit a particular purpose.
+  </p>
+
+  <h2 id="liability">Liability</h2>
+  <p>To the extent the law allows, and subject to the section above:</p>
+  <ul>
+    <li>
+      we are not liable for indirect or consequential loss, or for loss of profit, revenue, data or
+      goodwill;
+    </li>
+    <li>
+      our total liability to you for all claims in connection with the service is limited to the
+      amount you paid us for it in the 12 months before the claim, or AUD 100 if you paid nothing.
+    </li>
+  </ul>
+  <p>
+    You are responsible for losses arising from your content, the workflows you run, and what you
+    publish to connected platforms. If you use the service for a business, you agree to cover our
+    reasonable costs if a third party brings a claim against us arising from those.
+  </p>
+
+  <h2 id="termination">Suspension and termination</h2>
+  <p>
+    You can stop using the service at any time, and ask us to close your account. We may suspend
+    or end your access if you breach these terms, if your use puts the service or others at risk,
+    or if we stop offering the service. Where reasonable, we will give you notice and a chance to
+    export your content first. Sections that by their nature should continue, such as those on
+    ownership, liability and governing law, survive termination.
+  </p>
+
+  <h2 id="changes">Changes to these terms</h2>
+  <p>
+    We may update these terms as the service develops. We will change the date at the top of this
+    page. If a change materially affects you, we will tell you by email at least 14 days before it
+    takes effect. If you keep using the service after that, you accept the updated terms.
+  </p>
+
+  <h2 id="law">Governing law</h2>
+  <p>
+    These terms are governed by the laws of {governingState}, Australia. You and we submit to the
+    non-exclusive jurisdiction of its courts and of the federal courts of Australia.
+  </p>
+
+  <h2 id="contact">Contact</h2>
+  <p>
+    Questions about these terms, and legal notices, go to <a href={mail}>{contactEmail}</a>.
+  </p>
+</Legal>

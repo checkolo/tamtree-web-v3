@@ -1,0 +1,130 @@
+---
+import Legal from '../layouts/Legal.astro';
+import { legal } from '../data/legal';
+
+/**
+ * Data deletion instructions — the URL given to Meta as the app's "Data
+ * deletion instructions URL" (App settings › Basic). Meta accepts a page that
+ * tells a person how to have their data deleted, in place of a callback
+ * endpoint, so this page is that instruction and nothing else.
+ *
+ * Facebook and Instagram come first because this is what Meta's reviewers
+ * open; YouTube and TikTok follow so one page answers the question for every
+ * platform Tamtree connects to. The privacy policy's #data-deletion section
+ * links here.
+ */
+const { contactEmail } = legal;
+const mail = `mailto:${contactEmail}`;
+
+const sections = [
+  { id: 'what-we-hold', title: 'What Tamtree holds' },
+  { id: 'in-tamtree', title: 'Delete it in Tamtree' },
+  { id: 'facebook-instagram', title: 'Remove access on Facebook and Instagram' },
+  { id: 'other-platforms', title: 'YouTube and TikTok' },
+  { id: 'by-email', title: 'Ask us to delete it' },
+  { id: 'what-happens', title: 'What happens next' },
+];
+---
+
+<Legal
+  title="Data deletion"
+  description="How to delete the data Tamtree holds from your Facebook, Instagram, YouTube or TikTok connection, or your whole Tamtree account."
+  sections={sections}
+>
+  <p>
+    This page explains how to delete the data Tamtree holds because you connected a Facebook Page,
+    an Instagram account, a YouTube channel or a TikTok account to it, and how to delete your whole
+    Tamtree account. You can do it yourself in a few clicks, or ask us to do it for you.
+  </p>
+
+  <h2 id="what-we-hold">What Tamtree holds</h2>
+  <p>For a connected Facebook Page and Instagram professional account, Tamtree stores:</p>
+  <ul>
+    <li>the access token you provided, encrypted;</li>
+    <li>your Facebook Page ID, and the ID of the Instagram account linked to it;</li>
+    <li>
+      a record of the Reels Tamtree uploaded for you: their IDs, captions, and when they were sent.
+    </li>
+  </ul>
+  <p>
+    Tamtree does not read or store your posts, messages, followers, comments or insights. For
+    YouTube and TikTok it holds the equivalent: an encrypted access token, the connected account's
+    basic identifiers, and a record of the videos it uploaded. The{' '}
+    <a href="/privacy/#connected-accounts">privacy policy</a> has the detail.
+  </p>
+
+  <h2 id="in-tamtree">Delete it in Tamtree</h2>
+  <ol>
+    <li>Sign in to Tamtree and open <strong>Credentials</strong>.</li>
+    <li>
+      Find the connection (for example <em>Meta (Facebook Page &amp; Instagram)</em>) and choose
+      <strong>Delete</strong>.
+    </li>
+  </ol>
+  <p>
+    The stored token and account IDs are deleted immediately, and Tamtree can no longer reach the
+    account. Workflows that used the connection will stop at that step until you connect an account
+    again.
+  </p>
+
+  <h2 id="facebook-instagram">Remove access on Facebook and Instagram</h2>
+  <p>
+    Deleting the connection in Tamtree removes our copy. To also cancel the access on Meta's side:
+  </p>
+  <ul>
+    <li>
+      <strong>If you created a System User token</strong> (the setup the Tamtree guide describes):
+      in <a href="https://business.facebook.com/settings" rel="noopener">Meta Business settings</a>,
+      go to <em>Users › System users</em>, select the system user, and choose{' '}
+      <strong>Revoke tokens</strong>. To remove the app from your business entirely, open{' '}
+      <em>Accounts › Apps</em> and remove it.
+    </li>
+    <li>
+      <strong>If you connected through Facebook Login:</strong> on Facebook, go to{' '}
+      <em>Settings &amp; privacy › Settings › Business integrations</em> (or{' '}
+      <em>Apps and websites</em>), select the app, and choose <strong>Remove</strong>.
+    </li>
+  </ul>
+  <p>
+    Removing access does not delete Reels already published to your Page or Instagram account.
+    Delete those on Facebook or Instagram.
+  </p>
+
+  <h2 id="other-platforms">YouTube and TikTok</h2>
+  <ul>
+    <li>
+      <strong>YouTube:</strong> delete the connection in Tamtree as above, then remove Tamtree under{' '}
+      <em>Third-party apps &amp; services</em> on your{' '}
+      <a href="https://myaccount.google.com/permissions" rel="noopener">Google Account</a>.
+    </li>
+    <li>
+      <strong>TikTok:</strong> delete the connection in Tamtree as above, then remove the app in
+      the TikTok app under <em>Settings and privacy › Security › Apps and services</em>.
+    </li>
+  </ul>
+
+  <h2 id="by-email">Ask us to delete it</h2>
+  <p>
+    If you cannot sign in, or want your whole Tamtree account deleted, email{' '}
+    <a href={mail}>{contactEmail}</a> from the address on your account (or the one you joined the
+    waitlist with) with the subject <strong>Data deletion request</strong>. Tell us which
+    connections or which account the request covers. If your request is about a Facebook Page or
+    Instagram account, include the Page name or Instagram username.
+  </p>
+
+  <h2 id="what-happens">What happens next</h2>
+  <ul>
+    <li>We confirm we received your request within 7 days.</li>
+    <li>
+      We complete the deletion within 30 days, and then email you to confirm it is done, with a
+      reference you can quote if you contact us about it again.
+    </li>
+    <li>
+      If we need to verify that the request comes from you, we will ask before deleting anything.
+    </li>
+    <li>
+      If the law requires us to keep a record, such as a billing record, we keep only that and tell
+      you what was kept.
+    </li>
+  </ul>
+</Legal>
