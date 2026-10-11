@@ -6,8 +6,8 @@ critical path. This repo is the **build**; the plan it is built from lives in
 
 Blog **content** lives in a second repo, `tamtree-ai/blog`, which
 this build clones into `content/` before every run. One site, one domain, one
-deploy — **[DEPLOYMENT.md](DEPLOYMENT.md)** is how to configure it, and is what
-you want if you are setting up Vercel.
+deploy — **[DEPLOYMENT.md](DEPLOYMENT.md)** is how it is hosted and shipped
+(`make deploy`).
 
 ---
 
@@ -190,6 +190,8 @@ missing number is a claim about a run nobody made.
 
 ## Deploying
 
-Vercel, static output, `trailingSlash: 'always'`. Headers and CSP live in
-`vercel.json` and **cannot be verified locally** — check them with `curl -sI`
-against a preview deployment.
+`make deploy` — static output, `trailingSlash: 'always'`, served by Caddy on our
+own server. [DEPLOYMENT.md](DEPLOYMENT.md) has the whole path. Headers and CSP
+live in `deploy/Caddyfile.web`, which Astro's dev server does not read — check
+them with `curl -sI` against the live site, or against a local Caddy (the
+command is in DEPLOYMENT.md).
