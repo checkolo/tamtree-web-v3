@@ -108,12 +108,18 @@ main() {
     compose run --rm --no-deps -T --entrypoint caddy caddy \
       validate --config /etc/caddy/Caddyfile >/dev/null 2>&1
   }
-  running_config_is_stale() {
-    ! compose exec -T caddy cat /etc/caddy/Caddyfile | cmp -s - "$COMPOSE_DIR/Caddyfile.local"
-  }
+  # Whether caddy is still running a config older than the one on disk cannot
+  # be read off the container: Caddyfile.local.sh rewrites the file in place,
+  # the single-file bind mount follows the inode, and so `cat` inside the
+  # container always shows the new text while the process runs the old one.
+  # A marker says it instead — written when the snippet is installed, removed
+  # once caddy has restarted — so a deploy that died in between is finished by
+  # the next one rather than forgotten.
+  PENDING=.caddy-restart-pending
 
   activate() { # activate <release>: its Caddy snippet, then the symlink
     local tag="$1" snippet="releases/$1.Caddyfile" installed=0 restart=0
+    if [ -e "$PENDING" ]; then was_pending=1; else was_pending=0; fi
     [ -f "releases/$tag/index.html" ] || { echo "releases/$tag is not a built site" >&2; exit 1; }
     [ -f "$snippet" ] || { echo "$snippet is missing" >&2; exit 1; }
 
@@ -121,11 +127,12 @@ main() {
       rm -f Caddyfile.web.prev
       if [ -f Caddyfile.web ]; then cp -p Caddyfile.web Caddyfile.web.prev; fi
       cp "$snippet" Caddyfile.web
+      : >"$PENDING"
       installed=1
       regenerate || { restore_snippet; echo "Caddyfile.local.sh failed — caddy keeps its config, the old release keeps serving" >&2; exit 1; }
     fi
 
-    if running_config_is_stale; then
+    if [ -e "$PENDING" ]; then
       if validates; then
         restart=1
       elif [ "$installed" = 1 ]; then
@@ -134,8 +141,8 @@ main() {
         echo "  docker run --rm -v \"\$PWD/deploy/Caddyfile.web:/etc/caddy/Caddyfile:ro\" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile" >&2
         exit 1
       else
-        say "! the host's Caddyfile.local differs from what caddy runs and does not validate —"
-        say "! not this deploy's change, so caddy is left alone"
+        say "! an earlier deploy left a Caddy config that was never loaded, and it does not validate —"
+        say "! not this deploy's change, so caddy is left on what it runs"
       fi
     fi
 
@@ -147,6 +154,7 @@ main() {
 
     if [ "$restart" = 1 ]; then
       compose restart caddy >/dev/null
+      rm -f "$PENDING"
       say "caddy restarted on the new config"
     fi
     rm -f Caddyfile.web.prev
@@ -154,6 +162,7 @@ main() {
 
   restore_snippet() {
     if [ -f Caddyfile.web.prev ]; then mv Caddyfile.web.prev Caddyfile.web; else rm -f Caddyfile.web; fi
+    [ "$was_pending" = 1 ] || rm -f "$PENDING"
     regenerate || true
   }
 
@@ -168,6 +177,7 @@ main() {
       done
   }
 
+  was_pending=0
   case "$1" in
     facts)
       printf 'current=%s\n' "$(current)"
