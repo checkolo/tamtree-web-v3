@@ -206,6 +206,22 @@ curl -sI http://localhost:8080/blog/
 
 ---
 
+## Before launch
+
+The site is reachable but deliberately kept out of search engines. Two things
+do that, and launch means removing both in one deploy:
+
+- `public/robots.txt` disallows everything. Replace it with an allow-all and a
+  `Sitemap: https://www.tamtree.io/sitemap-index.xml` line.
+- `deploy/Caddyfile.web` sends `X-Robots-Tag: noindex, nofollow` on every
+  response. Delete that line (the `noindex` on `*.md` is separate and stays).
+
+Remove only the robots.txt rule and nothing is indexed: crawlers come, read
+`noindex`, and leave. Remove only the header and nothing is crawled. Changing
+the snippet restarts Caddy, as any header change does.
+
+---
+
 ## Why content is fetched, not submodule-pinned
 
 A git submodule records a **commit SHA** in the consuming repo. Publishing a
