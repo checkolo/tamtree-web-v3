@@ -19,7 +19,7 @@ export const legal = {
   /** The Australian State or Territory whose law governs the Terms. */
   governingState: '[STATE]',
   /** ISO date the current text took effect. */
-  lastUpdated: '2026-10-09',
+  lastUpdated: '2026-10-11',
   site: 'https://www.tamtree.io',
 } as const;
 
