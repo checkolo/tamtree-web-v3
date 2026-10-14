@@ -7,7 +7,7 @@ import WaitlistForm from '../WaitlistForm.astro';
  * `.island` again rather than a theme branch: the finale is ink-black on paper
  * and on ink alike, so the DOM does not differ between themes. See tokens.css.
  *
- * The mark is drawn rather than placed: the three strokes animate in, which is
+ * The mark is drawn rather than placed: the four strokes grow in, which is
  * the only place on the page the logo behaves like the thing it depicts. It is
  * <Mark>'s glyph and not <Mark> itself, because Mark's job is to be the mark
  * beside the wordmark — giving it an animation prop would push a one-section
@@ -29,18 +29,19 @@ import WaitlistForm from '../WaitlistForm.astro';
       class="waitlist__mark"
       width="46"
       height="46"
-      viewBox="0 0 24 24"
+      viewBox="21.5 21.5 57 57"
       fill="none"
+      stroke="var(--brand)"
+      stroke-width="7"
       stroke-linecap="round"
+      stroke-linejoin="round"
       aria-hidden="true"
       focusable="false"
     >
-      <path class="waitlist__stroke waitlist__stroke--trunk" d="M12 22V6.5" stroke="var(--brand)" stroke-width="1.8"></path>
-      <path class="waitlist__stroke waitlist__stroke--left" d="M12 14.2L5.6 8.6" stroke="var(--brand)" stroke-width="1.8"></path>
-      <path class="waitlist__stroke waitlist__stroke--right" d="M12 11.4L18.4 6.2" stroke="var(--brand)" stroke-width="1.8"></path>
-      <circle cx="12" cy="5" r="2.3" fill="var(--brand)"></circle>
-      <circle cx="4.7" cy="7.9" r="2.1" fill="var(--brand-ink)"></circle>
-      <circle cx="19.3" cy="5.5" r="2.1" fill="var(--live)"></circle>
+      <path class="waitlist__stroke waitlist__stroke--ground" d="M34 75H66" pathLength="1"></path>
+      <path class="waitlist__stroke waitlist__stroke--trunk" d="M50 75V25" pathLength="1"></path>
+      <path class="waitlist__stroke waitlist__stroke--low" d="M35 42 50 57 65 42" pathLength="1"></path>
+      <path class="waitlist__stroke waitlist__stroke--high" d="M39 30 50 41 61 30" pathLength="1"></path>
     </svg>
 
     <h2 class="rv">Be first<br class="waitlist__break" /> in line.</h2>
@@ -86,32 +87,29 @@ import WaitlistForm from '../WaitlistForm.astro';
 
   .waitlist__mark { margin-bottom: 26px; }
 
-  /* The dash lengths are the paths' own lengths, so each stroke draws itself
-     exactly once. Reduced motion removes the animation and the reset below
+  /* `pathLength="1"` makes every stroke one unit long, so one dash of 1 draws
+     each exactly once whatever its real length. The tree grows from the
+     ground up. Reduced motion removes the animation and the reset below
      leaves the finished glyph rather than an empty one. */
   .waitlist__stroke {
+    stroke-dasharray: 1;
     stroke-dashoffset: 0;
-    animation: draw 1s ease both;
+    animation: draw 0.7s ease both;
   }
+
+  .waitlist__stroke--ground { animation-delay: 0.1s; }
 
   .waitlist__stroke--trunk {
-    stroke-dasharray: 18;
-    animation-duration: 1.2s;
-    animation-delay: 0.1s;
+    animation-duration: 1s;
+    animation-delay: 0.35s;
   }
 
-  .waitlist__stroke--left {
-    stroke-dasharray: 10;
-    animation-delay: 0.5s;
-  }
+  .waitlist__stroke--low { animation-delay: 0.85s; }
 
-  .waitlist__stroke--right {
-    stroke-dasharray: 10;
-    animation-delay: 0.7s;
-  }
+  .waitlist__stroke--high { animation-delay: 1.05s; }
 
   @keyframes draw {
-    from { stroke-dashoffset: 18; }
+    from { stroke-dashoffset: 1; }
     to { stroke-dashoffset: 0; }
   }
 
