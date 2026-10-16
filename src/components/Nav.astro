@@ -173,4 +173,13 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
       font-size: 17px;
     }
   }
+
+  /* The smallest phones (320px): mark, CTA and menu only just fit, so the CTA
+     gives up some padding rather than slide under the menu button. */
+  @media (max-width: 359px) {
+    .nav :global(.nav__cta) {
+      padding: 0 12px;
+      font-size: 14px;
+    }
+  }
 </style>
