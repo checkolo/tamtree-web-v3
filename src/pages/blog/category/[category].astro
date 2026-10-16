@@ -25,11 +25,11 @@ const { cat } = Astro.props;
 const posts = (await publishedPosts()).filter((p) => p.data.category === cat.slug);
 ---
 
-<Base title={`${cat.label} — Writing`} description={cat.blurb}>
+<Base title={`${cat.label} — Blog`} description={cat.blurb}>
   <section class="sec cat-head">
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap">
-      <Eyebrow>Writing</Eyebrow>
+      <Eyebrow>Blog</Eyebrow>
       <h1>{cat.label}</h1>
       <p class="cat-head__lede">{cat.blurb}</p>
       <CategoryFilter current={cat.slug as CategorySlug} />

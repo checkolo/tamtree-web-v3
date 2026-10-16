@@ -14,13 +14,13 @@ import Button from './Button.astro';
 const links = [
   { href: '/product/', label: 'Product' },
   { href: '/how-it-works/', label: 'How it works' },
-  { href: '/blog/', label: 'Writing' },
+  { href: '/blog/', label: 'Blog' },
 ];
 
 /**
  * `aria-current="page"` on the section you are in. `startsWith` rather than
  * equality because /blog/a-post/ and /blog/category/engineering/ are both
- * inside Writing, and a nav that goes blank the moment you open a post is
+ * inside Blog, and a nav that goes blank the moment you open a post is
  * telling the reader they have left the section they are reading.
  */
 const here = Astro.url.pathname;
