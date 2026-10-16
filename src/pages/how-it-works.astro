@@ -1,0 +1,354 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHead from '../components/PageHead.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Chip from '../components/Chip.astro';
+import Button from '../components/Button.astro';
+import CtaBand from '../components/CtaBand.astro';
+
+/**
+ * /how-it-works/ — the lifecycle a workflow goes through, draft to production
+ * (T2.3). Traceable to the product spec: WS9's universal lifecycle invariant
+ * (draft → test → scan/gate → publish), §6 execution, WS4 gates, WS7 versions.
+ *
+ * C3: the stages are an <ol> (their order is the argument), and "what goes
+ * wrong" is a <table> — a fixed mapping from event to response.
+ */
+const stages = [
+  {
+    verb: 'Build',
+    title: 'Describe it, or draw it.',
+    body: 'Tell the Composer what you want in plain language and it edits the canvas for you, or draw the flow yourself. Pick pipeline or crew first; the two compose later.',
+    chips: ['Composer', 'canvas', 'examples gallery'],
+  },
+  {
+    verb: 'Test',
+    title: 'Run the draft, not the live version.',
+    body: 'Test runs execute your draft against real input. Pin sample data, run from any step, and talk to a crew in the chat panel before anything depends on it.',
+    chips: ['pinned data', 'run from any step', 'chat panel'],
+  },
+  {
+    verb: 'Grade',
+    title: 'Score it before anyone sees it.',
+    body: 'Eval suites run the draft in simulate mode, where tools that would change something return fixtures instead. A judge model scores what has no single right answer.',
+    chips: ['eval suites', 'simulate mode', 'LLM-as-judge'],
+  },
+  {
+    verb: 'Publish',
+    title: 'Through the gate, or not at all.',
+    body: 'Publishing turns the draft into an immutable version, and only if it clears its promotion gate. Rolling back is publishing an older version, through the same gate.',
+    chips: ['promotion gates', 'immutable versions', 'rollback'],
+  },
+  {
+    verb: 'Run',
+    title: 'Wherever the work starts.',
+    body: 'A webhook, a schedule, a poll for new data, a chat widget on your site, the REST API, or another tool calling it over MCP. Every run records the version it started on.',
+    chips: ['webhooks', 'schedules', 'chat widget', 'REST API', 'MCP'],
+  },
+  {
+    verb: 'Watch',
+    title: 'Everything on the record.',
+    body: 'A live run view, a guardrail event for every verdict, cost for every step, an audit log of every change — and online evals that keep grading after release.',
+    chips: ['run history', 'guardrail events', 'cost ledger', 'audit log'],
+  },
+];
+
+const failures = [
+  { when: 'A worker crashes mid-run', then: 'The run resumes from its last completed step. Steps that already finished are not repeated.' },
+  { when: 'A run needs a person', then: 'It parks at zero compute until they answer — for an hour or for a week.' },
+  { when: 'A model output leaks PII or carries an injection', then: 'A guardrail redacts or blocks it before it is used, and records the decision on the run.' },
+  { when: 'A prompt change lowers quality', then: 'The promotion gate refuses to publish it. The current version keeps serving.' },
+  { when: 'Spend reaches the budget', then: 'New runs are refused, and running ones stop at their next step boundary.' },
+  { when: 'A step fails for good', then: 'The run fails with the cause attributed to the step, and the flow’s error workflow runs if you set one.' },
+];
+---
+
+<Base
+  title="How it works"
+  description="How a Tamtree workflow goes from draft to production: build, test, grade, publish through a promotion gate, run on durable execution, and keep it on the record."
+>
+  <PageHead
+    eyebrow="How it works"
+    lede="Every workflow and agent in Tamtree follows the same path: draft, test, grade, publish. Nothing reaches production without passing through it, and nothing in production runs without a record."
+  >
+    From draft to production.<br />No hardening phase.
+  </PageHead>
+
+  <section class="sec hiw" aria-labelledby="hiw-stages">
+    <div class="seam" aria-hidden="true"></div>
+    <div class="wrap">
+      <Eyebrow>The lifecycle</Eyebrow>
+      <h2 id="hiw-stages">Six stages, one path.</h2>
+
+      <ol class="hiw__stages">
+        {stages.map((s, i) => (
+          <li class="hiw__stage">
+            <p class="hiw__verb">
+              <span class="hiw__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              {s.verb}
+            </p>
+            <h3>{s.title}</h3>
+            <p class="hiw__body">{s.body}</p>
+            <ul class="hiw__chips" aria-label={`${s.verb}: features`}>
+              {s.chips.map((c) => <li><Chip size="sm">{c}</Chip></li>)}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="sec hiw" aria-labelledby="hiw-fail">
+    <div class="seam" aria-hidden="true"></div>
+    <div class="wrap hiw__fail">
+      <div class="hiw__fail-copy">
+        <Eyebrow>When things go wrong</Eyebrow>
+        <h2 id="hiw-fail">A demo has to work once. Production has to survive.</h2>
+        <p>
+          The crash, the injection, the regression and the bill all arrive eventually. Each one
+          has an answer built into the runtime, so none of them is a project for later.
+        </p>
+        <div class="hiw__links">
+          <Button href="/product/" variant="ghost">Explore the product</Button>
+        </div>
+      </div>
+
+      <div class="hiw__table-wrap">
+        <table class="hiw__table">
+          <caption class="visually-hidden">What Tamtree does when something goes wrong in a run</caption>
+          <thead>
+            <tr>
+              <th scope="col">When</th>
+              <th scope="col">Tamtree</th>
+            </tr>
+          </thead>
+          <tbody>
+            {failures.map((f) => (
+              <tr>
+                <th scope="row">{f.when}</th>
+                <td>{f.then}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand id="hiw-waitlist" />
+</Base>
+
+<style>
+  .hiw {
+    padding: 88px 0;
+    background: color-mix(in srgb, var(--page) var(--sec-veil), transparent);
+  }
+
+  .hiw h2 {
+    margin-top: 16px;
+    font-size: 48px;
+    font-weight: 700;
+  }
+
+  .hiw__stages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin: 44px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hiw__stage {
+    display: flex;
+    flex-direction: column;
+    padding: 28px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  .hiw__verb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand-ink);
+  }
+
+  .hiw__n {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--brand) 50%, transparent);
+    background: color-mix(in srgb, var(--brand) 12%, var(--surface-2));
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  .hiw__stage h3 {
+    margin-top: 18px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+
+  .hiw__body {
+    flex: 1;
+    margin-top: 12px;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .hiw__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .hiw__fail {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 64px;
+    align-items: start;
+  }
+
+  .hiw__fail-copy p {
+    margin-top: 20px;
+    max-width: 440px;
+    font-size: 17px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .hiw__links {
+    margin-top: 28px;
+  }
+
+  .hiw__table-wrap {
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+  }
+
+  .hiw__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15.5px;
+    line-height: 1.55;
+  }
+
+  .hiw__table th,
+  .hiw__table td {
+    padding: 18px 22px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hiw__table tbody tr:last-child th,
+  .hiw__table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .hiw__table thead th {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .hiw__table tbody th {
+    width: 40%;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .hiw__table td {
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 1000px) {
+    .hiw__stages {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hiw__fail {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .hiw {
+      padding: 60px 0;
+    }
+
+    .hiw h2 {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .hiw__stages {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .hiw__stage {
+      padding: 22px;
+    }
+
+    .hiw__stage h3 {
+      font-size: 21px;
+    }
+
+    /* Two columns of prose do not fit 390px; each row becomes a stacked pair. */
+    .hiw__table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    .hiw__table tr {
+      display: block;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hiw__table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .hiw__table th,
+    .hiw__table td {
+      display: block;
+      width: auto;
+      padding: 0;
+      border: 0;
+    }
+
+    .hiw__table tbody th {
+      width: auto;
+      margin-bottom: 6px;
+    }
+  }
+</style>

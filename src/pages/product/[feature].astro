@@ -1,0 +1,399 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import Chip from '../../components/Chip.astro';
+import Eyebrow from '../../components/Eyebrow.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { FEATURES, featureHref, neighbours, type Feature } from '../../data/product';
+
+/**
+ * /product/<slug>/ — one page per feature, all generated from data/product.ts
+ * so the footer, the overview grid and these routes cannot disagree (T2.3).
+ *
+ * Outline (C3): h1 the feature's claim → h2 "What you get" → h3 per point →
+ * h2 the worked run → h2 "Keep exploring". The worked run is an <ol>: it is a
+ * sequence, and its order is the point.
+ *
+ * The feature's tone tints the accents only — rules, numerals, the run's
+ * spine — via --accent, never the text, so contrast is the same on every page.
+ */
+export function getStaticPaths() {
+  return FEATURES.map((feature) => ({ params: { feature: feature.slug }, props: { feature } }));
+}
+
+interface Props {
+  feature: Feature;
+}
+const { feature } = Astro.props;
+const { prev, next } = neighbours(feature.slug);
+const accent = `--accent: var(--${feature.tone}); --accent-ink: var(--${feature.tone}-ink);`;
+---
+
+<Base title={feature.name} description={feature.summary}>
+  <div class="feat" style={accent}>
+    <PageHead
+      eyebrow={feature.name}
+      lede={feature.lede}
+      crumbs={[{ label: 'Product', href: '/product/' }, { label: feature.name }]}
+    >
+      {feature.title}
+      <ul class="feat__chips" slot="after" aria-label={`${feature.name} at a glance`}>
+        {feature.chips.map((c) => <li><Chip>{c}</Chip></li>)}
+      </ul>
+    </PageHead>
+
+    <section class="sec feat__points" aria-labelledby="feat-points">
+      <div class="seam" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="feat__head">
+          <Eyebrow>What you get</Eyebrow>
+          <h2 id="feat-points">Built into the runtime.</h2>
+        </div>
+        <ul class="feat__grid">
+          {feature.points.map((p, i) => (
+            <li class="feat__card">
+              <span class="feat__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <h3>{p.title}</h3>
+              <p>{p.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section class="sec feat__run" aria-labelledby="feat-run">
+      <div class="seam" aria-hidden="true"></div>
+      <div class="wrap feat__run-grid">
+        <div class="feat__run-copy">
+          <Eyebrow>In a run</Eyebrow>
+          <h2 id="feat-run">{feature.flow.title}</h2>
+          <p>
+            What {feature.name.toLowerCase()} do{feature.name.endsWith('s') ? '' : 'es'} while a run is
+            actually happening, step by step.
+          </p>
+        </div>
+        <ol class="feat__steps">
+          {feature.flow.steps.map((s) => <li>{s}</li>)}
+        </ol>
+      </div>
+    </section>
+
+    <section class="sec feat__more" aria-labelledby="feat-more">
+      <div class="seam" aria-hidden="true"></div>
+      <div class="wrap">
+        <h2 id="feat-more" class="feat__more-title">Keep exploring</h2>
+        <ul class="feat__pager">
+          <li>
+            <a class="feat__pager-card" href={featureHref(prev.slug)}>
+              <span class="feat__pager-dir">← Previous</span>
+              <span class="feat__pager-name">{prev.name}</span>
+              <span class="feat__pager-sum">{prev.summary}</span>
+            </a>
+          </li>
+          <li>
+            <a class="feat__pager-card feat__pager-card--next" href={featureHref(next.slug)}>
+              <span class="feat__pager-dir">Next →</span>
+              <span class="feat__pager-name">{next.name}</span>
+              <span class="feat__pager-sum">{next.summary}</span>
+            </a>
+          </li>
+        </ul>
+        <p class="feat__also">
+          <a href="/product/">All of the product</a>
+          <span aria-hidden="true">·</span>
+          <a href="/how-it-works/">How a workflow goes from draft to production</a>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <CtaBand id={`${feature.slug}-waitlist`} />
+</Base>
+
+<style>
+  .feat__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 34px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .feat__points,
+  .feat__run,
+  .feat__more {
+    background: color-mix(in srgb, var(--page) var(--sec-veil), transparent);
+  }
+
+  .feat__points {
+    padding: 88px 0;
+  }
+
+  .feat__head h2,
+  .feat__run-copy h2 {
+    margin-top: 16px;
+    font-size: 48px;
+    font-weight: 700;
+  }
+
+  .feat__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin: 44px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .feat__card {
+    position: relative;
+    padding: 28px 28px 30px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+  }
+
+  .feat__card::before {
+    content: '';
+    position: absolute;
+    inset: 0 28px auto;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: var(--accent);
+    opacity: 0.85;
+  }
+
+  .feat__n {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--accent-ink);
+  }
+
+  .feat__card h3 {
+    margin: 14px 0 0;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
+  .feat__card p {
+    margin-top: 12px;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .feat__run {
+    padding: 88px 0;
+  }
+
+  .feat__run-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 64px;
+    align-items: start;
+  }
+
+  .feat__run-copy p {
+    margin-top: 20px;
+    max-width: 420px;
+    font-size: 17px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .feat__steps {
+    margin: 0;
+    padding: 8px 0 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .feat__steps li {
+    position: relative;
+    padding: 0 0 26px 58px;
+    font-size: 17px;
+    line-height: 1.58;
+    color: var(--ink);
+    counter-increment: step;
+  }
+
+  /* The numeral is decorative — the <ol> already carries the order for a
+     screen reader and for the extracted text. */
+  .feat__steps li::before {
+    content: counter(step, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: -2px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface-2));
+    font-family: var(--mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--accent-ink);
+  }
+
+  .feat__steps li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 17.5px;
+    top: 38px;
+    bottom: 2px;
+    width: 1px;
+    background: linear-gradient(color-mix(in srgb, var(--accent) 50%, transparent), var(--line));
+  }
+
+  .feat__steps li:last-child {
+    padding-bottom: 0;
+  }
+
+  .feat__more {
+    padding: 72px 0 96px;
+  }
+
+  .feat__more-title {
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .feat__pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .feat__pager-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 26px 28px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+  }
+
+  .feat__pager-card:hover {
+    color: var(--ink);
+    border-color: var(--line-2);
+    transform: translateY(-2px);
+  }
+
+  .feat__pager-card--next {
+    text-align: right;
+  }
+
+  .feat__pager-dir {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .feat__pager-name {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .feat__pager-sum {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+
+  .feat__also {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+    font-size: 15px;
+    color: var(--ink-4);
+  }
+
+  @media (max-width: 1000px) {
+    .feat__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .feat__run-grid {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .feat__chips {
+      margin-top: 26px;
+      gap: 8px;
+    }
+
+    .feat__points,
+    .feat__run {
+      padding: 60px 0;
+    }
+
+    .feat__head h2,
+    .feat__run-copy h2 {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .feat__grid {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .feat__card {
+      padding: 22px 22px 24px;
+    }
+
+    .feat__card h3 {
+      font-size: 20px;
+    }
+
+    .feat__steps li {
+      padding-left: 52px;
+      font-size: 16px;
+    }
+
+    .feat__more {
+      padding: 52px 0 64px;
+    }
+
+    .feat__more-title {
+      font-size: 26px;
+    }
+
+    .feat__pager {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .feat__pager-card--next {
+      text-align: left;
+    }
+
+    .feat__pager-name {
+      font-size: 24px;
+    }
+  }
+</style>

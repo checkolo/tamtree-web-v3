@@ -23,9 +23,14 @@ interface Props {
    */
   image?: string;
   bodyClass?: string;
+  /**
+   * For pages that must never be indexed — the 404. Drops the canonical too:
+   * a canonical on a not-found page tells a crawler the error IS the page.
+   */
+  noindex?: boolean;
 }
 
-const { title, description, markdownHref, bodyClass, image } = Astro.props;
+const { title, description, markdownHref, bodyClass, image, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
 ---
@@ -40,7 +45,7 @@ const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
 
     <title>{full}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
 
     {markdownHref && <link rel="alternate" type="text/markdown" href={markdownHref} />}
 
@@ -53,7 +58,7 @@ const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
     <meta property="og:type" content="website" />
     <meta property="og:title" content={full} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     {image && <meta property="og:image" content={new URL(image, Astro.site).href} />}
     <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
 

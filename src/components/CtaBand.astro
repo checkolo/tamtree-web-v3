@@ -1,0 +1,106 @@
+---
+import WaitlistForm from './WaitlistForm.astro';
+
+/**
+ * The closing call to action on every inner page — a compact version of the
+ * homepage finale (§10), on the same `.island` so it is ink-black in both
+ * themes and the DOM does not branch.
+ *
+ * It carries the real form rather than a link back to /#waitlist: a reader who
+ * has just finished a feature page is the most qualified visitor the site gets,
+ * and sending them to the top of another page to find the field loses some.
+ *
+ * `id` must be unique per page — the form's label, status line and iframe sink
+ * are all keyed from it.
+ */
+interface Props {
+  id: string;
+  title?: string;
+  lede?: string;
+}
+const {
+  id,
+  title = 'Be first in line.',
+  lede = 'Tamtree is launching soon. Leave an email and we will tell you when early access opens.',
+} = Astro.props;
+---
+
+<section class="sec island cta" aria-labelledby={`${id}-title`}>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="ember-wash cta__wash" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="wrap cta__inner">
+    <h2 id={`${id}-title`}>{title}</h2>
+    <p class="cta__lede">{lede}</p>
+    <div class="cta__form">
+      <WaitlistForm id={id} />
+      <p class="cta__fine">NO SPAM · UNSUBSCRIBE IN ONE CLICK</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta {
+    padding: 104px 0;
+    background: color-mix(in srgb, var(--page) var(--sec-veil), transparent);
+    text-align: center;
+  }
+
+  .cta__wash {
+    width: 760px;
+    height: 360px;
+    left: 50%;
+    top: 40%;
+    translate: -50% -50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 26%, transparent), transparent 70%);
+  }
+
+  .cta__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  h2 {
+    font-size: 64px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .cta__lede {
+    margin: 22px 0 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .cta__form {
+    width: min(520px, 100%);
+    margin-top: 34px;
+  }
+
+  .cta__fine {
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-4);
+  }
+
+  @media (max-width: 700px) {
+    .cta {
+      padding: 72px 0;
+    }
+
+    h2 {
+      font-size: 40px;
+    }
+
+    .cta__lede {
+      font-size: 16px;
+    }
+  }
+</style>

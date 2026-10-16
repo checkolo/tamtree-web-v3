@@ -1,0 +1,182 @@
+---
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
+import Button from '../components/Button.astro';
+
+/**
+ * T2.4 — the not-found page. Astro emits it as dist/404.html, which Vercel
+ * serves with a real 404 status for any path that matches no file.
+ *
+ * `noindex` drops the canonical as well (see Base): a canonical on an error
+ * page tells a crawler the error is the content.
+ *
+ * The way out is a list of the site's real sections, not only "home" — the
+ * reader arrived wanting something specific, and the likeliest something is
+ * one of these four.
+ */
+const ways = [
+  { href: '/product/', label: 'Product', note: 'What Tamtree does' },
+  { href: '/how-it-works/', label: 'How it works', note: 'Draft to production' },
+  { href: '/blog/', label: 'Writing', note: 'Notes from inside a run' },
+  { href: '/#waitlist', label: 'Early access', note: 'Join the waitlist' },
+];
+---
+
+<Base title="Page not found" description="This page does not exist on tamtree.io." noindex>
+  <section class="sec nf">
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="nf__wash" aria-hidden="true"></div>
+
+    <div class="wrap nf__inner">
+      <div class="nf__mark" aria-hidden="true"><Mark size={40} /></div>
+      <p class="nf__code">404 · NOT FOUND</p>
+      <h1>This branch doesn’t exist.</h1>
+      <p class="nf__lede">
+        The page you were after was moved, renamed, or never grew here in the first place. One of
+        these will get you back on track.
+      </p>
+
+      <nav class="nf__ways" aria-label="Site sections">
+        <ul>
+          {ways.map((w) => (
+            <li>
+              <a href={w.href}>
+                <span class="nf__way">{w.label}</span>
+                <span class="nf__note">{w.note}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <Button href="/">Back to home</Button>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    padding: 120px 0 140px;
+    text-align: center;
+  }
+
+  .nf__wash {
+    position: absolute;
+    width: 820px;
+    height: 420px;
+    left: 50%;
+    top: 0;
+    translate: -50% 0;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 16%, transparent), transparent 68%);
+  }
+
+  .nf__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .nf__code {
+    margin-top: 28px;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.24em;
+    color: var(--brand-ink);
+  }
+
+  h1 {
+    margin-top: 18px;
+    max-width: 820px;
+    font-size: 76px;
+    font-weight: 800;
+  }
+
+  .nf__lede {
+    margin-top: 24px;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .nf__ways ul {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    width: min(880px, 100%);
+    margin: 44px 0 40px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nf__ways {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .nf__ways a {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    height: 100%;
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    text-align: left;
+    color: var(--ink);
+    transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+  }
+
+  .nf__ways a:hover {
+    color: var(--ink);
+    border-color: var(--line-2);
+    transform: translateY(-2px);
+  }
+
+  .nf__way {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .nf__note {
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 700px) {
+    .nf {
+      padding: 64px 0 80px;
+    }
+
+    h1 {
+      font-size: 42px;
+      line-height: 0.98;
+    }
+
+    .nf__lede {
+      font-size: 16px;
+    }
+
+    .nf__ways ul {
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 32px 0 28px;
+    }
+
+    .nf__ways a {
+      padding: 16px;
+    }
+
+    .nf__way {
+      font-size: 17px;
+    }
+  }
+</style>

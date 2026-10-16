@@ -1,0 +1,125 @@
+---
+import Legal from '../layouts/Legal.astro';
+
+/**
+ * Privacy (T2.3). Scoped to what this site actually does today, verified
+ * against the build rather than written from a template:
+ *
+ *   * waitlist   — WaitlistForm POSTs email + `tag` fields straight to
+ *                  Buttondown (docs/waitlist.md); nothing of ours sits between.
+ *   * hosting    — Vercel (DEPLOYMENT.md), which logs requests.
+ *   * fonts      — Google Fonts, loaded cross-origin by Base.astro.
+ *   * storage    — one localStorage key, `tt-theme` (theme-init.js). No cookies.
+ *   * analytics  — none.
+ *
+ * If any of those changes — an analytics script, a new form, a new processor —
+ * this page changes in the same commit, and `updated` moves with it.
+ */
+---
+
+<Legal
+  title="Privacy"
+  eyebrow="Legal"
+  updated="2026-10-15"
+  description="What the Tamtree website collects, why, who processes it, and how to have it deleted. No analytics, no advertising, no tracking cookies."
+>
+  <p class="legal__lead">
+    This website collects as little as it can: the email address you give us if you join the
+    waitlist, and the request data any web host sees. There are no analytics, no advertising and
+    no tracking cookies.
+  </p>
+
+  <p>
+    This policy covers <strong>www.tamtree.io</strong> and its waitlist. It does not cover the
+    Tamtree product itself, which will have its own terms and privacy policy when it launches.
+  </p>
+
+  <h2>Who we are</h2>
+  <p>
+    This site is operated by Tamtree (“we”, “us”). For anything in this policy, write
+    to <a href="mailto:hello@tamtree.io">hello@tamtree.io</a>.
+  </p>
+
+  <h2>What we collect, and why</h2>
+
+  <h3>If you join the waitlist</h3>
+  <p>
+    We collect your <strong>email address</strong> and the options you tick (for example “launch
+    news” or “early-access beta”). We use them only to email you about Tamtree’s launch and early
+    access. Your browser sends the form directly to our email provider, Buttondown, which stores the
+    list on our behalf; the address never passes through a server of ours.
+  </p>
+  <p>
+    We rely on your <strong>consent</strong> to do this. You can withdraw it at any time with the
+    unsubscribe link in any email we send, or by writing to us.
+  </p>
+
+  <h3>When you visit any page</h3>
+  <p>
+    Our host, Vercel, receives the information every web request carries — your IP address,
+    browser and device details, the page requested and the time — in order to deliver the page and
+    protect the site from abuse. We do not use this data to identify you or to build a profile.
+  </p>
+  <p>
+    Our pages load their typefaces from <strong>Google Fonts</strong>, so your browser also
+    connects to Google’s servers, which receive your IP address and browser details as part of that
+    request.
+  </p>
+
+  <h3>Stored on your device</h3>
+  <p>
+    If you switch between light and dark mode, your choice is saved in your browser’s local storage
+    under the key <code>tt-theme</code>. It never leaves your device and you can clear it at any
+    time. We set no cookies.
+  </p>
+
+  <h2>What we do not do</h2>
+  <ul>
+    <li>We do not run analytics or tracking scripts.</li>
+    <li>We do not show advertising or use advertising pixels.</li>
+    <li>We do not sell, rent or trade personal data.</li>
+    <li>We do not use your data to train AI models.</li>
+  </ul>
+
+  <h2>Who processes data for us</h2>
+  <ul>
+    <li><strong>Buttondown</strong> — stores and sends email for the waitlist.</li>
+    <li><strong>Vercel</strong> — hosts and delivers this website.</li>
+    <li><strong>Google Fonts</strong> — serves the typefaces the pages use.</li>
+  </ul>
+  <p>
+    These providers may process data in the United States and other countries outside your own.
+    Where the law requires it, those transfers rely on the providers’ standard contractual
+    safeguards.
+  </p>
+
+  <h2>How long we keep it</h2>
+  <p>
+    We keep your waitlist email until you unsubscribe, ask us to delete it, or we close the
+    waitlist — whichever comes first. Request logs are kept by Vercel for the short period its
+    service requires, and are not otherwise retained by us.
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    Depending on where you live, you may have the right to access the personal data we hold about
+    you, to correct it, to have it deleted, to object to or restrict how it is used, and to receive
+    a copy of it. Email <a href="mailto:hello@tamtree.io">hello@tamtree.io</a> and we will act on
+    your request promptly and within the time the law allows. You also have the right to complain
+    to your local data protection authority.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    This site is meant for professionals and is not directed at children under 16. We do not
+    knowingly collect their data; if you believe a child has joined the waitlist, tell us and we
+    will delete the address.
+  </p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If what we collect or how we use it changes, we will update this page and the date at the top.
+    If you are on the waitlist and the change is significant, we will tell you by email before it
+    takes effect.
+  </p>
+</Legal>

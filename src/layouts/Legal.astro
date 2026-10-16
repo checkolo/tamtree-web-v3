@@ -1,0 +1,160 @@
+---
+import Base from './Base.astro';
+import PageHead from '../components/PageHead.astro';
+
+/**
+ * Privacy and Terms (T2.3). Reading pages, so the body is set at a prose
+ * measure on an opaque sheet — the constellation stays behind it, the same
+ * decision the blog post made (Batch 12).
+ *
+ * The page's own prose comes through the slot, which Astro does not scope, so
+ * the rules below reach it through :global() under the .legal root.
+ *
+ * `updated` is a plain ISO date the page sets by hand whenever its text
+ * changes. It is deliberately not the build date: a policy that claims to have
+ * changed on every deploy is a policy nobody can tell has changed.
+ */
+interface Props {
+  title: string;
+  description: string;
+  eyebrow: string;
+  updated: string;
+}
+const { title, description, eyebrow, updated } = Astro.props;
+const updatedLabel = new Date(`${updated}T00:00:00Z`).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<Base title={title} description={description}>
+  <PageHead eyebrow={eyebrow} narrow>
+    {title}
+    <p class="legal__updated" slot="after">
+      Last updated <time datetime={updated}>{updatedLabel}</time>
+    </p>
+  </PageHead>
+
+  <section class="sec legal-sec">
+    <div class="wrap">
+      <div class="legal">
+        <slot />
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .legal__updated {
+    margin-top: 22px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    color: var(--ink-3);
+  }
+
+  .legal-sec {
+    padding: 0 0 110px;
+  }
+
+  .legal {
+    max-width: 760px;
+    padding: 48px 56px 56px;
+    border-radius: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+    font-size: 17px;
+    line-height: 1.72;
+    color: var(--ink-2);
+  }
+
+  .legal > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .legal :global(h2) {
+    margin: 44px 0 14px;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+  }
+
+  .legal :global(h3) {
+    margin: 28px 0 8px;
+    font-family: var(--body);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .legal :global(p),
+  .legal :global(ul) {
+    margin: 0 0 16px;
+  }
+
+  .legal :global(ul) {
+    padding-left: 22px;
+  }
+
+  .legal :global(li) {
+    margin-bottom: 8px;
+  }
+
+  .legal :global(li::marker) {
+    color: var(--brand-ink);
+  }
+
+  .legal :global(strong) {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .legal :global(a) {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--brand) 45%, transparent);
+    text-underline-offset: 3px;
+  }
+
+  .legal :global(code) {
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--field-bg);
+    border: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 0.86em;
+    color: var(--ink);
+  }
+
+  .legal :global(.legal__lead) {
+    font-size: 18.5px;
+    color: var(--ink);
+  }
+
+  @media (max-width: 700px) {
+    .legal-sec {
+      padding-bottom: 72px;
+    }
+
+    .legal {
+      padding: 28px 22px 32px;
+      border-radius: 16px;
+      font-size: 16px;
+    }
+
+    .legal :global(h2) {
+      margin-top: 34px;
+      font-size: 23px;
+    }
+
+    .legal :global(.legal__lead) {
+      font-size: 17px;
+    }
+  }
+</style>

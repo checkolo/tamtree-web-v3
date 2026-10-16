@@ -1,0 +1,439 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHead from '../../components/PageHead.astro';
+import Eyebrow from '../../components/Eyebrow.astro';
+import Chip from '../../components/Chip.astro';
+import Button from '../../components/Button.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { FEATURES, featureHref } from '../../data/product';
+
+/**
+ * /product/ — the overview the nav's "Product" link lands on (T2.3).
+ *
+ * The primitives comparison is a <table> (C3): two things compared on the same
+ * four attributes is tabular data, and the spec's own §3 states it as one.
+ * The feature grid is generated from data/product.ts, the same list the footer
+ * and the /product/<slug>/ routes read.
+ */
+const compare = [
+  { attr: 'Control flow', pipeline: 'Fixed, in the order you drew it', crew: 'A lead agent decides each move' },
+  { attr: 'Best for', pipeline: 'Repeatable, auditable procedures: sync, ETL, billing', crew: 'Open-ended work: research, triage, support' },
+  { attr: 'Cost and latency', pipeline: 'Low and predictable', crew: 'Higher and variable — so it is metered and capped' },
+  { attr: 'Nesting', pipeline: 'A pipeline step can be a crew', crew: 'A crew can call a pipeline as a tool' },
+];
+
+const ladder = [
+  'visual editor',
+  '{{ expressions }}',
+  'sandboxed code steps',
+  'Python SDK',
+  'Git sync + CLI',
+  'full REST API',
+];
+---
+
+<Base
+  title="Product"
+  description="Tamtree runs deterministic pipelines and autonomous agent crews on one durable engine, with guardrails, evals, knowledge and cost controls built in."
+>
+  <PageHead
+    eyebrow="Product"
+    lede="Tamtree is one orchestrator for two kinds of work: the kind that should follow a script, and the kind that has to write its own. Both run on the same crash-proof engine, with the controls production needs already in place."
+  >
+    One engine.<br />Two ways to work.
+    <div class="ov__actions" slot="after">
+      <Button href="#ov-waitlist">Get early access</Button>
+      <Button href="/how-it-works/" variant="ghost">See how it works</Button>
+    </div>
+  </PageHead>
+
+  <section class="sec ov ov__prims" aria-labelledby="ov-prims">
+    <div class="seam" aria-hidden="true"></div>
+    <div class="wrap">
+      <Eyebrow>The primitives</Eyebrow>
+      <h2 id="ov-prims">Some work wants a script.<br />Some work wants a crew.</h2>
+
+      <div class="ov__table-wrap">
+        <table class="ov__table">
+          <caption class="visually-hidden">Pipelines and crews compared</caption>
+          <thead>
+            <tr>
+              <td></td>
+              <th scope="col"><a href={featureHref('pipelines')} class="ov__col ov__col--pipe">Pipelines</a></th>
+              <th scope="col"><a href={featureHref('crews')} class="ov__col ov__col--crew">Crews</a></th>
+            </tr>
+          </thead>
+          <tbody>
+            {compare.map((r) => (
+              <tr>
+                <th scope="row">{r.attr}</th>
+                <td>{r.pipeline}</td>
+                <td>{r.crew}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p class="ov__note">
+        Nest them freely, and choose per step. <strong>One engine underneath.</strong>
+      </p>
+    </div>
+  </section>
+
+  <section class="sec ov" aria-labelledby="ov-features">
+    <div class="seam" aria-hidden="true"></div>
+    <div class="wrap">
+      <Eyebrow>The trust layer</Eyebrow>
+      <h2 id="ov-features">Built in, not bolted on.</h2>
+      <ul class="ov__grid">
+        {FEATURES.map((f) => (
+          <li>
+            <a class="ov__card" href={featureHref(f.slug)} style={`--accent: var(--${f.tone}); --accent-ink: var(--${f.tone}-ink);`}>
+              <span class="ov__card-name">{f.name}</span>
+              <span class="ov__card-title">{f.title}</span>
+              <span class="ov__card-sum">{f.summary}</span>
+              <span class="ov__card-more" aria-hidden="true">Learn more →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="sec ov" aria-labelledby="ov-under">
+    <div class="seam" aria-hidden="true"></div>
+    <div class="wrap">
+      <Eyebrow>Underneath everything</Eyebrow>
+      <h2 id="ov-under">The parts you never have to build.</h2>
+      <div class="ov__under">
+        <article class="ov__panel">
+          <h3>Durable execution</h3>
+          <p>
+            Every run is checkpointed step by step. A crashed process or a replaced host does not
+            lose it, and a run waiting three days on a person uses no compute while it waits.
+          </p>
+          <ul class="ov__chips">
+            <li><Chip>process crashed</Chip></li>
+            <li><Chip>host replaced</Chip></li>
+            <li><Chip tone="live" dot>state intact</Chip></li>
+          </ul>
+        </article>
+
+        <article class="ov__panel">
+          <h3>MCP-native</h3>
+          <p>
+            Any MCP server becomes tools for your agents, and your published workflows become MCP
+            tools for anything else. Already automate in n8n or Zapier? Register them as tools
+            rather than rebuilding their connectors.
+          </p>
+          <ul class="ov__chips">
+            <li><Chip>MCP client</Chip></li>
+            <li><Chip tone="compose">MCP server</Chip></li>
+          </ul>
+        </article>
+
+        <article class="ov__panel">
+          <h3>No ceiling</h3>
+          <p>Start by clicking. When you need more, each rung up is there.</p>
+          <ol class="ov__ladder">
+            {ladder.map((rung, i) => (
+              <li><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>{rung}</li>
+            ))}
+          </ol>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand id="ov-waitlist" />
+</Base>
+
+<style>
+  .ov__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 34px;
+  }
+
+  .ov {
+    padding: 88px 0;
+    background: color-mix(in srgb, var(--page) var(--sec-veil), transparent);
+  }
+
+  .ov h2 {
+    margin-top: 16px;
+    font-size: 48px;
+    font-weight: 700;
+  }
+
+  /* ── primitives table ── */
+
+  .ov__table-wrap {
+    margin-top: 40px;
+    overflow-x: auto;
+    border-radius: 18px;
+    border: 1px solid var(--line);
+    background: var(--card-bg);
+    box-shadow: var(--card-shadow);
+  }
+
+  .ov__table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .ov__table th,
+  .ov__table td {
+    padding: 18px 24px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ov__table tbody tr:last-child th,
+  .ov__table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .ov__table thead th {
+    padding-top: 22px;
+  }
+
+  .ov__table tbody th {
+    width: 22%;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .ov__table td {
+    color: var(--ink-2);
+  }
+
+  .ov__col {
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .ov__col--pipe {
+    color: var(--brand-ink);
+  }
+
+  .ov__col--crew {
+    color: var(--compose-ink);
+  }
+
+  .ov__col:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .ov__note {
+    margin-top: 24px;
+    font-size: 17px;
+    color: var(--ink-2);
+  }
+
+  .ov__note strong {
+    color: var(--brand-ink);
+    font-weight: 600;
+  }
+
+  /* ── feature grid ── */
+
+  .ov__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin: 44px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ov__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    padding: 28px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    box-shadow: var(--card-shadow);
+    color: var(--ink);
+    transition: border-color var(--dur-1) var(--ease), transform var(--dur-1) var(--ease);
+  }
+
+  .ov__card::before {
+    content: '';
+    position: absolute;
+    inset: 0 28px auto;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.85;
+  }
+
+  .ov__card:hover {
+    color: var(--ink);
+    border-color: var(--line-2);
+    transform: translateY(-2px);
+  }
+
+  .ov__card-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+
+  .ov__card-title {
+    font-family: var(--display);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+  }
+
+  .ov__card-sum {
+    flex: 1;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--ink-2);
+  }
+
+  .ov__card-more {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brand-ink);
+  }
+
+  /* ── underneath ── */
+
+  .ov__under {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 44px;
+  }
+
+  .ov__panel {
+    padding: 28px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+  }
+
+  .ov__panel h3 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .ov__panel p {
+    margin-top: 14px;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink-2);
+  }
+
+  .ov__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ov__ladder {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  .ov__ladder li {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+
+  .ov__ladder li span {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand-ink);
+  }
+
+  .ov__ladder li:last-child {
+    border-color: color-mix(in srgb, var(--brand) 45%, transparent);
+    background: color-mix(in srgb, var(--brand) 12%, transparent);
+  }
+
+  @media (max-width: 1000px) {
+    .ov__grid,
+    .ov__under {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 700px) {
+    .ov {
+      padding: 60px 0;
+    }
+
+    .ov h2 {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .ov__actions {
+      margin-top: 26px;
+    }
+
+    .ov__grid,
+    .ov__under {
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .ov__card,
+    .ov__panel {
+      padding: 22px;
+    }
+
+    .ov__card-title {
+      font-size: 21px;
+    }
+
+    .ov__table th,
+    .ov__table td {
+      padding: 14px 16px;
+      font-size: 15px;
+    }
+
+    .ov__col {
+      font-size: 21px;
+    }
+  }
+</style>
