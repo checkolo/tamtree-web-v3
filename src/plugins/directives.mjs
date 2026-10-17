@@ -66,10 +66,25 @@ const VOCABULARY = {
   button: { kind: 'container', element: 'tt-button', wrap: null, expect: 'paragraph' },
 
   steps: { kind: 'container', element: 'tt-steps', wrap: null, expect: 'list' },
-  ledger: { kind: 'container', element: 'tt-ledger', wrap: null, expect: 'table' },
+  // Both scroll sideways on a phone (prose.css), so each is a focusable, named
+  // region — otherwise a keyboard user cannot reach the clipped columns (axe
+  // scrollable-region-focusable, fixed 2026-10-16).
+  ledger: {
+    kind: 'container',
+    element: 'tt-ledger',
+    wrap: null,
+    expect: 'table',
+    fixed: { tabindex: '0', role: 'region', 'aria-label': 'Ledger table' },
+  },
 
   run: { kind: 'container', element: 'tt-run', wrap: null, expect: 'table', attrs: ['src'] },
-  compare: { kind: 'container', element: 'tt-compare', wrap: null, expect: 'table' },
+  compare: {
+    kind: 'container',
+    element: 'tt-compare',
+    wrap: null,
+    expect: 'table',
+    fixed: { tabindex: '0', role: 'region', 'aria-label': 'Comparison table' },
+  },
 
   dag: { kind: 'leaf', element: 'tt-dag', attrs: ['src'], require: ['src'] },
   stat: { kind: 'leaf', element: 'tt-stat', attrs: ['value', 'label'], require: ['value', 'label'] },

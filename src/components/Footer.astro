@@ -1,6 +1,7 @@
 ---
 import Mark from './Mark.astro';
 import ThemeToggle from './ThemeToggle.astro';
+import { FEATURES, featureHref, type Feature } from '../data/product';
 
 /**
  * Ported semantically (C3). Three changes from the artboard's DOM, none of
@@ -18,25 +19,13 @@ import ThemeToggle from './ThemeToggle.astro';
  * In the light theme the footer closes on PAPER — it is deliberately not one of
  * the ink-black islands (design decision, 2026-09-01).
  */
+const linksFor = (group: Feature['group']) =>
+  FEATURES.filter((f) => f.group === group).map((f) => ({ href: featureHref(f.slug), label: f.name }));
+
+/** Generated from data/product.ts, so a footer link cannot outlive its page. */
 const columns = [
-  {
-    id: 'foot-product',
-    label: 'Product',
-    links: [
-      { href: '/product/pipelines/', label: 'Pipelines' },
-      { href: '/product/crews/', label: 'Crews' },
-      { href: '/product/guardrails/', label: 'Guardrails' },
-    ],
-  },
-  {
-    id: 'foot-platform',
-    label: 'Platform',
-    links: [
-      { href: '/product/evals/', label: 'Evals' },
-      { href: '/product/knowledge/', label: 'Knowledge' },
-      { href: '/product/cost-controls/', label: 'Cost controls' },
-    ],
-  },
+  { id: 'foot-product', label: 'Product', links: linksFor('product') },
+  { id: 'foot-platform', label: 'Platform', links: linksFor('platform') },
 ];
 
 const legal = [

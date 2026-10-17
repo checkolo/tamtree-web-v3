@@ -1,0 +1,154 @@
+---
+import Eyebrow from './Eyebrow.astro';
+
+/**
+ * The header every inner page opens with — the blog index's header, lifted so
+ * /product/, /how-it-works/, the feature pages and the legal pages share one
+ * shape instead of five near-copies.
+ *
+ * Breadcrumbs are a <nav> with an ordered list (C3): the trail is a sequence,
+ * and the last crumb is the current page, marked with aria-current rather than
+ * left as a link that goes nowhere.
+ *
+ * The <h1> is the slot's text, so a page can put a <span> inside it for the
+ * second display line the way the homepage does, and still have one heading.
+ */
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  eyebrow: string;
+  lede?: string;
+  crumbs?: Crumb[];
+  /** Narrow measure for reading pages (legal), wide for marketing ones. */
+  narrow?: boolean;
+}
+const { eyebrow, lede, crumbs, narrow = false } = Astro.props;
+---
+
+<section class:list={['sec', 'phead', narrow && 'phead--narrow']}>
+  <div class="grid-bg" aria-hidden="true"></div>
+  <div class="phead__wash" aria-hidden="true"></div>
+
+  <div class="wrap phead__inner">
+    {
+      crumbs && crumbs.length > 0 && (
+        <nav class="phead__crumbs" aria-label="Breadcrumb">
+          <ol>
+            {crumbs.map((c) => (
+              <li>
+                {c.href ? <a href={c.href}>{c.label}</a> : <span aria-current="page">{c.label}</span>}
+              </li>
+            ))}
+          </ol>
+        </nav>
+      )
+    }
+
+    <Eyebrow>{eyebrow}</Eyebrow>
+    <h1><slot /></h1>
+    {lede && <p class="phead__lede">{lede}</p>}
+    <slot name="after" />
+  </div>
+</section>
+
+<style>
+  .phead {
+    padding: 96px 0 64px;
+  }
+
+  .phead__inner {
+    position: relative;
+  }
+
+  .phead__wash {
+    position: absolute;
+    width: 900px;
+    height: 380px;
+    left: -160px;
+    top: -90px;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+    background: radial-gradient(circle, color-mix(in srgb, var(--brand) 15%, transparent), transparent 68%);
+  }
+
+  .phead__crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
+  }
+
+  .phead__crumbs li + li::before {
+    content: '/';
+    margin-right: 10px;
+    color: var(--ink-4);
+  }
+
+  .phead__crumbs a {
+    color: var(--ink-3);
+  }
+
+  .phead__crumbs a:hover {
+    color: var(--brand-ink);
+  }
+
+  .phead__crumbs [aria-current='page'] {
+    color: var(--ink-2);
+  }
+
+  h1 {
+    margin: 20px 0 0;
+    max-width: 960px;
+    font-size: 72px;
+    font-weight: 700;
+  }
+
+  .phead--narrow h1 {
+    font-size: 60px;
+  }
+
+  .phead__lede {
+    margin: 26px 0 0;
+    max-width: 680px;
+    font-size: 19px;
+    line-height: 1.66;
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 700px) {
+    .phead {
+      padding: 52px 0 40px;
+    }
+
+    .phead__wash {
+      width: 460px;
+      height: 280px;
+      left: -120px;
+      top: -70px;
+    }
+
+    h1,
+    .phead--narrow h1 {
+      margin-top: 16px;
+      font-size: 40px;
+      line-height: 0.98;
+    }
+
+    .phead__lede {
+      margin-top: 20px;
+      font-size: 16px;
+      line-height: 1.64;
+    }
+  }
+</style>

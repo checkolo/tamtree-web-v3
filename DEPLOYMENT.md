@@ -171,7 +171,13 @@ Why each part exists:
   so a changed file is a new URL.
 - Everything → the CSP. Its `form-action` allows `buttondown.email` because the
   waitlist form POSTs there directly (no runtime or database of ours sits
-  between); `style-src 'unsafe-inline'` is for Expressive Code, which sets
+  between). `frame-src` allows it too, and is **not** redundant with
+  `form-action`: the form targets a hidden iframe so the page can render its
+  own success state, and that frame navigation is checked against `frame-src`
+  (which falls back to `default-src 'self'`). Without it Chrome blocks the
+  POST before it is sent — yet the iframe still fires `load`, so the form
+  says "You're on the list" for a signup that never left the browser. That
+  shipped to production once (fixed 2026-10-15). `style-src 'unsafe-inline'` is for Expressive Code, which sets
   per-token colours as style attributes. `style-src`/`font-src` also allowlist
   `fonts.googleapis.com`/`fonts.gstatic.com` — Bricolage Grotesque, Instrument
   Sans and JetBrains Mono are loaded from Google Fonts (`Base.astro`'s

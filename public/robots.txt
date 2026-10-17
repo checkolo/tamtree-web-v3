@@ -3,3 +3,5 @@
 # reason. Lifting it is both changes together: DEPLOYMENT.md, "Before launch".
 User-agent: *
 Disallow: /
+
+Sitemap: https://www.tamtree.io/sitemap-index.xml
