@@ -17,7 +17,8 @@ import { legal } from '../data/legal';
  * Every fact about the website itself is checked against the build: no
  * analytics, no cookies, the theme choice in localStorage (theme-init.js),
  * Google Fonts in <head> (Base.astro), the waitlist form posting to Buttondown
- * (docs/waitlist.md), hosting on Vercel.
+ * (docs/waitlist.md), hosting on our own server at AWS in Sydney
+ * (DEPLOYMENT.md), whose access log is Caddy's (deploy/Caddyfile.web).
  *
  * The wording avoids anything gate:copy forbids (licensing, deployment model,
  * pricing), so this page commits to none of them.
@@ -73,9 +74,9 @@ const sections = [
       stored in your browser's local storage so the site remembers it. It is never sent to us.
     </li>
     <li>
-      <strong>Server logs.</strong> Our hosting provider, Vercel, records standard request details
-      (IP address, browser user agent, the page requested, and the time) to deliver the site and
-      protect it from abuse.
+      <strong>Server logs.</strong> Our web server records standard request details (IP address,
+      browser user agent, the page requested, and the time) to deliver the site and protect it
+      from abuse.
     </li>
     <li>
       <strong>Fonts.</strong> The site loads its typefaces from Google Fonts, so your browser sends
@@ -173,7 +174,10 @@ const sections = [
   <h2 id="sharing">Who we share it with</h2>
   <p>We share personal information only as needed to run Tamtree:</p>
   <ul>
-    <li><strong>Vercel</strong>, which hosts this website.</li>
+    <li>
+      <strong>Amazon Web Services</strong>, which provides the server this website runs on, in
+      Sydney, Australia.
+    </li>
     <li><strong>Buttondown</strong>, which holds the waitlist and sends our emails.</li>
     <li><strong>Google Fonts</strong>, which serves the website's typefaces.</li>
     <li>
@@ -189,7 +193,7 @@ const sections = [
 
   <h2 id="overseas">Overseas storage</h2>
   <p>
-    Some of our providers, including Vercel, Buttondown and Google, store or process data outside
+    Some of our providers, including Buttondown and Google, store or process data outside
     Australia, mainly in the United States. We choose providers that protect personal information
     to a standard comparable to the Australian Privacy Principles.
   </p>

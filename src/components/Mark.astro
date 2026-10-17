@@ -2,6 +2,11 @@
 /**
  * The Tamtree mark and wordmark.
  *
+ * The mark is the tiered tree shared with the app (brand decision D4,
+ * 2026-10-14): a trunk, two 45° tiers and a ground bar, one round-capped
+ * stroke on a 100-unit grid. The viewBox is the tree's own square, so `size`
+ * is the tree's height. Below 24px the favicon's one-tier drawing takes over.
+ *
  * The SVG is `aria-hidden` rather than titled: the wordmark beside it says
  * "tamtree" in real text, so a title on the glyph would make a screen reader
  * announce the name twice. Decorative here means decorative — the meaning is
@@ -20,18 +25,19 @@ const wordSize = Math.round(size * 0.85);
   <svg
     width={size}
     height={size}
-    viewBox="0 0 24 24"
+    viewBox="21.5 21.5 57 57"
     fill="none"
+    stroke="var(--brand)"
+    stroke-width="7"
     stroke-linecap="round"
+    stroke-linejoin="round"
     aria-hidden="true"
     focusable="false"
   >
-    <path d="M12 22V6.5" stroke="var(--brand)" stroke-width="2"></path>
-    <path d="M12 14.2L5.6 8.6" stroke="var(--brand)" stroke-width="2" opacity=".8"></path>
-    <path d="M12 11.4L18.4 6.2" stroke="var(--brand)" stroke-width="2" opacity=".8"></path>
-    <circle cx="12" cy="5" r="2.3" fill="var(--brand)"></circle>
-    <circle cx="4.7" cy="7.9" r="2.1" fill="var(--brand)" opacity=".9"></circle>
-    <circle cx="19.3" cy="5.5" r="2.1" fill="var(--live)"></circle>
+    <path d="M50 25V75"></path>
+    <path d="M39 30 50 41 61 30"></path>
+    <path d="M35 42 50 57 65 42"></path>
+    <path d="M34 75H66"></path>
   </svg>
   {wordmark && <span class="mark__word" style={`font-size:${wordSize}px`}>tamtree</span>}
 </span>
