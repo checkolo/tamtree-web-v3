@@ -81,6 +81,9 @@
     if (!root.hasAttribute('data-theme')) paint();
   });
 
+  // The header's ThemeSwitch sets the same attribute; repaint when it does.
+  new MutationObserver(paint).observe(root, { attributeFilter: ['data-theme'] });
+
   paint();
 </script>
 
