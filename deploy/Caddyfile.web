@@ -1,0 +1,82 @@
+# The tamtree.io site blocks — every response header the site depends on.
+#
+# This file is not a whole Caddyfile. The host (tamtree-app) runs one Caddy for
+# the app, the docs and this site; its generator appends this file to the
+# config it builds (see DEPLOYMENT.md, "One-time host setup"). `make deploy`
+# ships it next to the release it was written for and restarts Caddy only when
+# it changed, so the headers and the HTML they describe always move together.
+#
+# Astro's `output: 'static'` writes files, not response headers, so anything
+# that has to be a header can only live here.
+
+# Apex → www. `site` in astro.config.mjs is https://www.tamtree.io, which is
+# what every canonical URL, the sitemap and the feed are generated from.
+tamtree.io {
+	redir https://www.tamtree.io{uri} permanent
+	header -Server
+}
+
+www.tamtree.io {
+	# `current` is a symlink to releases/<tag>, switched by scripts/deploy_remote.sh.
+	root * /srv/web/current
+
+	# RFC 8288 pointer from a post to its markdown sibling. Without it the
+	# `.md` is undiscoverable to anything that does not already know the
+	# convention.
+	@post path_regexp post ^/blog/([^/]+)/$
+	header @post Link `</blog/{re.post.1}.md>; rel="alternate"; type="text/markdown"`
+
+	# Served as text/markdown so a fetch renders as source rather than
+	# downloading, and noindex because the `.md` is a sibling of the real page,
+	# not a second page to rank.
+	@markdown path *.md
+	header @markdown {
+		Content-Type "text/markdown; charset=utf-8"
+		X-Robots-Tag noindex
+	}
+
+	# Deliberately crawlable — these exist to be read by machines.
+	@llms path /llms.txt /llms-full.txt
+	header @llms Content-Type "text/plain; charset=utf-8"
+
+	# Astro puts a content hash in every filename under /_astro/, so a changed
+	# file is a new URL and the old one can be cached forever.
+	@hashed path /_astro/*
+	header @hashed Cache-Control "public, max-age=31536000, immutable"
+
+	header {
+		# PRE-LAUNCH: keep every response out of search indexes. robots.txt
+		# asks crawlers not to fetch; this covers the ones that fetch anyway,
+		# and the files a <meta> tag cannot reach. Remove both together at
+		# launch — DEPLOYMENT.md, "Before launch".
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), interest-cohort=()"
+		# Why each directive is what it is: DEPLOYMENT.md, "Headers and the CSP".
+		# The sha256 is src/brand/theme-init.js — edit that file and this hash
+		# must change with it; scripts/deploy_remote.sh refuses to ship otherwise.
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'sha256-dc4Dkcbb+LDKAowpbGY8L3pvQ4vSff6qtm4WUVZQwyA='; connect-src 'self'; form-action 'self' https://buttondown.email; frame-src https://buttondown.email"
+	}
+	# On its own line, not in the block above: a deletion makes a `header`
+	# block deferred, and deferred headers are skipped when file_server answers
+	# with an error — every 404 would go out with no CSP at all.
+	header -Server
+
+	encode zstd gzip
+	file_server
+
+	# There is no 404 page in the build yet. Without this an unknown URL is an
+	# empty body that still names the server.
+	handle_errors {
+		header -Server
+		respond "{err.status_code} {err.status_text}"
+	}
+
+	# Access logs to stdout so `docker compose logs caddy` works and the
+	# json-file driver's rotation applies.
+	log {
+		output stdout
+	}
+}

@@ -12,7 +12,6 @@ dist/
 /content/
 
 .astro/
-.vercel/
 shots/
 reports/
 .DS_Store
@@ -20,4 +19,3 @@ reports/
 .env.production
 design/reference/
 design/diff/
-.vercel

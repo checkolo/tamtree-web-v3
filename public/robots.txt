@@ -1,4 +1,7 @@
+# PRE-LAUNCH: the site is public but not meant to be crawled or indexed yet.
+# deploy/Caddyfile.web sends "X-Robots-Tag: noindex, nofollow" for the same
+# reason. Lifting it is both changes together: DEPLOYMENT.md, "Before launch".
 User-agent: *
-Allow: /
+Disallow: /
 
 Sitemap: https://www.tamtree.io/sitemap-index.xml

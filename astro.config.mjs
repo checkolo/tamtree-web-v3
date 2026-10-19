@@ -62,7 +62,7 @@ export default defineConfig({
     server: { strictPort: true },
     // Below this size Astro inlines a page's own <script> directly into the
     // HTML rather than emitting a file with a src. That reads as "it just
-    // works" in dev, but the CSP in vercel.json is script-src 'self' with no
+    // works" in dev, but the CSP in deploy/Caddyfile.web is script-src 'self' with no
     // 'unsafe-inline' — production silently drops every inlined script (the
     // constellation canvas, the theme toggle, the nav menu) with no console
     // error to point at. Forcing every script external is what lets the CSP

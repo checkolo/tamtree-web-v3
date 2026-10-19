@@ -6,7 +6,7 @@ T2.2 is written against the real contract rather than redesigned around it later
 ## Why a provider endpoint rather than our own
 
 No runtime, no database, no GDPR surface owned here, and the list lives where it
-will be mailed from. The alternative — a Vercel function writing to a store —
+will be mailed from. The alternative — an endpoint of our own writing to a store —
 buys nothing before launch and adds a system that has to be operated, secured
 and exported from.
 
@@ -30,7 +30,7 @@ state — the deck's copy, not the provider's. The no-JS path lets the redirect
 happen and lands on Buttondown's own confirmation; that is a worse experience
 and an acceptable floor, not the default.
 
-## CSP consequences (recorded against `vercel.json`)
+## CSP consequences (recorded against `deploy/Caddyfile.web`)
 
 | Directive | Value | Why |
 |---|---|---|
