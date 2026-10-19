@@ -1,6 +1,7 @@
 ---
 import Mark from './Mark.astro';
 import Button from './Button.astro';
+import ThemeSwitch from './ThemeSwitch.astro';
 
 /**
  * Ported semantically from the artboards (C3). The mock draws three bare
@@ -55,7 +56,10 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
           </li>
         ))}
       </ul>
-      <Button href="/#waitlist" size="sm" class="nav__cta">Get early access</Button>
+      <div class="nav__actions">
+        <ThemeSwitch />
+        <Button href="/#waitlist" size="sm" class="nav__cta">Get early access</Button>
+      </div>
     </nav>
   </div>
 </header>
@@ -122,6 +126,14 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
     font-weight: 600;
   }
 
+  /* The theme switch sits with the CTA, not in the 34px rhythm of the links:
+     it is a control, not a destination. */
+  .nav__actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
   .nav__menu {
     display: none;
     align-items: center;
@@ -151,6 +163,10 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
       gap: 10px;
     }
 
+    .nav__actions {
+      gap: 10px;
+    }
+
     .nav__list {
       position: absolute;
       inset: 100% 0 auto;
@@ -174,9 +190,14 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
     }
   }
 
-  /* The smallest phones (320px): mark, CTA and menu only just fit, so the CTA
-     gives up some padding rather than slide under the menu button. */
+  /* The smallest phones (320px): mark, CTA and menu only just fit, so the
+     theme switch steps out — the footer toggle still offers the choice — and
+     the CTA gives up some padding rather than slide under the menu button. */
   @media (max-width: 359px) {
+    .nav :global(.tswitch) {
+      display: none;
+    }
+
     .nav :global(.nav__cta) {
       padding: 0 12px;
       font-size: 14px;
