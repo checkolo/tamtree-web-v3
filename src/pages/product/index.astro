@@ -6,6 +6,7 @@ import Chip from '../../components/Chip.astro';
 import Button from '../../components/Button.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { FEATURES, featureHref } from '../../data/product';
+import { breadcrumbs, softwareApplication } from '../../lib/seo';
 
 /**
  * /product/ — the overview the nav's "Product" link lands on (T2.3).
@@ -30,11 +31,14 @@ const ladder = [
   'Git sync + CLI',
   'full REST API',
 ];
+const description =
+  'Tamtree runs deterministic pipelines and autonomous agent crews on one durable engine, with guardrails, evals, knowledge and cost controls built in.';
 ---
 
 <Base
   title="Product"
-  description="Tamtree runs deterministic pipelines and autonomous agent crews on one durable engine, with guardrails, evals, knowledge and cost controls built in."
+  description={description}
+  jsonLd={[softwareApplication(description), breadcrumbs([{ label: 'Product' }], Astro.url.pathname)]}
 >
   <PageHead
     eyebrow="Product"

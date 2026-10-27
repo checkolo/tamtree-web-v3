@@ -5,6 +5,7 @@ import CategoryFilter from '../../../components/CategoryFilter.astro';
 import PostGrid from '../../../components/PostGrid.astro';
 import { CATEGORIES, type CategorySlug } from '../../../lib/categories';
 import { publishedPosts } from '../../../lib/posts';
+import { breadcrumbs } from '../../../lib/seo';
 
 /**
  * A category page per entry in CATEGORIES — every one of them, whether or not a
@@ -25,7 +26,11 @@ const { cat } = Astro.props;
 const posts = (await publishedPosts()).filter((p) => p.data.category === cat.slug);
 ---
 
-<Base title={`${cat.label} — Blog`} description={cat.blurb}>
+<Base
+  title={`${cat.label} — Blog`}
+  description={cat.blurb}
+  jsonLd={[breadcrumbs([{ label: 'Blog', href: '/blog/' }, { label: cat.label }], Astro.url.pathname)]}
+>
   <section class="sec cat-head">
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="wrap">

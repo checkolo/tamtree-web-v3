@@ -4,6 +4,7 @@ import { satteri } from '@astrojs/markdown-satteri';
 import sitemap from '@astrojs/sitemap';
 import expressiveCode from 'astro-expressive-code';
 
+import { agentsCorpus } from './src/plugins/agents.mjs';
 import { ttDirectives } from './src/plugins/directives.mjs';
 
 /**
@@ -45,6 +46,8 @@ export default defineConfig({
       },
     }),
     sitemap(),
+    // Page .md siblings and the llms.txt corpus, derived from dist/ (C4).
+    agentsCorpus(),
   ],
 
   /**

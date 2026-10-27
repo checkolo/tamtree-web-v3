@@ -5,6 +5,7 @@ import Chip from '../../components/Chip.astro';
 import Eyebrow from '../../components/Eyebrow.astro';
 import CtaBand from '../../components/CtaBand.astro';
 import { FEATURES, featureHref, neighbours, type Feature } from '../../data/product';
+import { breadcrumbs } from '../../lib/seo';
 
 /**
  * /product/<slug>/ — one page per feature, all generated from data/product.ts
@@ -26,15 +27,16 @@ interface Props {
 }
 const { feature } = Astro.props;
 const { prev, next } = neighbours(feature.slug);
+const crumbs = [{ label: 'Product', href: '/product/' }, { label: feature.name }];
 const accent = `--accent: var(--${feature.tone}); --accent-ink: var(--${feature.tone}-ink);`;
 ---
 
-<Base title={feature.name} description={feature.summary}>
+<Base title={feature.name} description={feature.summary} jsonLd={[breadcrumbs(crumbs, Astro.url.pathname)]}>
   <div class="feat" style={accent}>
     <PageHead
       eyebrow={feature.name}
       lede={feature.lede}
-      crumbs={[{ label: 'Product', href: '/product/' }, { label: feature.name }]}
+      crumbs={crumbs}
     >
       {feature.title}
       <ul class="feat__chips" slot="after" aria-label={`${feature.name} at a glance`}>

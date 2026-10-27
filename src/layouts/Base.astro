@@ -9,12 +9,28 @@ import Footer from '../components/Footer.astro';
 // Raw so it can be inlined in <head>. It must run before the first paint and
 // before any stylesheet, which a bundled module script cannot do.
 import themeInit from '../brand/theme-init.js?raw';
+import { graph, markdownPathFor } from '../lib/seo';
+
+interface Article {
+  published: Date;
+  updated?: Date;
+  section: string;
+  tags: string[];
+}
 
 interface Props {
   title: string;
   description: string;
-  /** Absolute path of a machine-readable sibling, when one exists (C1/C4). */
+  /**
+   * Absolute path of the page's Markdown sibling (C1/C4). Every page has one,
+   * so this defaults to the path `src/plugins/agents.mjs` writes it at; a post
+   * passes its source `.md` explicitly.
+   */
   markdownHref?: string;
+  /** schema.org nodes for this page; emitted as one `@graph` (C4 contract 4). */
+  jsonLd?: object[];
+  /** Makes the page `og:type=article` and adds the `article:*` properties. */
+  article?: Article;
   /**
    * Site-root path of the share image. `twitter:card` has always claimed
    * `summary_large_image` here; until something fills this in, that claim is a
@@ -34,13 +50,18 @@ interface Props {
 const {
   title,
   description,
-  markdownHref,
+  markdownHref: markdownProp,
+  jsonLd = [],
+  article,
   bodyClass,
   image = '/og-default.png',
   noindex = false,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
+const markdownHref = noindex ? undefined : (markdownProp ?? markdownPathFor(Astro.url.pathname));
+// `<` escaped so no string in the data can close the script element early.
+const ld = jsonLd.length ? JSON.stringify(graph(jsonLd)).replace(/</g, '\\u003c') : null;
 ---
 
 <!doctype html>
@@ -65,12 +86,28 @@ const full = title === 'Tamtree' ? title : `${title} · Tamtree`;
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#ea580c" />
 
-    <meta property="og:type" content="website" />
+    <link rel="alternate" type="application/rss+xml" title="Tamtree blog" href="/blog/rss.xml" />
+    <meta property="og:site_name" content="Tamtree" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
     <meta property="og:title" content={full} />
     <meta property="og:description" content={description} />
     {!noindex && <meta property="og:url" content={canonical} />}
     {image && <meta property="og:image" content={new URL(image, Astro.site).href} />}
     <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
+    {
+      article && (
+        <>
+          <meta property="article:published_time" content={article.published.toISOString()} />
+          <meta property="article:modified_time" content={(article.updated ?? article.published).toISOString()} />
+          <meta property="article:section" content={article.section} />
+          {article.tags.map((t) => <meta property="article:tag" content={t} />)}
+        </>
+      )
+    }
+    {/* A data block, not a script: CSP script-src does not apply to it, so the
+        strict policy and the theme-init hash are untouched. `is:inline` keeps
+        Astro from bundling it out to a file. */}
+    {ld && <script type="application/ld+json" is:inline set:html={ld} />}
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

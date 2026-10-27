@@ -1,6 +1,7 @@
 ---
 import Base from './Base.astro';
 import { formatLegalDate, legal } from '../data/legal';
+import { breadcrumbs } from '../lib/seo';
 
 /**
  * The reading sheet for the legal pages — the blog post's sheet, measure and
@@ -20,7 +21,7 @@ const { title, description, sections } = Astro.props;
 const updated = legal.lastUpdated;
 ---
 
-<Base title={title} description={description}>
+<Base title={title} description={description} jsonLd={[breadcrumbs([{ label: title }], Astro.url.pathname)]}>
   <article class="legal">
     <div class="wrap">
       <div class="legal__sheet">

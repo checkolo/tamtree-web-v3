@@ -9,11 +9,16 @@ import Knowledge from '../components/sections/Knowledge.astro';
 import Interop from '../components/sections/Interop.astro';
 import Trust from '../components/sections/Trust.astro';
 import Waitlist from '../components/sections/Waitlist.astro';
+import { organization, softwareApplication, website } from '../lib/seo';
+
+const description =
+  'An agent-first workflow orchestrator. Deterministic pipelines and autonomous agent crews on one crash-proof engine, with guardrails, evals and budgets built in.';
 ---
 
 <Base
   title="Tamtree"
-  description="An agent-first workflow orchestrator. Deterministic pipelines and autonomous agent crews on one crash-proof engine, with guardrails, evals and budgets built in."
+  description={description}
+  jsonLd={[organization(), website(), softwareApplication(description)]}
 >
   <meta
     slot="head"
