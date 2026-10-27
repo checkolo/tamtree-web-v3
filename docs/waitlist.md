@@ -3,6 +3,10 @@
 **Provider: Buttondown.** Decided 2026-09-02, ahead of the form being built, so
 T2.2 is written against the real contract rather than redesigned around it later.
 
+**2026-10-28:** Buttondown moved its domain — `buttondown.email` now 302s to
+`buttondown.com`, which a CSP naming only `.email` blocks mid-redirect. The form,
+the CSP and this document now use `.com`.
+
 ## Why a provider endpoint rather than our own
 
 No runtime, no database, no GDPR surface owned here, and the list lives where it
@@ -13,7 +17,7 @@ and exported from.
 ## The endpoint
 
 ```
-POST https://buttondown.email/api/emails/embed-subscribe/<username>
+POST https://buttondown.com/api/emails/embed-subscribe/<username>
 Content-Type: application/x-www-form-urlencoded
 
 email=<address>&tag=waitlist
@@ -34,7 +38,7 @@ and an acceptable floor, not the default.
 
 | Directive | Value | Why |
 |---|---|---|
-| `form-action` | `'self' https://buttondown.email` | the form POSTs cross-origin |
+| `form-action` | `'self' https://buttondown.com` | the form POSTs cross-origin |
 | `connect-src` | `'self'` | unchanged — no `fetch`, the form is a real form |
 | `script-src` | `'self'` | unchanged — no provider SDK is loaded |
 
