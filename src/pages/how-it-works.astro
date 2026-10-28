@@ -5,6 +5,7 @@ import Eyebrow from '../components/Eyebrow.astro';
 import Chip from '../components/Chip.astro';
 import Button from '../components/Button.astro';
 import CtaBand from '../components/CtaBand.astro';
+import { breadcrumbs } from '../lib/seo';
 
 /**
  * /how-it-works/ — the lifecycle a workflow goes through, draft to production
@@ -65,6 +66,7 @@ const failures = [
 
 <Base
   title="How it works"
+  jsonLd={[breadcrumbs([{ label: 'How it works' }], Astro.url.pathname)]}
   description="How a Tamtree workflow goes from draft to production: build, test, grade, publish through a promotion gate, run on durable execution, and keep it on the record."
 >
   <PageHead

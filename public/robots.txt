@@ -5,3 +5,7 @@ User-agent: *
 Disallow: /
 
 Sitemap: https://www.tamtree.io/sitemap-index.xml
+
+# For language models and agents (C4 contract 3) — the whole site as Markdown:
+# llms.txt:      https://www.tamtree.io/llms.txt
+# llms-full.txt: https://www.tamtree.io/llms-full.txt

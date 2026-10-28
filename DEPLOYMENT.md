@@ -169,7 +169,7 @@ Why each part exists:
   exist to be read by machines.
 - `/_astro/*` → cached forever. Astro puts a content hash in those filenames,
   so a changed file is a new URL.
-- Everything → the CSP. Its `form-action` allows `buttondown.email` because the
+- Everything → the CSP. Its `form-action` allows `buttondown.com` because the
   waitlist form POSTs there directly (no runtime or database of ours sits
   between). `frame-src` allows it too, and is **not** redundant with
   `form-action`: the form targets a hidden iframe so the page can render its
@@ -217,8 +217,22 @@ curl -sI http://localhost:8080/blog/
 The site is reachable but deliberately kept out of search engines. Two things
 do that, and launch means removing both in one deploy:
 
-- `public/robots.txt` disallows everything. Replace it with an allow-all and a
-  `Sitemap: https://www.tamtree.io/sitemap-index.xml` line.
+- `public/robots.txt` disallows everything. Replace it with:
+
+  ```
+  User-agent: *
+  Allow: /
+
+  Sitemap: https://www.tamtree.io/sitemap-index.xml
+
+  # For language models and agents — the whole site as Markdown:
+  # llms.txt:      https://www.tamtree.io/llms.txt
+  # llms-full.txt: https://www.tamtree.io/llms-full.txt
+  ```
+
+  One `*` group on purpose: it already admits GPTBot, ClaudeBot,
+  PerplexityBot and the rest, and a named group *replaces* `*` for that bot
+  rather than extending it.
 - `deploy/Caddyfile.web` sends `X-Robots-Tag: noindex, nofollow` on every
   response. Delete that line (the `noindex` on `*.md` is separate and stays).
 
