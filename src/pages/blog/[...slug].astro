@@ -5,6 +5,10 @@ import { Image, getImage } from 'astro:assets';
 import { getCollection, getEntry, render } from 'astro:content';
 import { blogPosting, breadcrumbs } from '../../lib/seo';
 import { category as lookup, categoryHref } from '../../lib/categories';
+import { publishedPosts, readingMinutes } from '../../lib/posts';
+import PostGrid from '../../components/PostGrid.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import PostShare from '../../components/PostShare.astro';
 
 export async function getStaticPaths() {
   // Drafts are visible in dev, and in a build made with TT_INCLUDE_DRAFTS=1 —
@@ -16,7 +20,7 @@ export async function getStaticPaths() {
 }
 
 const { post } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 
 /**
  * The empty-body guard, and why it is on the page rather than in a gate.
@@ -68,6 +72,40 @@ const { hero, heroAlt } = post.data;
 const share = hero ? await getImage({ src: hero, width: 1200, format: 'jpeg' }) : null;
 const author = await getEntry(post.data.author);
 const markdownHref = `/blog/${post.id}.md`;
+
+const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const mins = readingMinutes(post.body);
+const authorName = author?.data.name ?? 'Tamtree';
+const initials = authorName
+  .split(/\s+/)
+  .map((w) => w[0])
+  .slice(0, 2)
+  .join('')
+  .toUpperCase();
+
+/**
+ * The table of contents is the post's H2s, and only when there are enough of
+ * them to be worth navigating — a three-paragraph note with one heading does
+ * not need a map. A leading "1. " is dropped from the label: the rail is a
+ * list already, and the number repeated beside it is noise.
+ */
+const toc = headings
+  .filter((h) => h.depth === 2)
+  .map((h) => ({ slug: h.slug, text: h.text.replace(/^\d+\.\s+/, '') }));
+const showToc = toc.length >= 3;
+
+/**
+ * "Keep reading": up to three other posts, same category first, then the
+ * newest of the rest. Never the post itself, and never an empty heading — the
+ * section is left out entirely when there is nothing else to read.
+ */
+const others = (await publishedPosts()).filter((p) => p.id !== post.id);
+const related = [
+  ...others.filter((p) => p.data.category === post.data.category),
+  ...others.filter((p) => p.data.category !== post.data.category),
+].slice(0, 3);
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const jsonLd = [
   blogPosting({
     path: Astro.url.pathname,
@@ -96,32 +134,69 @@ const jsonLd = [
   article={{ published, updated: post.data.updatedDate, section: cat.label, tags: post.data.tags }}
   image={share?.src}
 >
+  {/* Reading progress. Pure CSS (a scroll timeline), so it exists only where
+      the browser supports one — absent is a fine fallback for a cosmetic bar. */}
+  <div class="post__progress" aria-hidden="true"></div>
+
   <article class="post">
-    <div class="wrap">
-      {/* The reading sheet. The constellation is back behind the blog, and a
-          moving dot-network directly under body copy is what made a post hard
-          to read — so the words sit on an opaque surface and the network stays
-          visible around it, framing the page instead of competing with it. */}
-      <div class="post__sheet">
+    {/* The editorial layout (2026-10-28), replacing Batch 12's reading sheet.
+        The sheet existed to keep the moving constellation out from under the
+        text; the same job is now done by fading the network out once the
+        reader is past the header (see the #bg rules below), so the column can
+        sit on the page itself like every other long-form reading surface. */}
+    <div class="wrap post__layout">
+      <header class="post__head">
         {/* The category is a route now, so the eyebrow is a way back to it
             rather than a label of the slug. */}
         <p class="eyebrow"><a href={categoryHref(post.data.category)}>{cat.label}</a></p>
         <h1>{post.data.title}</h1>
-        <p class="post__meta">
-          <time datetime={published.toISOString()}>
-            {published.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </time>
-        </p>
+        <div class="post__byline">
+          <span class="post__avatar" aria-hidden="true">{initials}</span>
+          <p class="post__meta">
+            <span class="post__author">{authorName}</span>
+            <span class="post__when">
+              <time datetime={published.toISOString()}>{fmt(published)}</time>
+              <span aria-hidden="true"> · </span>
+              {mins} min read
+              {
+                post.data.updatedDate && (
+                  <>
+                    <span aria-hidden="true"> · </span>
+                    Updated <time datetime={post.data.updatedDate.toISOString()}>{fmt(post.data.updatedDate)}</time>
+                  </>
+                )
+              }
+            </span>
+          </p>
+        </div>
+      </header>
+
+      {
+        hero && (
+          <Image
+            class="post__hero"
+            src={hero}
+            alt={heroAlt ?? ''}
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 1100px) 92vw, 996px"
+            loading="eager"
+          />
+        )
+      }
+
+      <div class="post__main">
         {
-          hero && (
-            <Image
-              class="post__hero"
-              src={hero}
-              alt={heroAlt ?? ''}
-              widths={[640, 960, 1280]}
-              sizes="(max-width: 860px) 92vw, 1004px"
-              loading="eager"
-            />
+          showToc && (
+            <details class="post__toc-m">
+              <summary>On this page</summary>
+              <nav aria-label="Contents">
+                <ol>
+                  {toc.map((h) => (
+                    <li><a href={`#${h.slug}`}>{h.text}</a></li>
+                  ))}
+                </ol>
+              </nav>
+            </details>
           )
         }
 
@@ -149,28 +224,141 @@ const jsonLd = [
         <div class="post__body">
           <Content />
         </div>
+
+        <footer class="post__end">
+          <div class="post__byline">
+            <span class="post__avatar" aria-hidden="true">{initials}</span>
+            <p class="post__meta">
+              <span class="post__author">{authorName}</span>
+              {author?.data.title && <span class="post__when">{author.data.title}</span>}
+            </p>
+          </div>
+          <PostShare url={canonical} title={post.data.title} />
+        </footer>
       </div>
+
+      {
+        showToc && (
+          <aside class="post__rail">
+            <nav class="toc" aria-label="On this page">
+              <p class="toc__title" aria-hidden="true">On this page</p>
+              <ol>
+                {toc.map((h) => (
+                  <li><a href={`#${h.slug}`} data-toc={h.slug}>{h.text}</a></li>
+                ))}
+              </ol>
+            </nav>
+          </aside>
+        )
+      }
     </div>
   </article>
+
+  {
+    related.length > 0 && (
+      <section class="related" aria-labelledby="related-title">
+        <div class="wrap related__inner">
+          <h2 id="related-title" class="related__title">Keep reading</h2>
+          <PostGrid posts={related} label="More posts" />
+        </div>
+      </section>
+    )
+  }
+
+  <CtaBand id="post-cta" />
 </Base>
 
 <style>
-  .post {
-    padding-block: var(--sec-y);
+  /* ── The page under the post ─────────────────────────────────────────
+
+     The constellation stays on the blog, but only behind the header. Past the
+     first ~400px of scroll it fades out, so body copy never has a moving
+     network under it — the job Batch 12's opaque sheet used to do. The mask
+     keeps it to the top of the viewport even before any scroll, and the
+     --scene-bg ember glows go too: they are `fixed`, so they would drift
+     behind the paragraphs exactly as the owner reported in Batch 12. */
+  :global(body) {
+    background: var(--page);
   }
 
-  /* Opaque, deliberately. The constellation is a backdrop for the blog, not a
-     texture under the paragraphs: --page is the token every solid surface is
-     measured against, so this is the same ground the site uses everywhere the
-     eye has to rest. */
-  .post__sheet {
-    max-width: 1180px;
-    margin-inline: auto;
-    padding: 56px 88px 68px;
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    background: var(--page);
-    box-shadow: var(--card-shadow);
+  :global(#bg) {
+    -webkit-mask-image: linear-gradient(#000 0, #000 140px, transparent 460px);
+    mask-image: linear-gradient(#000 0, #000 140px, transparent 460px);
+    transition: opacity 0.4s var(--ease);
+  }
+
+  /* Where scroll timelines exist the fade tracks the scroll exactly; the
+     script below sets data-past as the fallback everywhere else. */
+  @supports (animation-timeline: scroll()) {
+    :global(#bg) {
+      animation: post-net-fade linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 420px;
+    }
+  }
+
+  :global(#bg[data-past]) {
+    opacity: 0;
+  }
+
+  @keyframes post-net-fade {
+    to { opacity: 0; }
+  }
+
+  .post__progress {
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .post__progress {
+      display: block;
+      position: fixed;
+      top: 75px;
+      left: 0;
+      right: 0;
+      z-index: 61;
+      height: 2px;
+      background: var(--brand);
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      animation: post-progress linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+
+  @keyframes post-progress {
+    to { transform: scaleX(1); }
+  }
+
+  /* ── Layout ────────────────────────────────────────────────────────────
+
+     One 720px reading column and a 220px rail, centred together. The text
+     runs the column's full width — there is no narrower measure inside a wider
+     box any more, so the right edge of a paragraph and of a table agree. The
+     hero is the one thing that spans both. */
+  .post {
+    position: relative;
+    padding-block: 72px 112px;
+  }
+
+  .post__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 720px) 220px;
+    grid-template-areas:
+      'head .'
+      'hero hero'
+      'main rail';
+    justify-content: center;
+    column-gap: 56px;
+  }
+
+  .post__head { grid-area: head; }
+  .post__hero { grid-area: hero; }
+  .post__main { grid-area: main; min-width: 0; }
+  .post__rail { grid-area: rail; }
+
+  .eyebrow {
+    color: var(--brand-ink);
   }
 
   .eyebrow a {
@@ -179,37 +367,178 @@ const jsonLd = [
   }
 
   .eyebrow a:hover {
-    color: var(--brand-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
 
   h1 {
-    margin-top: 14px;
-    font-size: clamp(32px, 4.4vw, 52px);
-    max-width: 20ch;
+    margin-top: 16px;
+    font-size: clamp(34px, 4.2vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+  }
+
+  /* A byline, in the body face. The old meta line was spaced-out mono — it
+     read as a log line, not as a person who wrote this. */
+  .post__byline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .post__head .post__byline {
+    margin-top: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .post__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--spine-bg);
+    border: 1px solid var(--spine-border);
+    color: var(--spine-ink);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
   .post__meta {
-    margin-top: 18px;
-    padding-bottom: 26px;
-    border-bottom: 1px solid var(--line);
-    font-family: var(--mono);
-    font-size: 12.5px;
-    letter-spacing: 0.08em;
-    color: var(--ink-4);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.4;
+    color: var(--ink-3);
   }
 
-  /* The hero sits under the meta rule, not above the title. A picture before
-     the headline pushes the one thing the reader came for below the fold, and
-     the eyebrow/title/date block is what tells them they are in the right
-     place. */
+  .post__author {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* The hero sits under the byline, not above the title. A picture before
+     the headline pushes the one thing the reader came for below the fold. */
   .post__hero {
     display: block;
     width: 100%;
     height: auto;
-    margin-top: 34px;
-    border-radius: 14px;
+    margin-top: 40px;
+    border-radius: 12px;
     border: 1px solid var(--line);
     background: var(--field-bg);
+  }
+
+  /* ── The rail ──────────────────────────────────────────────────────── */
+
+  .post__rail {
+    position: sticky;
+    top: 112px;
+    align-self: start;
+    margin-top: 48px;
+  }
+
+  .toc__title {
+    margin: 0 0 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+  }
+
+  .toc ol,
+  .post__toc-m ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .toc a {
+    display: block;
+    padding: 6px 0 6px 14px;
+    border-left: 1px solid var(--line);
+    font-size: 13.5px;
+    line-height: 1.45;
+    color: var(--ink-3);
+    text-decoration: none;
+    transition: color var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+  }
+
+  .toc a:hover {
+    color: var(--ink);
+  }
+
+  .toc a[aria-current='true'] {
+    padding-left: 13px;
+    border-left: 2px solid var(--brand);
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  /* Below the rail's breakpoint the same list folds into the column. */
+  .post__toc-m {
+    display: none;
+    margin-top: 32px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .post__toc-m summary {
+    padding: 14px 18px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    cursor: pointer;
+  }
+
+  .post__toc-m ol {
+    padding: 0 18px 14px;
+  }
+
+  .post__toc-m a {
+    display: block;
+    padding: 6px 0;
+    font-size: 15px;
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+
+  /* ── After the post ────────────────────────────────────────────────── */
+
+  .post__end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 56px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+
+  .related {
+    position: relative;
+    padding-block: 0 112px;
+  }
+
+  /* The same 996px as the column plus rail, so the cards line up under the
+     post rather than jumping out to the site's full wrap. */
+  .related__inner {
+    max-width: 996px;
+  }
+
+  .related__title {
+    margin-bottom: 28px;
+    font-size: 28px;
+    line-height: 1.15;
   }
 
   /* Loud on purpose, and dev-only — a production build never reaches this page
@@ -232,9 +561,9 @@ const jsonLd = [
   /* Long-form measure. Everything the Markdown pipeline emits lands here, so
      this is where the reading rhythm is set rather than in each directive. */
   .post__body {
-    margin-top: 36px;
-    font-size: 17px;
-    line-height: 1.7;
+    margin-top: 44px;
+    font-size: 18px;
+    line-height: 1.72;
     color: var(--ink-2);
   }
 
@@ -245,17 +574,15 @@ const jsonLd = [
      spacing and type scale to the page's. The child combinator keeps this
      owning the rhythm of the post's own blocks and nothing nested inside a
      directive, which owns its own. */
-  /* Plain running text gets its own measure, narrower than the sheet: a wide
-     sheet is what the hero and the directive blocks (cards, tables, code)
-     need room for, but a 100+ character paragraph line is unreadable at that
-     width. Everything else — directives, the bare table below, images — is
-     left at the sheet's full width on purpose. */
   .post__body > :global(p),
   .post__body > :global(ul),
   .post__body > :global(ol),
   .post__body > :global(blockquote) {
-    max-width: 68ch;
-    margin-block: 22px;
+    margin-block: 24px;
+  }
+
+  .post__body > :global(:first-child) {
+    margin-top: 0;
   }
 
   .post__body > :global(.expressive-code) {
@@ -263,16 +590,17 @@ const jsonLd = [
   }
 
   .post__body > :global(h2) {
-    max-width: 68ch;
-    margin-block: 44px 14px;
-    font-size: 30px;
+    position: relative;
+    margin-block: 64px 16px;
+    font-size: 28px;
     line-height: 1.2;
+    letter-spacing: -0.02em;
     color: var(--ink);
   }
 
   .post__body > :global(h3) {
-    max-width: 68ch;
-    margin-block: 32px 12px;
+    position: relative;
+    margin-block: 36px 12px;
     font-size: 22px;
     line-height: 1.25;
     color: var(--ink);
@@ -323,6 +651,27 @@ const jsonLd = [
 
   .post__body :global(strong) { color: var(--ink); }
 
+  /* Section links. The script appends one to every H2/H3 with an id; it shows
+     on hover and is otherwise out of the way. Hidden from assistive tech and
+     the tab order — the TOC is the accessible way to reach a section. */
+  .post__body :global(.post__anchor) {
+    margin-left: 0.3em;
+    color: var(--ink-4);
+    font-weight: 400;
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity var(--dur-1) var(--ease);
+  }
+
+  .post__body :global(h2:hover .post__anchor),
+  .post__body :global(h3:hover .post__anchor) {
+    opacity: 1;
+  }
+
+  .post__body :global(.post__anchor:hover) {
+    color: var(--brand-ink);
+  }
+
   .post__body :global(blockquote) {
     margin-inline: 0;
     padding-left: 22px;
@@ -331,16 +680,116 @@ const jsonLd = [
     font-size: 1.03em;
   }
 
-  @media (max-width: 860px) {
-    .post__sheet {
-      padding: 34px 24px 44px;
-      border-radius: 16px;
+  @media (max-width: 1100px) {
+    .post__layout {
+      grid-template-columns: minmax(0, 720px);
+      grid-template-areas:
+        'head'
+        'hero'
+        'main';
     }
+
+    .post__rail { display: none; }
+    .post__toc-m { display: block; }
   }
 
   @media (max-width: 700px) {
-    .post__body { font-size: 16px; }
-    .post__body > :global(h2) { margin-block: 34px 12px; font-size: 25px; }
+    .post { padding-block: 40px 80px; }
+    .post__progress { top: 61px; }
+    .post__hero { margin-top: 28px; border-radius: 10px; }
+    .post__body { margin-top: 32px; font-size: 16.5px; line-height: 1.7; }
+    .post__body > :global(h2) { margin-block: 44px 12px; font-size: 24px; }
     .post__body > :global(h3) { font-size: 19px; }
+    .related { padding-bottom: 80px; }
+    .related__title { font-size: 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post__progress { display: none; }
   }
 </style>
+
+<script>
+  /**
+   * Post-page enhancements. Each one is optional: without this script the
+   * post reads the same, the TOC still links, and only the conveniences go.
+   */
+
+  // Section links on every H2/H3 the pipeline gave an id.
+  for (const h of document.querySelectorAll<HTMLElement>('.post__body > h2[id], .post__body > h3[id]')) {
+    const a = document.createElement('a');
+    a.className = 'post__anchor';
+    a.href = `#${h.id}`;
+    a.textContent = '#';
+    a.setAttribute('aria-hidden', 'true');
+    a.tabIndex = -1;
+    h.append(a);
+  }
+
+  // Highlight the section being read in the rail: the last heading whose top
+  // has passed just under the nav. Measured on scroll rather than with an
+  // IntersectionObserver, which only reports crossings — a jump straight into
+  // the middle of a section (a shared #link, a long scroll) would light nothing.
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('.toc a[data-toc]')].map((a) => [a.dataset.toc!, a])
+  );
+  const heads = [...links.keys()]
+    .map((id) => document.getElementById(id))
+    .filter((h): h is HTMLElement => !!h);
+  if (heads.length) {
+    let current: HTMLAnchorElement | undefined;
+    let queued = false;
+    const update = () => {
+      queued = false;
+      let id = heads[0].id;
+      for (const h of heads) {
+        if (h.getBoundingClientRect().top <= 120) id = h.id;
+        else break;
+      }
+      const next = links.get(id);
+      if (next === current) return;
+      current?.removeAttribute('aria-current');
+      next?.setAttribute('aria-current', 'true');
+      current = next;
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (!queued) {
+          queued = true;
+          requestAnimationFrame(update);
+        }
+      },
+      { passive: true }
+    );
+    update();
+  }
+
+  // Copy link — shown only where the clipboard API exists.
+  if (navigator.clipboard) {
+    for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-copy-link]')) {
+      btn.hidden = false;
+      const label = btn.querySelector<HTMLElement>('[data-copy-label]');
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(btn.dataset.copyLink ?? location.href);
+          if (label) label.textContent = 'Copied';
+        } catch {
+          if (label) label.textContent = 'Copy failed';
+        }
+        setTimeout(() => label && (label.textContent = 'Copy link'), 1800);
+      });
+      if (label) label.setAttribute('aria-live', 'polite');
+    }
+  }
+
+  // The constellation fade, where CSS scroll timelines are not available.
+  if (!CSS.supports('animation-timeline: scroll()')) {
+    const bg = document.getElementById('bg');
+    if (bg) {
+      const onScroll = () => bg.toggleAttribute('data-past', scrollY > 320);
+      addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    }
+  }
+</script>

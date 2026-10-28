@@ -30,7 +30,7 @@ tt-callout > aside {
   padding: 20px 24px 20px 22px;
   border: 1px solid var(--cal-line);
   border-left: 3px solid var(--cal-edge);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--cal-bg);
 }
 
@@ -100,6 +100,11 @@ tt-aside > aside {
 tt-aside > aside > :first-child { margin-top: 0; }
 tt-aside > aside > :last-child { margin-bottom: 0; }
 
+/* Blocks sit on the page, not on raised surfaces (2026-10-28). The post is an
+   editorial column now, not a card, so a block earns its edge with a hairline
+   border alone — fills and shadows made every directive look like a widget
+   dropped into the text. */
+
 /* ── steps ──────────────────────────────────────────────────────────────── */
 
 tt-steps {
@@ -107,8 +112,7 @@ tt-steps {
   margin: 30px 0;
   padding: 26px 28px;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 10px;
 }
 
 tt-steps > ol,
@@ -175,8 +179,7 @@ tt-compare {
   margin: 32px 0;
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 10px;
 }
 
 tt-ledger > table,
@@ -237,8 +240,7 @@ tt-stat {
   padding: 26px 28px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--brand);
-  border-radius: 14px;
-  background: var(--surface);
+  border-radius: 10px;
   color: var(--ink-3);
   font-size: 15px;
   line-height: 1.5;
@@ -271,9 +273,8 @@ tt-card > article {
   padding: 24px 24px 22px;
   border: 1px solid var(--line);
   border-top: 3px solid var(--card-edge, var(--line-2));
-  border-radius: 14px;
+  border-radius: 10px;
   background: var(--card-bg);
-  box-shadow: var(--card-shadow);
 }
 
 tt-card h3 {
@@ -382,4 +383,21 @@ tt-figure figcaption::before {
   tt-card > article { padding: 20px; }
   tt-figure { margin: 24px 0; }
   tt-figure figcaption { font-size: 13.5px; }
+}
+
+/* ── inline code ─────────────────────────────────────────────────────────── */
+
+/* Nothing styled inline `code` before this, so it fell back to the browser's
+   Courier — in the ledger's first column and inside callouts, where it is most
+   of what the reader is scanning for. `pre code` belongs to expressive-code.
+   `break-word`, not `anywhere`: the latter lowers a table column's minimum
+   width, so `regenerate` broke across two lines in the ledger. */
+.post__body :not(pre) > code {
+  padding: 0.1em 0.38em;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  font-family: var(--mono);
+  font-size: 0.86em;
+  overflow-wrap: break-word;
 }
