@@ -92,6 +92,9 @@ const shown = publishDate.toLocaleDateString('en-GB', {
   .pcard__thumb {
     display: block;
     width: calc(100% + 60px);
+    /* base.css caps every img at 100%, which silently undid the bleed above
+       and left a gap down the card's right edge. */
+    max-width: none;
     height: 180px;
     margin: -30px -30px 4px;
     object-fit: cover;

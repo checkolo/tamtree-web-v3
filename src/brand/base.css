@@ -23,6 +23,9 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* The nav is sticky (74px, 60px on a phone), so without this every #anchor —
+     a TOC entry, a shared section link — lands with its heading behind it. */
+  scroll-padding-top: 96px;
 }
 
 body {

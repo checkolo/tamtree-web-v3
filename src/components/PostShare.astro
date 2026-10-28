@@ -1,0 +1,85 @@
+---
+/**
+ * Share a post: copy its link, or hand it to X or LinkedIn.
+ *
+ * Plain intent URLs rather than either network's widget — no third-party
+ * script, nothing for the CSP to allow, and no tracking pixel on a page that
+ * otherwise has none. "Copy link" is the one that needs JavaScript; without it
+ * the button is hidden rather than left dead (`hidden` is lifted by the post
+ * route's script once the clipboard is known to exist).
+ */
+interface Props {
+  url: string;
+  title: string;
+}
+const { url, title } = Astro.props;
+const x = `https://x.com/intent/post?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`;
+const li = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+---
+
+<div class="share">
+  <span class="share__label">Share</span>
+  <button type="button" class="share__btn" data-copy-link={url} hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+      <path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.5 1.5"></path>
+      <path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.5-1.5"></path>
+    </svg>
+    <span data-copy-label>Copy link</span>
+  </button>
+  <a class="share__btn" href={x} target="_blank" rel="noopener noreferrer">
+    <span>X</span><span class="visually-hidden"> (opens in a new tab)</span>
+  </a>
+  <a class="share__btn" href={li} target="_blank" rel="noopener noreferrer">
+    <span>LinkedIn</span><span class="visually-hidden"> (opens in a new tab)</span>
+  </a>
+</div>
+
+<style>
+  .share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .share__label {
+    margin-right: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-4);
+  }
+
+  .share__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--ink-2);
+    font-family: var(--body);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-1) var(--ease),
+      color var(--dur-1) var(--ease);
+  }
+
+  .share__btn[hidden] { display: none; }
+
+  .share__btn:hover {
+    border-color: var(--line-2);
+    color: var(--ink);
+  }
+
+  .share__btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+</style>
