@@ -109,7 +109,7 @@ contact *is* being on the waitlist.
 
 | Var | Required | |
 |---|---|---|
-| `RESEND_API_KEY` | yes | a key with *sending* + *contacts* access, nothing more |
+| `RESEND_API_KEY` | yes | **Full access** — a *Sending access* key can send the notification but not create contacts |
 | `WAITLIST_FROM` | yes | e.g. `Tamtree <waitlist@tamtree.io>`; the domain must be verified in Resend |
 | `WAITLIST_NOTIFY_TO` | yes | the inbox that receives each signup |
 | `SITE_ORIGIN` | no | defaults to `https://www.tamtree.io` |
@@ -129,9 +129,9 @@ The service refuses to start without the three required values.
    ```bash
    mkdir -p /opt/tamtree/web-site/waitlist && cd $_
    # copy waitlist/{server.mjs,Dockerfile,compose.yml,.env.example} here
-   cp .env.example .env && chmod 600 .env   # fill it in
-   docker network ls                         # the app stack's network
-   CADDY_NETWORK=<that name> docker compose up -d --build
+   cp .env.example .env && chmod 600 .env   # fill it in, CADDY_NETWORK included
+   docker inspect $(docker ps -qf name=caddy) -f '{{json .NetworkSettings.Networks}}'   # → CADDY_NETWORK
+   docker compose up -d --build
    ```
 
 3. **Caddy** already proxies `/api/waitlist` to `waitlist:8787` (it ships with
