@@ -397,6 +397,9 @@ tt-figure figcaption::before {
   border: 1px solid var(--line);
   border-radius: 5px;
   background: color-mix(in srgb, var(--ink) 5%, transparent);
+  /* Its own ink, not inherited: inside a figcaption, aside or blockquote the
+     surrounding text is --ink-3, which on the chip fell under 4.5:1 (gate:axe). */
+  color: var(--ink-2);
   font-family: var(--mono);
   font-size: 0.86em;
   overflow-wrap: break-word;
