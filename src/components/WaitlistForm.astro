@@ -39,6 +39,9 @@ const {
 const inputId = `${id}-email`;
 ---
 
+{/* One flex item to whatever row hosts it: without the wrapper, the message
+    and <noscript> become siblings in the hero's row and sit beside the form. */}
+<div class="wl-wrap">
 <form
   class:list={['wl', `wl--${size}`, className]}
   id={id}
@@ -92,6 +95,7 @@ const inputId = `${id}-email`;
 </noscript>
 
 <p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
+</div>
 
 <script>
   // Must match WAITLIST_POW_BITS in waitlist/server.mjs (default 15).
@@ -281,8 +285,23 @@ const inputId = `${id}-email`;
     outline-offset: 2px;
   }
 
+  .wl-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+  }
+
+  /* `width: 0; min-width: 100%` keeps a long message from widening the wrapper:
+     it wraps at the form's width instead of setting it. */
+  .wl__msg,
+  .wl__noscript {
+    width: 0;
+    min-width: 100%;
+  }
+
   .wl__msg {
     margin-top: 14px;
+    text-align: center;
     font-size: 16px;
     color: var(--good-ink);
   }
@@ -304,6 +323,7 @@ const inputId = `${id}-email`;
   }
 
   @media (max-width: 700px) {
+    .wl-wrap,
     .wl { width: 100%; }
 
     /* `.wl--lg .wl__row` above is (0,2,0); a media query adds no specificity,

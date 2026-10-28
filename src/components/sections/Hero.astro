@@ -139,7 +139,9 @@ const scene = heroScene();
   .hero__cta {
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* Top, not center: the waitlist grows downward when its message appears,
+       and centring would push the field up out of line with this button. */
+    align-items: flex-start;
     gap: 14px;
     margin-top: 40px;
   }
