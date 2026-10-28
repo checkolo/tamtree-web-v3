@@ -28,7 +28,8 @@ Caddy is the only way in.
 POST /api/waitlist
 Content-Type: application/x-www-form-urlencoded
 
-email=<address>&tag=waitlist[&tag=launch-news][&tag=early-access][&company=<honeypot>]
+email=<address>&tag=waitlist[&tag=launch-news][&tag=early-access]
+  &pow_ts=<unix seconds>&pow_nonce=<integer>[&company=<honeypot>]
 ```
 
 | Caller sends | Success | Failure |
@@ -36,9 +37,16 @@ email=<address>&tag=waitlist[&tag=launch-news][&tag=early-access][&company=<hone
 | a plain form POST (no JS) | `303 → /waitlist/thanks/` | `303 → /waitlist/sorry/?reason=<code>` |
 | `Accept: application/json` (the form's script) | `200 {"ok":true}` | `4xx/5xx {"ok":false,"error":"<code>"}` |
 
-Error codes: `email` (400, malformed), `busy` (429, more than 5 tries per IP in
-10 minutes), `origin` (403, `Origin` is set and isn't `SITE_ORIGIN`), `invalid`
-(oversized or unreadable body), `unavailable` (502, both Resend writes failed).
+Error codes:
+
+- `email` (400): the address is malformed.
+- `stamp` (400): the proof-of-work stamp is missing, weak or reused. Every no-JS POST gets this.
+- `clock` (400): the stamp's timestamp is more than 5 minutes off. The response
+  carries `now`, and the form re-stamps once with it.
+- `busy` (429): more than 5 tries per IP in 10 minutes, or the hourly cap was reached.
+- `origin` (403): `Origin` is set and isn't `SITE_ORIGIN`.
+- `invalid`: the body is oversized or unreadable.
+- `unavailable` (502): both Resend writes failed.
 
 **What counts as success.** A signup succeeds if *either* write lands. A contact
 saved without a notification is still on the list. A notification sent without
@@ -46,10 +54,35 @@ a contact is still in the inbox to add by hand (it says `Saved as a Resend
 contact: NO`). This is also how a repeat signup behaves, since Resend may refuse
 a duplicate contact. Only when both fail does the visitor hear that it failed.
 
-**Abuse.** Three measures: a honeypot field (`company`, off-screen and out of the
-tab order), which gets a fake success and is never written; an in-memory per-IP
-rate limit; and the `Origin` check. No CAPTCHA: none of the providers would
-leave `script-src 'self'` intact.
+**Abuse.** The endpoint only ever emails *us*, never the address entered, so it
+can't be used to mail a stranger. The worst a bot can do is put junk into the
+list and the inbox. In the order they are checked:
+
+1. **`Origin`** must be ours when present.
+2. **Per-IP rate limit:** 5 tries per 10 minutes, in memory.
+3. **Honeypot:** `company` is off-screen and out of the tab order. A filled one
+   gets a fake success and is never written.
+4. **Proof-of-work stamp:** the form's script finds a nonce such that
+   `sha256("<email>:<pow_ts>:<pow_nonce>")` starts with `WAITLIST_POW_BITS` zero
+   bits (default 15, ~32k hashes, well under a second on a phone). The email is
+   lowercased and trimmed. The stamp is bound to one address and a ±5-minute
+   window, and the server remembers spent stamps, so each one works once. There
+   is no challenge endpoint and no secret. What it buys is cost: a bot pays per
+   signup the compute a person pays once. **The bits are set in two places**:
+   the env var and `POW_BITS` in `WaitlistForm.astro`.
+5. **Hourly cap:** `WAITLIST_HOURLY_CAP` (default 100) accepted signups per hour
+   across *all* addresses. This is the ceiling for a bot spread over many IPs.
+   Reaching it logs a warning.
+
+Why not a CAPTCHA (decided 2026-10-28): Turnstile, reCAPTCHA and hCaptcha all
+put a third-party script and frame into the CSP and onto the privacy page. The
+stamp needs neither. The escalation path, if a stamp-paying bot ever shows up,
+is Turnstile.
+
+**This is the one place the site needs JavaScript.** A stamp can only be
+computed in script, so a no-JS POST is refused (`stamp` → `/waitlist/sorry/`).
+The form's `<noscript>` says so up front and offers `legal.contactEmail`
+instead. Every other page and the content pipeline stay zero-JS-dependent.
 
 ## Opt-ins → Resend topics
 
@@ -80,6 +113,8 @@ contact *is* being on the waitlist.
 | `WAITLIST_FROM` | yes | e.g. `Tamtree <waitlist@tamtree.io>`; the domain must be verified in Resend |
 | `WAITLIST_NOTIFY_TO` | yes | the inbox that receives each signup |
 | `SITE_ORIGIN` | no | defaults to `https://www.tamtree.io` |
+| `WAITLIST_POW_BITS` | no | default 15; change `POW_BITS` in `WaitlistForm.astro` with it |
+| `WAITLIST_HOURLY_CAP` | no | default 100 accepted signups per hour, all addresses |
 | `RESEND_SEGMENT_ID`, `RESEND_TOPIC_*` | no | see above |
 
 The service refuses to start without the three required values.
@@ -110,8 +145,9 @@ The service refuses to start without the three required values.
 
 `pnpm dev` serves no `/api/waitlist`, so a signup there shows the form's error
 message. To exercise the real path, run
-`RESEND_API_KEY=… WAITLIST_FROM=… WAITLIST_NOTIFY_TO=… node waitlist/server.mjs`
-and post to `:8787` directly. The tests (`pnpm test:waitlist`) fake Resend and
+`RESEND_API_KEY=… WAITLIST_FROM=… WAITLIST_NOTIFY_TO=… WAITLIST_POW_BITS=0 node waitlist/server.mjs`
+and post to `:8787` directly. `POW_BITS=0` accepts any well-formed stamp, so
+`pow_ts=$(date +%s)&pow_nonce=0` will do. The tests (`pnpm test:waitlist`) fake Resend and
 need no key.
 
 ## Not decided here

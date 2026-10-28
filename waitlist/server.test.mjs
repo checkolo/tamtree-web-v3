@@ -1,15 +1,41 @@
 // pnpm test:waitlist
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 
-import { configFrom, contactPayload, createHandler, parseSignup, rateLimiter } from './server.mjs';
+import {
+  checkStamp,
+  configFrom,
+  contactPayload,
+  createHandler,
+  leadingZeroBits,
+  parseSignup,
+  rateLimiter,
+  stampMemory,
+} from './server.mjs';
 
 const ENV = {
   RESEND_API_KEY: 're_test',
   WAITLIST_FROM: 'Tamtree <waitlist@tamtree.io>',
   WAITLIST_NOTIFY_TO: 'inbox@tamtree.io',
   RESEND_TOPIC_LAUNCH_NEWS: 'topic-news',
+  // Cheap enough to solve per test; production is 15.
+  WAITLIST_POW_BITS: '4',
+};
+const BITS = 4;
+
+/** What the form's script does, in node: find a nonce meeting `bits`. */
+function solve(email, ts, bits = BITS) {
+  for (let n = 0; ; n++) {
+    const d = createHash('sha256').update(`${email}:${ts}:${n}`).digest();
+    if (leadingZeroBits(d) >= bits) return n;
+  }
+}
+const nowS = () => Math.floor(Date.now() / 1000);
+const stamped = (body, ts = nowS()) => {
+  const email = (new URLSearchParams(body).get('email') || '').trim().toLowerCase();
+  return `${body}&pow_ts=${ts}&pow_nonce=${solve(email, ts)}`;
 };
 const quiet = { warn() {}, error() {}, log() {} };
 
@@ -36,12 +62,13 @@ async function withServer(deps, fn) {
   }
 }
 
-const post = (base, body, headers = {}) =>
+/** POSTs with a valid stamp added, unless the body already says pow_ or `raw` is set. */
+const post = (base, body, headers = {}, { raw = false } = {}) =>
   fetch(`${base}/api/waitlist`, {
     method: 'POST',
     redirect: 'manual',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
-    body,
+    body: raw || body.includes('pow_') ? body : stamped(body),
   });
 
 test('config refuses to start without its secrets', () => {
@@ -146,4 +173,64 @@ test('only POST /api/waitlist is served', async () => {
     assert.equal((await fetch(`${base}/elsewhere`)).status, 404);
     assert.equal((await fetch(`${base}/healthz`)).status, 200);
   });
+});
+
+test('leading zero bits counts across bytes', () => {
+  assert.equal(leadingZeroBits(Uint8Array.from([0, 0x0f])), 12);
+  assert.equal(leadingZeroBits(Uint8Array.from([0x80])), 0);
+  assert.equal(leadingZeroBits(Uint8Array.from([0, 0])), 16);
+});
+
+test('stamp: valid once, bound to the email, inside the clock window', () => {
+  const seen = stampMemory();
+  const ts = 1_000_000;
+  const n = solve('a@b.io', ts);
+  const signup = { email: 'a@b.io', stampTs: String(ts), stampNonce: String(n) };
+  assert.equal(checkStamp(signup, { bits: BITS, nowS: ts, seen }), 'ok');
+  assert.equal(checkStamp(signup, { bits: BITS, nowS: ts, seen }), 'stamp', 'reused');
+  // The stamp is bound to its address: pick a ts where a@b.io's nonce does not
+  // also happen to meet the target for x@b.io (1 in 16 at 4 bits), then reuse it.
+  let t2 = ts;
+  while (leadingZeroBits(createHash('sha256').update(`x@b.io:${t2}:${solve('a@b.io', t2)}`).digest()) >= BITS) t2++;
+  const moved = { email: 'x@b.io', stampTs: String(t2), stampNonce: String(solve('a@b.io', t2)) };
+  assert.equal(checkStamp(moved, { bits: BITS, nowS: t2, seen: stampMemory() }), 'stamp');
+  assert.equal(checkStamp(signup, { bits: BITS, nowS: ts + 301, seen: stampMemory() }), 'clock');
+  assert.equal(checkStamp({ ...signup, stampNonce: 'abc' }, { bits: BITS, nowS: ts, seen: stampMemory() }), 'stamp');
+});
+
+test('a POST without a stamp — the no-JS path — is refused before Resend', async () => {
+  const resend = fakeResend();
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const res = await post(base, 'email=a@b.io', {}, { raw: true });
+    assert.equal(res.status, 303);
+    assert.equal(res.headers.get('location'), 'https://www.tamtree.io/waitlist/sorry/?reason=stamp');
+  });
+  assert.equal(resend.calls.length, 0);
+});
+
+test('a stale clock gets the server time back, and a re-stamp with it succeeds', async () => {
+  const resend = fakeResend();
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const json = { Accept: 'application/json' };
+    const stale = await post(base, stamped('email=a@b.io', nowS() - 3600), json);
+    assert.equal(stale.status, 400);
+    const body = await stale.json();
+    assert.equal(body.error, 'clock');
+    const retry = await post(base, stamped('email=a@b.io', body.now), json);
+    assert.equal(retry.status, 200);
+  });
+});
+
+test('the hourly cap refuses signups across every address', async () => {
+  const resend = fakeResend();
+  const hourlyCap = rateLimiter({ max: 2, windowMs: 3_600_000 });
+  await withServer({ fetchImpl: resend.fetchImpl, hourlyCap, rateLimit: () => true }, async (base) => {
+    const json = { Accept: 'application/json' };
+    assert.equal((await post(base, 'email=a@b.io', json)).status, 200);
+    assert.equal((await post(base, 'email=c@d.io', json)).status, 200);
+    const third = await post(base, 'email=e@f.io', json);
+    assert.equal(third.status, 429);
+    assert.deepEqual(await third.json(), { ok: false, error: 'busy' });
+  });
+  assert.equal(resend.calls.length, 4);
 });

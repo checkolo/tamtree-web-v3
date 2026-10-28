@@ -1,15 +1,20 @@
 ---
 /**
  * The waitlist form (T2.2), posting to our own `/api/waitlist` (waitlist/server.mjs,
- * contract in docs/waitlist.md). It is a real form first: the site is zero-JS by
- * default and a waitlist that needs script to submit loses exactly the visitors
- * most likely to have read the page. Without JS the POST answers with a 303 to
- * /waitlist/thanks/ or /waitlist/sorry/.
+ * contract in docs/waitlist.md).
  *
- * With JS the script sends the same fields with `Accept: application/json` and
- * renders the deck's own message in place — and, because it can read the
- * response, says "you're on the list" only when the endpoint said so.
+ * The one place on the site that needs script (owner's call, 2026-10-28): the
+ * script computes a proof-of-work stamp that keeps bots out, and a POST without
+ * one is refused. Without JS the <noscript> says so and offers the contact
+ * email instead; a POST made anyway lands on /waitlist/sorry/. Nothing else on
+ * the page depends on this — it is still a real form with a real action.
+ *
+ * The script sends the fields with `Accept: application/json` and renders the
+ * deck's own message in place — and, because it can read the response, says
+ * "you're on the list" only when the endpoint said so.
  */
+import { legal } from '../data/legal';
+
 interface Tag {
   value: string;
   label: string;
@@ -79,14 +84,56 @@ const inputId = `${id}-email`;
   }
 </form>
 
+<noscript>
+  <p class="wl__noscript">
+    The waitlist needs JavaScript on, to keep bots out. Or email{' '}
+    <a href={`mailto:${legal.contactEmail}`}>{legal.contactEmail}</a> and we'll add you.
+  </p>
+</noscript>
+
 <p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
 
 <script>
+  // Must match WAITLIST_POW_BITS in waitlist/server.mjs (default 15).
+  const POW_BITS = 15;
+
   const FAILED: Record<string, string> = {
     email: "That doesn't look like an email address — check it and try again.",
-    busy: 'Too many tries from here. Give it a few minutes and try again.',
+    busy: 'Too many signups right now. Give it a few minutes and try again.',
   };
   const FALLBACK = "Something went wrong on our side and you're not on the list yet. Please try again shortly.";
+
+  function zeroBits(bytes: Uint8Array): number {
+    let bits = 0;
+    for (const byte of bytes) {
+      if (byte === 0) {
+        bits += 8;
+        continue;
+      }
+      return bits + Math.clz32(byte) - 24;
+    }
+    return bits;
+  }
+
+  /** The nonce for sha256(`${email}:${ts}:${nonce}`) — waitlist/server.mjs checkStamp. */
+  async function stamp(email: string, ts: number): Promise<number> {
+    const enc = new TextEncoder();
+    for (let nonce = 0; ; nonce++) {
+      const digest = await crypto.subtle.digest('SHA-256', enc.encode(`${email}:${ts}:${nonce}`));
+      if (zeroBits(new Uint8Array(digest)) >= POW_BITS) return nonce;
+    }
+  }
+
+  async function send(form: HTMLFormElement, ts: number) {
+    const body = new URLSearchParams(new FormData(form) as unknown as Record<string, string>);
+    // Normalised exactly as the server does, or the hash would not match.
+    const email = (body.get('email') ?? '').trim().toLowerCase();
+    body.set('pow_ts', String(ts));
+    body.set('pow_nonce', String(await stamp(email, ts)));
+    const res = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok && data.ok === true, error: String(data.error ?? ''), now: Number(data.now) };
+  }
 
   for (const form of document.querySelectorAll<HTMLFormElement>('.wl')) {
     const msg = document.getElementById(`${form.id}-msg`);
@@ -96,24 +143,20 @@ const inputId = `${id}-email`;
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (submit) submit.disabled = true;
-      let ok = false;
-      let error = '';
+      let result = { ok: false, error: '', now: NaN };
       try {
-        const res = await fetch(form.action, {
-          method: 'POST',
-          headers: { Accept: 'application/json' },
-          body: new URLSearchParams(new FormData(form) as unknown as Record<string, string>),
-        });
-        const data = await res.json().catch(() => ({}));
-        ok = res.ok && data.ok === true;
-        error = data.error ?? '';
+        result = await send(form, Math.floor(Date.now() / 1000));
+        // This device's clock is off by minutes: stamp again against the server's.
+        if (result.error === 'clock' && Number.isFinite(result.now)) result = await send(form, result.now);
       } catch {
         // Offline, or the endpoint is down: the fallback copy covers both.
       }
-      msg.classList.toggle('wl__msg--error', !ok);
-      msg.textContent = ok ? "You're on the list. We'll be in touch before launch." : (FAILED[error] ?? FALLBACK);
+      msg.classList.toggle('wl__msg--error', !result.ok);
+      msg.textContent = result.ok
+        ? "You're on the list. We'll be in touch before launch."
+        : (FAILED[result.error] ?? FALLBACK);
       msg.hidden = false;
-      if (ok) form.hidden = true;
+      if (result.ok) form.hidden = true;
       else if (submit) submit.disabled = false;
     });
   }
@@ -245,6 +288,12 @@ const inputId = `${id}-email`;
   }
 
   .wl__msg--error { color: var(--danger-ink); }
+
+  .wl__noscript {
+    margin-top: 14px;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
 
   .wl__trap {
     position: absolute;

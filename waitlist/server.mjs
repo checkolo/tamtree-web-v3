@@ -15,7 +15,12 @@
  * sends `Accept: application/json` and renders the in-page message from the
  * JSON instead, which is what lets it say "you're on the list" only when that
  * is true.
+ *
+ * Bots: a proof-of-work stamp (see checkStamp) on top of a honeypot, a per-IP
+ * limit and an hourly cap on all signups. The stamp needs the form's script to
+ * compute, so a no-JS POST is refused; the form says so in a <noscript>.
  */
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
@@ -23,6 +28,9 @@ const RESEND_API = 'https://api.resend.com';
 const MAX_BODY = 8 * 1024;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 5;
+const HOUR_MS = 60 * 60 * 1000;
+// How far a stamp's timestamp may sit from the server's clock, either way.
+const STAMP_WINDOW_S = 5 * 60;
 // `waitlist` is the hidden field every form sends; the other two are §10's
 // opt-ins. Anything else in `tag` is dropped rather than stored.
 const KNOWN_TAGS = ['waitlist', 'launch-news', 'early-access'];
@@ -38,6 +46,12 @@ export function configFrom(env) {
     from: env.WAITLIST_FROM,
     notifyTo: env.WAITLIST_NOTIFY_TO,
     siteOrigin: (env.SITE_ORIGIN || 'https://www.tamtree.io').replace(/\/$/, ''),
+    // Must match POW_BITS in src/components/WaitlistForm.astro. Each extra bit
+    // doubles the work: 15 is ~32k hashes, well under a second on a phone.
+    powBits: Number(env.WAITLIST_POW_BITS || 15),
+    // Accepted signups per hour across every address — the ceiling on what a
+    // bot spread over many IPs can push into the list and the inbox.
+    hourlyCap: Number(env.WAITLIST_HOURLY_CAP || 100),
     segmentId: env.RESEND_SEGMENT_ID || '',
     // Resend topics are what a Broadcast is sent to, so each opt-in maps to
     // one. Unset ids are skipped: the opt-in still reaches the notification.
@@ -72,7 +86,55 @@ export function parseSignup(body) {
   const tags = [...new Set(params.getAll('tag'))].filter((t) => KNOWN_TAGS.includes(t));
   // The honeypot: a field a person never sees, so only a bot fills it in.
   const trap = (params.get('company') || '').trim();
-  return { email, tags, trap };
+  return { email, tags, trap, stampTs: params.get('pow_ts') || '', stampNonce: params.get('pow_nonce') || '' };
+}
+
+export function leadingZeroBits(bytes) {
+  let bits = 0;
+  for (const byte of bytes) {
+    if (byte === 0) {
+      bits += 8;
+      continue;
+    }
+    return bits + Math.clz32(byte) - 24;
+  }
+  return bits;
+}
+
+/**
+ * The proof-of-work stamp. The browser searches for a nonce such that
+ * sha256(`${email}:${ts}:${nonce}`) starts with `bits` zero bits, `ts` being
+ * its own clock in unix seconds. No challenge endpoint and no secret: binding
+ * the email makes each stamp good for one address, the clock window makes it
+ * good for a few minutes, and `seen` makes it good once. What it buys is cost —
+ * a bot pays the same compute per signup that a person pays once.
+ *
+ * Returns 'ok', 'clock' (ts outside the window — the caller retries with the
+ * server's time) or 'stamp' (missing, malformed, too weak or reused).
+ */
+export function checkStamp({ email, stampTs, stampNonce }, { bits, nowS, seen }) {
+  if (!/^\d{1,12}$/.test(stampTs) || !/^\d{1,16}$/.test(stampNonce)) return 'stamp';
+  if (Math.abs(Number(stampTs) - nowS) > STAMP_WINDOW_S) return 'clock';
+  const digest = createHash('sha256').update(`${email}:${stampTs}:${stampNonce}`).digest();
+  if (leadingZeroBits(digest) < bits) return 'stamp';
+  const key = digest.toString('hex');
+  if (!seen.add(key, nowS)) return 'stamp';
+  return 'ok';
+}
+
+/** Stamps already spent, kept just past the window they could still be valid in. */
+export function stampMemory() {
+  const spent = new Map();
+  return {
+    add(key, nowS) {
+      if (spent.has(key)) return false;
+      spent.set(key, nowS);
+      if (spent.size > 5_000) {
+        for (const [k, t] of spent) if (nowS - t > 2 * STAMP_WINDOW_S) spent.delete(k);
+      }
+      return true;
+    },
+  };
 }
 
 export function isValidEmail(email) {
@@ -165,6 +227,9 @@ function readBody(req) {
 
 export function createHandler(cfg, deps = {}) {
   const allow = deps.rateLimit ?? rateLimiter();
+  const underCap = deps.hourlyCap ?? rateLimiter({ max: cfg.hourlyCap, windowMs: HOUR_MS });
+  const seen = deps.stamps ?? stampMemory();
+  const clock = deps.now ?? (() => new Date());
   const log = deps.log ?? console;
 
   return async function handle(req, res) {
@@ -184,10 +249,10 @@ export function createHandler(cfg, deps = {}) {
     }
 
     const wantsJson = (req.headers.accept || '').includes('application/json');
-    const reply = (status, ok, error) => {
+    const reply = (status, ok, error, extra = {}) => {
       if (wantsJson) {
         res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-        res.end(JSON.stringify(ok ? { ok } : { ok, error }));
+        res.end(JSON.stringify(ok ? { ok } : { ok, error, ...extra }));
       } else {
         const page = ok ? '/waitlist/thanks/' : `/waitlist/sorry/?reason=${error}`;
         res.writeHead(303, { Location: `${cfg.siteOrigin}${page}`, 'Cache-Control': 'no-store' }).end();
@@ -215,7 +280,17 @@ export function createHandler(cfg, deps = {}) {
     if (signup.trap) return reply(200, true);
     if (!isValidEmail(signup.email)) return reply(400, false, 'email');
 
-    const ok = await subscribe(cfg, signup, { fetchImpl: deps.fetchImpl, log, now: deps.now });
+    const nowS = Math.floor(clock().getTime() / 1000);
+    const stamp = checkStamp(signup, { bits: cfg.powBits, nowS, seen });
+    // `now` lets a visitor whose clock is off re-stamp against ours.
+    if (stamp === 'clock') return reply(400, false, 'clock', { now: nowS });
+    if (stamp !== 'ok') return reply(400, false, 'stamp');
+    if (!underCap('all')) {
+      log.warn('waitlist: hourly cap reached — refusing signups until the window rolls over');
+      return reply(429, false, 'busy');
+    }
+
+    const ok = await subscribe(cfg, signup, { fetchImpl: deps.fetchImpl, log, now: clock });
     return ok ? reply(200, true) : reply(502, false, 'unavailable');
   };
 }

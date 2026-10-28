@@ -2,11 +2,13 @@
 import Base from '../../layouts/Base.astro';
 import Mark from '../../components/Mark.astro';
 import Button from '../../components/Button.astro';
+import { legal } from '../../data/legal';
 
 /**
  * Where a no-JS waitlist signup lands when it did not go through. The server
- * adds `?reason=` (email, busy, origin, unavailable) for the logs and for any
- * future copy; the page is static, so it names every likely cause at once.
+ * adds `?reason=` (email, stamp, busy, origin, unavailable) for the logs and for
+ * any future copy; the page is static, so it names every likely cause at once.
+ * `stamp` is the common one here: a no-JS POST has no proof-of-work stamp.
  */
 ---
 
@@ -17,8 +19,9 @@ import Button from '../../components/Button.astro';
       <p class="wl-done__code">WAITLIST · NOT SAVED</p>
       <h1>That didn't go through.</h1>
       <p class="wl-done__lede">
-        You're not on the list yet. Check the email address, or if you've tried a few times, give it
-        a few minutes — then try again.
+        You're not on the list yet. The form needs JavaScript turned on to keep bots out — check
+        that, and the email address, then try again. Or email{' '}
+        <a href={`mailto:${legal.contactEmail}`}>{legal.contactEmail}</a> and we'll add you.
       </p>
       <Button href="/#waitlist">Try again</Button>
     </div>
