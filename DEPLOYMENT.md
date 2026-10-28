@@ -169,15 +169,15 @@ Why each part exists:
   exist to be read by machines.
 - `/_astro/*` → cached forever. Astro puts a content hash in those filenames,
   so a changed file is a new URL.
-- Everything → the CSP. Its `form-action` allows `buttondown.com` because the
-  waitlist form POSTs there directly (no runtime or database of ours sits
-  between). `frame-src` allows it too, and is **not** redundant with
-  `form-action`: the form targets a hidden iframe so the page can render its
-  own success state, and that frame navigation is checked against `frame-src`
-  (which falls back to `default-src 'self'`). Without it Chrome blocks the
-  POST before it is sent — yet the iframe still fires `load`, so the form
-  says "You're on the list" for a signup that never left the browser. That
-  shipped to production once (fixed 2026-10-15). `style-src 'unsafe-inline'` is for Expressive Code, which sets
+- `/api/waitlist` → `reverse_proxy waitlist:8787`, the one route that is not a
+  file (`waitlist/`, docs/waitlist.md). The container runs beside the app stack;
+  if it is down the route answers 502 and the form says the signup failed.
+- Everything → the CSP. `form-action 'self'` and `connect-src 'self'` are all
+  the waitlist needs, since it posts to its own origin. (Until 2026-10-28 the form
+  posted cross-origin to Buttondown through a hidden iframe, which needed
+  `form-action` and `frame-src` entries — and twice shipped a form that said
+  "You're on the list" for a POST the CSP had blocked, because the iframe fires
+  `load` either way. The same-origin endpoint reads the real response instead.) `style-src 'unsafe-inline'` is for Expressive Code, which sets
   per-token colours as style attributes. `style-src`/`font-src` also allowlist
   `fonts.googleapis.com`/`fonts.gstatic.com` — Bricolage Grotesque, Instrument
   Sans and JetBrains Mono are loaded from Google Fonts (`Base.astro`'s

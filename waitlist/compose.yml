@@ -1,0 +1,24 @@
+# Run on tamtree-app from /opt/tamtree/web-site/waitlist (docs/waitlist.md, "Host setup").
+#
+# Its own compose project, joined to the app stack's network so the shared Caddy
+# can reach it as `waitlist:8787`. No published ports: Caddy is the only way in,
+# which is what lets server.mjs trust X-Forwarded-For.
+services:
+  waitlist:
+    build: .
+    image: tamtree-waitlist:latest
+    restart: unless-stopped
+    env_file: .env
+    mem_limit: 64m
+    networks: [caddy]
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  caddy:
+    external: true
+    # The network the app stack's Caddy is on — `docker network ls` on the host.
+    name: ${CADDY_NETWORK:-docker_default}

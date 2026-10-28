@@ -23,8 +23,10 @@ deploy — **[DEPLOYMENT.md](DEPLOYMENT.md)** is how it is hosted and shipped
 pnpm install
 ```
 
-Nothing else. There is no `.env` to fill in to run the site: the waitlist posts
-straight to Buttondown's public embed endpoint, and no key is read at build time.
+Nothing else. There is no `.env` to fill in to run the site: no key is read at
+build time. The waitlist form posts to `/api/waitlist`, a separate small service
+in `waitlist/` (`pnpm test:waitlist`); under `pnpm dev` that route does not
+exist, so a signup there shows the form's error message — see docs/waitlist.md.
 
 ---
 

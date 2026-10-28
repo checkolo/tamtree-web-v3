@@ -1,0 +1,38 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import Button from '../../components/Button.astro';
+import { legal } from '../../data/legal';
+
+/**
+ * Where a no-JS waitlist signup lands when it did not go through. The server
+ * adds `?reason=` (email, stamp, busy, origin, unavailable) for the logs and for
+ * any future copy; the page is static, so it names every likely cause at once.
+ * `stamp` is the common one here: a no-JS POST has no proof-of-work stamp.
+ */
+---
+
+<Base title="Not saved yet" description="Your Tamtree waitlist signup did not go through." noindex>
+  <section class="sec wl-done">
+    <div class="wrap wl-done__inner">
+      <div aria-hidden="true"><Mark size={40} /></div>
+      <p class="wl-done__code">WAITLIST · NOT SAVED</p>
+      <h1>That didn't go through.</h1>
+      <p class="wl-done__lede">
+        You're not on the list yet. The form needs JavaScript turned on to keep bots out — check
+        that, and the email address, then try again. Or email{' '}
+        <a href={`mailto:${legal.contactEmail}`}>{legal.contactEmail}</a> and we'll add you.
+      </p>
+      <Button href="/#waitlist">Try again</Button>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .wl-done { padding: 120px 0 140px; text-align: center; }
+  .wl-done__inner { display: flex; flex-direction: column; align-items: center; }
+  .wl-done__code { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.24em; color: var(--danger-ink); }
+  h1 { margin-top: 18px; font-size: 64px; font-weight: 800; }
+  .wl-done__lede { margin: 24px 0 40px; max-width: 520px; font-size: 18px; line-height: 1.62; color: var(--ink-2); }
+  @media (max-width: 700px) { h1 { font-size: 40px; } }
+</style>

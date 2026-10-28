@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import Button from '../../components/Button.astro';
+
+/**
+ * Where a no-JS waitlist signup lands (waitlist/server.mjs answers the POST with
+ * a 303 here). With JS the form says the same thing in place and this page is
+ * never seen. `noindex`: it is a receipt, not a page to find.
+ */
+---
+
+<Base title="You're on the list" description="Your place on the Tamtree waitlist is saved." noindex>
+  <section class="sec wl-done">
+    <div class="wrap wl-done__inner">
+      <div aria-hidden="true"><Mark size={40} /></div>
+      <p class="wl-done__code">WAITLIST · SAVED</p>
+      <h1>You're on the list.</h1>
+      <p class="wl-done__lede">We'll be in touch before launch — and only when it matters.</p>
+      <Button href="/">Back to home</Button>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .wl-done { padding: 120px 0 140px; text-align: center; }
+  .wl-done__inner { display: flex; flex-direction: column; align-items: center; }
+  .wl-done__code { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.24em; color: var(--brand-ink); }
+  h1 { margin-top: 18px; font-size: 64px; font-weight: 800; }
+  .wl-done__lede { margin: 24px 0 40px; max-width: 520px; font-size: 18px; line-height: 1.62; color: var(--ink-2); }
+  @media (max-width: 700px) { h1 { font-size: 40px; } }
+</style>
