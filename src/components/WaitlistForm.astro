@@ -1,14 +1,14 @@
 ---
 /**
- * The waitlist form (T2.2), against Buttondown's real contract — see
- * docs/waitlist.md. A plain form POST, no SDK, no fetch: the site is zero-JS by
+ * The waitlist form (T2.2), posting to our own `/api/waitlist` (waitlist/server.mjs,
+ * contract in docs/waitlist.md). It is a real form first: the site is zero-JS by
  * default and a waitlist that needs script to submit loses exactly the visitors
- * most likely to have read the page.
+ * most likely to have read the page. Without JS the POST answers with a 303 to
+ * /waitlist/thanks/ or /waitlist/sorry/.
  *
- * The hidden iframe target keeps the provider's redirect off our origin so the
- * page can render the deck's own success state. With JS or iframes unavailable
- * the POST still works and the visitor lands on Buttondown's confirmation —
- * a worse experience and an acceptable floor, not the default.
+ * With JS the script sends the same fields with `Accept: application/json` and
+ * renders the deck's own message in place — and, because it can read the
+ * response, says "you're on the list" only when the endpoint said so.
  */
 interface Tag {
   value: string;
@@ -32,15 +32,13 @@ const {
   class: className,
 } = Astro.props;
 const inputId = `${id}-email`;
-const frameId = `${id}-sink`;
 ---
 
 <form
   class:list={['wl', `wl--${size}`, className]}
   id={id}
-  action="https://buttondown.com/api/emails/embed-subscribe/tamtree"
+  action="/api/waitlist"
   method="post"
-  target={frameId}
 >
   <div class="wl__row">
     <label class="visually-hidden" for={inputId}>Work email</label>
@@ -54,6 +52,10 @@ const frameId = `${id}-sink`;
       required
     />
     <input type="hidden" name="tag" value="waitlist" />
+    {/* Honeypot — off-screen and out of the tab order, so only a bot fills it. */}
+    <label class="wl__trap" aria-hidden="true">
+      Company <input type="text" name="company" tabindex="-1" autocomplete="off" />
+    </label>
     <button class="btn btn--primary btn--sm wl__submit" type="submit">{cta}</button>
   </div>
 
@@ -78,27 +80,41 @@ const frameId = `${id}-sink`;
 </form>
 
 <p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
-<iframe class="visually-hidden" name={frameId} id={frameId} title="Waitlist submission" tabindex="-1"></iframe>
 
 <script>
+  const FAILED: Record<string, string> = {
+    email: "That doesn't look like an email address — check it and try again.",
+    busy: 'Too many tries from here. Give it a few minutes and try again.',
+  };
+  const FALLBACK = "Something went wrong on our side and you're not on the list yet. Please try again shortly.";
+
   for (const form of document.querySelectorAll<HTMLFormElement>('.wl')) {
     const msg = document.getElementById(`${form.id}-msg`);
-    const sink = document.getElementById(`${form.id}-sink`) as HTMLIFrameElement | null;
-    if (!msg || !sink) continue;
+    const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    if (!msg) continue;
 
-    form.addEventListener('submit', () => {
-      // The iframe load event is the only signal a cross-origin POST gives
-      // back — we cannot read the response, only observe that one arrived.
-      // So this reports "sent", never "confirmed", which is the honest claim.
-      sink.addEventListener(
-        'load',
-        () => {
-          msg.textContent = "You're on the list. We'll be in touch before launch.";
-          msg.hidden = false;
-          form.hidden = true;
-        },
-        { once: true }
-      );
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (submit) submit.disabled = true;
+      let ok = false;
+      let error = '';
+      try {
+        const res = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: new URLSearchParams(new FormData(form) as unknown as Record<string, string>),
+        });
+        const data = await res.json().catch(() => ({}));
+        ok = res.ok && data.ok === true;
+        error = data.error ?? '';
+      } catch {
+        // Offline, or the endpoint is down: the fallback copy covers both.
+      }
+      msg.classList.toggle('wl__msg--error', !ok);
+      msg.textContent = ok ? "You're on the list. We'll be in touch before launch." : (FAILED[error] ?? FALLBACK);
+      msg.hidden = false;
+      if (ok) form.hidden = true;
+      else if (submit) submit.disabled = false;
     });
   }
 </script>
@@ -226,6 +242,16 @@ const frameId = `${id}-sink`;
     margin-top: 14px;
     font-size: 16px;
     color: var(--good-ink);
+  }
+
+  .wl__msg--error { color: var(--danger-ink); }
+
+  .wl__trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
   }
 
   @media (max-width: 700px) {
