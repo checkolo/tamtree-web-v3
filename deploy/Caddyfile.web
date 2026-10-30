@@ -19,7 +19,9 @@ tamtree.io {
 www.tamtree.io {
 	# The waitlist and contact endpoints (waitlist/server.mjs), one container on
 	# the app stack's network. Everything else here is a file.
-	handle /api/waitlist /api/contact {
+	# A named matcher: `handle` takes one matcher token, not a list of paths.
+	@api path /api/waitlist /api/contact
+	handle @api {
 		reverse_proxy waitlist:8787
 	}
 
