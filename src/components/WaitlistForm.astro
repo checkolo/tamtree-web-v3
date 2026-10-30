@@ -11,7 +11,9 @@
  *
  * The script sends the fields with `Accept: application/json` and renders the
  * deck's own message in place — and, because it can read the response, says
- * "you're on the list" only when the endpoint said so.
+ * "you're on the list" only when the endpoint said so. While the stamp is
+ * computed and the request is out, the button spins and says "Joining…"; a
+ * success swaps the form for a panel that can bring it back for another address.
  */
 import { legal } from '../data/legal';
 
@@ -47,6 +49,7 @@ const inputId = `${id}-email`;
   id={id}
   action="/api/waitlist"
   method="post"
+  autocomplete="off"
 >
   <div class="wl__row">
     <label class="visually-hidden" for={inputId}>Work email</label>
@@ -64,7 +67,10 @@ const inputId = `${id}-email`;
     <label class="wl__trap" aria-hidden="true">
       Company <input type="text" name="company" tabindex="-1" autocomplete="off" />
     </label>
-    <button class="btn btn--primary btn--sm wl__submit" type="submit">{cta}</button>
+    <button class="btn btn--primary btn--sm wl__submit" type="submit">
+      <span class="wl__spin" aria-hidden="true"></span>
+      <span class="wl__label">{cta}</span>
+    </button>
   </div>
 
   {
@@ -95,6 +101,19 @@ const inputId = `${id}-email`;
 </noscript>
 
 <p class="wl__msg" id={`${id}-msg`} role="status" aria-live="polite" hidden></p>
+
+<div class="wl__done" id={`${id}-done`} role="status" tabindex="-1" hidden>
+  <span class="wl__done-icon" aria-hidden="true">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  </span>
+  <div class="wl__done-body">
+    <p class="wl__done-title">You're on the list.</p>
+    <p class="wl__done-text">We'll write to <strong class="wl__done-email"></strong> before launch.</p>
+    <button class="wl__again" type="button">Add another email</button>
+  </div>
+</div>
 </div>
 
 <script>
@@ -141,12 +160,41 @@ const inputId = `${id}-email`;
 
   for (const form of document.querySelectorAll<HTMLFormElement>('.wl')) {
     const msg = document.getElementById(`${form.id}-msg`);
+    const done = document.getElementById(`${form.id}-done`);
     const submit = form.querySelector<HTMLButtonElement>('button[type="submit"]');
-    if (!msg) continue;
+    const label = submit?.querySelector<HTMLElement>('.wl__label');
+    const cta = label?.textContent ?? '';
+    if (!msg || !done) continue;
+
+    const busy = (on: boolean) => {
+      if (!submit) return;
+      submit.disabled = on;
+      submit.setAttribute('aria-busy', String(on));
+      submit.classList.toggle('wl__submit--busy', on);
+      if (label) label.textContent = on ? 'Joining…' : cta;
+    };
+
+    // Firefox restores a disabled button on reload and bfcache restores the
+    // whole page as it was left — either way the button must come back live.
+    window.addEventListener('pageshow', () => {
+      if (form.hidden) return;
+      busy(false);
+    });
+
+    done.querySelector('.wl__again')?.addEventListener('click', () => {
+      form.reset();
+      done.hidden = true;
+      msg.hidden = true;
+      form.hidden = false;
+      busy(false);
+      form.querySelector<HTMLInputElement>('input[type="email"]')?.focus();
+    });
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (submit) submit.disabled = true;
+      if (submit?.disabled) return;
+      busy(true);
+      msg.hidden = true;
       let result = { ok: false, error: '', now: NaN };
       try {
         result = await send(form, Math.floor(Date.now() / 1000));
@@ -155,13 +203,18 @@ const inputId = `${id}-email`;
       } catch {
         // Offline, or the endpoint is down: the fallback copy covers both.
       }
-      msg.classList.toggle('wl__msg--error', !result.ok);
-      msg.textContent = result.ok
-        ? "You're on the list. We'll be in touch before launch."
-        : (FAILED[result.error] ?? FALLBACK);
+      busy(false);
+      if (result.ok) {
+        const email = new FormData(form).get('email');
+        const slot = done.querySelector('.wl__done-email');
+        if (slot) slot.textContent = String(email ?? '').trim();
+        form.hidden = true;
+        done.hidden = false;
+        done.focus();
+        return;
+      }
+      msg.textContent = FAILED[result.error] ?? FALLBACK;
       msg.hidden = false;
-      if (result.ok) form.hidden = true;
-      else if (submit) submit.disabled = false;
     });
   }
 </script>
@@ -178,6 +231,11 @@ const inputId = `${id}-email`;
     width: max-content;
     max-width: 100%;
   }
+
+  /* `display: flex` above outranks the UA's `[hidden]` rule, so without this
+     a "hidden" form stayed on screen after a signup with its button dead. */
+  .wl[hidden],
+  .wl__done[hidden] { display: none; }
 
   .wl__row {
     display: flex;
@@ -229,6 +287,101 @@ const inputId = `${id}-email`;
   }
 
   .wl--xl .wl__submit { height: 50px; }
+
+  .wl__submit--busy { cursor: progress; }
+
+  .wl__submit:disabled { transform: none; }
+
+  .wl__spin {
+    display: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    animation: wl-spin 0.7s linear infinite;
+  }
+
+  .wl__submit--busy .wl__spin { display: block; }
+
+  @keyframes wl-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* The success panel takes the form's place, so it is sized like it and
+     reads as the outcome of the action rather than a footnote under it. */
+  .wl__done {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+    min-width: min(420px, 100%);
+    padding: 18px 22px;
+    border-radius: var(--r-xl);
+    background: color-mix(in srgb, var(--good) 12%, var(--field-bg));
+    border: 1px solid color-mix(in srgb, var(--good) 45%, transparent);
+    box-shadow: 0 8px 28px -12px color-mix(in srgb, var(--good) 55%, transparent);
+    text-align: left;
+    outline: none;
+    animation: wl-pop 0.32s var(--ease) both;
+  }
+
+  .wl__done-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--good);
+    color: #ffffff;
+  }
+
+  .wl__done-body p { margin: 0; }
+
+  .wl__done-title {
+    font-family: var(--body);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .wl__done-body .wl__done-text {
+    margin-top: 4px;
+    font-size: 15px;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+
+  .wl__done-email { color: var(--good-ink); }
+
+  .wl__again {
+    margin-top: 10px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-2);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .wl__again:hover { color: var(--ink); }
+
+  .wl__again:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  @keyframes wl-pop {
+    from { opacity: 0; transform: translateY(6px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
 
   .wl__tags {
     display: flex;
@@ -303,10 +456,8 @@ const inputId = `${id}-email`;
     margin-top: 14px;
     text-align: center;
     font-size: 16px;
-    color: var(--good-ink);
+    color: var(--danger-ink);
   }
-
-  .wl__msg--error { color: var(--danger-ink); }
 
   .wl__noscript {
     margin-top: 14px;
