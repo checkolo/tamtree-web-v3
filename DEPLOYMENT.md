@@ -212,33 +212,24 @@ curl -sI http://localhost:8080/blog/
 
 ---
 
-## Before launch
+## Indexing
 
-The site is reachable but deliberately kept out of search engines. Two things
-do that, and launch means removing both in one deploy:
+The site is public and indexable (launched 2026-10-30). Two things control
+that, and they must agree:
 
-- `public/robots.txt` disallows everything. Replace it with:
+- `public/robots.txt` — one `User-agent: *` group with `Allow: /`, the sitemap,
+  and pointers to `llms.txt`. One `*` group on purpose: it already admits
+  GPTBot, ClaudeBot, PerplexityBot and the rest, and a named group *replaces*
+  `*` for that bot rather than extending it.
+- `deploy/Caddyfile.web` — sends **no** site-wide `X-Robots-Tag`. The only
+  `noindex` is on `*.md`, because each `.md` is a sibling of a real page, not a
+  second page to rank. Waitlist receipts carry their own `<meta name="robots">`.
 
-  ```
-  User-agent: *
-  Allow: /
-
-  Sitemap: https://www.tamtree.io/sitemap-index.xml
-
-  # For language models and agents — the whole site as Markdown:
-  # llms.txt:      https://www.tamtree.io/llms.txt
-  # llms-full.txt: https://www.tamtree.io/llms-full.txt
-  ```
-
-  One `*` group on purpose: it already admits GPTBot, ClaudeBot,
-  PerplexityBot and the rest, and a named group *replaces* `*` for that bot
-  rather than extending it.
-- `deploy/Caddyfile.web` sends `X-Robots-Tag: noindex, nofollow` on every
-  response. Delete that line (the `noindex` on `*.md` is separate and stays).
-
-Remove only the robots.txt rule and nothing is indexed: crawlers come, read
-`noindex`, and leave. Remove only the header and nothing is crawled. Changing
-the snippet restarts Caddy, as any header change does.
+To take the site back out of search, change both in one deploy: `Disallow: /`
+in robots.txt **and** `X-Robots-Tag "noindex, nofollow"` in the site-wide
+`header` block. Change only robots.txt and already-indexed URLs linger (Google
+can no longer fetch them to see a `noindex`); change only the header and
+nothing new is crawled to learn it. A header change restarts Caddy.
 
 ---
 

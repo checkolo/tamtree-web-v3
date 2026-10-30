@@ -58,11 +58,6 @@ www.tamtree.io {
 	header @hashed Cache-Control "public, max-age=31536000, immutable"
 
 	header {
-		# PRE-LAUNCH: keep every response out of search indexes. robots.txt
-		# asks crawlers not to fetch; this covers the ones that fetch anyway,
-		# and the files a <meta> tag cannot reach. Remove both together at
-		# launch — DEPLOYMENT.md, "Before launch".
-		X-Robots-Tag "noindex, nofollow"
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
