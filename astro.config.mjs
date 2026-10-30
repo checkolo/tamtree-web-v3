@@ -45,8 +45,8 @@ export default defineConfig({
         uiFontFamily: 'var(--body)',
       },
     }),
-    // The waitlist receipts are noindex; a sitemap listing them would contradict that.
-    sitemap({ filter: (page) => !page.includes('/waitlist/') }),
+    // The waitlist and contact receipts are noindex; a sitemap listing them would contradict that.
+    sitemap({ filter: (page) => !page.includes('/waitlist/') && !/\/contact\/(not-)?sent\//.test(page) }),
     // Page .md siblings and the llms.txt corpus, derived from dist/ (C4).
     agentsCorpus(),
   ],

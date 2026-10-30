@@ -18,8 +18,7 @@ import { legal } from '../data/legal';
  * The platform clause names the YouTube Terms of Service, which YouTube API
  * Services require an app's own terms to bind users to.
  */
-const { entity, abn, contactEmail, governingState } = legal;
-const mail = `mailto:${contactEmail}`;
+const { entity, abn, contactPath, governingState } = legal;
 
 const sections = [
   { id: 'agreement', title: 'This agreement' },
@@ -206,6 +205,7 @@ const sections = [
 
   <h2 id="contact">Contact</h2>
   <p>
-    Questions about these terms, and legal notices, go to <a href={mail}>{contactEmail}</a>.
+    Send questions about these terms, and legal notices, through our{' '}
+    <a href={`${contactPath}?topic=legal`}>contact page</a>, choosing <strong>Legal notice</strong>.
   </p>
 </Legal>

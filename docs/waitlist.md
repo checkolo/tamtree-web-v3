@@ -10,6 +10,11 @@ form claimed success whether or not the signup arrived. It shipped that bug to
 production twice (a CSP `frame-src` gap on 2026-10-15, then the
 `buttondown.email` → `.com` redirect).
 
+The same service also takes the **contact form** (`POST /api/contact`, added
+2026-10-30, see below). The site shows no email address anywhere, since the repo
+is public. Privacy, deletion and legal mail reaches the inbox only through that
+form.
+
 ## Shape
 
 ```
@@ -69,7 +74,7 @@ list and the inbox. In the order they are checked:
    window, and the server remembers spent stamps, so each one works once. There
    is no challenge endpoint and no secret. What it buys is cost: a bot pays per
    signup the compute a person pays once. **The bits are set in two places**:
-   the env var and `POW_BITS` in `WaitlistForm.astro`.
+   the env var and `POW_BITS` in `src/lib/stamp.ts`.
 5. **Hourly cap:** `WAITLIST_HOURLY_CAP` (default 100) accepted signups per hour
    across *all* addresses. This is the ceiling for a bot spread over many IPs.
    Reaching it logs a warning.
@@ -81,8 +86,38 @@ is Turnstile.
 
 **This is the one place the site needs JavaScript.** A stamp can only be
 computed in script, so a no-JS POST is refused (`stamp` → `/waitlist/sorry/`).
-The form's `<noscript>` says so up front and offers `legal.contactEmail`
-instead. Every other page and the content pipeline stay zero-JS-dependent.
+The form's `<noscript>` says so up front and points to `/contact/` instead
+(which needs script too: there is deliberately no public address to fall back on). Every other page and the content pipeline stay zero-JS-dependent.
+
+## The contact form
+
+```
+POST /api/contact
+Content-Type: application/x-www-form-urlencoded
+
+email=<address>&message=<text>[&name=<text>][&topic=general|privacy|deletion|legal|waitlist]
+  &pow_ts=<unix seconds>&pow_nonce=<integer>[&company=<honeypot>]
+```
+
+One Resend `POST /emails` to `CONTACT_TO`, with the sender as `reply_to` and
+the topic label leading the subject (`Data deletion request: Ann`), so replying
+from the inbox answers them directly. It uses the same guards as the waitlist,
+in the same order (Origin, per-IP limit, honeypot, stamp bound to the email,
+hourly cap), but with its own limiter and cap, so a busy waitlist can't block a
+deletion request. It adds one error code, `message` (400): the message is empty
+or longer than 5000 characters. With only one write there's no partial success.
+A failed send is `unavailable` (502). No-JS receipts are `/contact/sent/` and
+`/contact/not-sent/?reason=<code>`.
+
+`CONTACT_TOPICS` in `server.mjs` is the list of topics. `/contact/` renders its
+select from it, and `?topic=<value>` preselects one. The legal pages link with
+`?topic=privacy`, `deletion`, `legal` and `waitlist`. Like the waitlist, it never
+mails the address entered, so it can't be used to mail a stranger.
+
+**Prove it after deploy:** send one message from the live `/contact/` and check
+that it arrives at `CONTACT_TO` and that Reply goes to the sender. Meta, Google
+and TikTok app reviews check that the privacy and deletion pages have a working
+contact.
 
 ## Opt-ins → Resend topics
 
@@ -113,8 +148,10 @@ contact *is* being on the waitlist.
 | `WAITLIST_FROM` | yes | e.g. `Tamtree <waitlist@tamtree.io>`; the domain must be verified in Resend |
 | `WAITLIST_NOTIFY_TO` | yes | the inbox that receives each signup |
 | `SITE_ORIGIN` | no | defaults to `https://www.tamtree.io` |
-| `WAITLIST_POW_BITS` | no | default 15; change `POW_BITS` in `WaitlistForm.astro` with it |
+| `WAITLIST_POW_BITS` | no | default 15; change `POW_BITS` in `src/lib/stamp.ts` with it |
 | `WAITLIST_HOURLY_CAP` | no | default 100 accepted signups per hour, all addresses |
+| `CONTACT_TO` | no | the inbox contact messages go to; defaults to `WAITLIST_NOTIFY_TO`. **Only ever here** — never in the repo |
+| `CONTACT_HOURLY_CAP` | no | default 30 contact messages per hour, all senders |
 | `RESEND_SEGMENT_ID`, `RESEND_TOPIC_*` | no | see above |
 
 The service refuses to start without the three required values.
@@ -134,8 +171,8 @@ The service refuses to start without the three required values.
    docker compose up -d --build
    ```
 
-3. **Caddy** already proxies `/api/waitlist` to `waitlist:8787` (it ships with
-   `deploy/Caddyfile.web`). Until the container exists the route answers 502
+3. **Caddy** already proxies `/api/waitlist` and `/api/contact` to `waitlist:8787`
+   (it ships with `deploy/Caddyfile.web`). Until the container exists the route answers 502
    and the form shows its error message. It never claims success.
 4. **Prove it:** run one real signup on the live site with both opt-ins ticked.
    Check that the contact appears in Resend with both topics `opt_in`, and that

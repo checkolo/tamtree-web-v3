@@ -17,9 +17,9 @@ tamtree.io {
 }
 
 www.tamtree.io {
-	# The waitlist endpoint (waitlist/server.mjs), its own container on the app
-	# stack's network. Everything else here is a file.
-	handle /api/waitlist {
+	# The waitlist and contact endpoints (waitlist/server.mjs), one container on
+	# the app stack's network. Everything else here is a file.
+	handle /api/waitlist /api/contact {
 		reverse_proxy waitlist:8787
 	}
 

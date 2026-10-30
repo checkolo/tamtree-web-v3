@@ -1,0 +1,36 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import Button from '../../components/Button.astro';
+
+/**
+ * Where a no-JS contact POST lands when it did not go through. The server adds
+ * `?reason=` (email, message, stamp, busy, origin, unavailable) for the logs;
+ * the page is static, so it names every likely cause at once. `stamp` is the
+ * common one here: a no-JS POST has no proof-of-work stamp.
+ */
+---
+
+<Base title="Not sent yet" description="Your message to Tamtree did not go through." noindex>
+  <section class="sec cf-done">
+    <div class="wrap cf-done__inner">
+      <div aria-hidden="true"><Mark size={40} /></div>
+      <p class="cf-done__code">CONTACT · NOT SENT</p>
+      <h1>That didn't go through.</h1>
+      <p class="cf-done__lede">
+        Your message wasn't sent. The form needs JavaScript turned on to keep bots out — check that,
+        and the email address, then try again.
+      </p>
+      <Button href="/contact/">Try again</Button>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cf-done { padding: 120px 0 140px; text-align: center; }
+  .cf-done__inner { display: flex; flex-direction: column; align-items: center; }
+  .cf-done__code { margin-top: 28px; font-family: var(--mono); font-size: 13px; letter-spacing: 0.24em; color: var(--danger-ink); }
+  h1 { margin-top: 18px; font-size: 64px; font-weight: 800; }
+  .cf-done__lede { margin: 24px 0 40px; max-width: 520px; font-size: 18px; line-height: 1.62; color: var(--ink-2); }
+  @media (max-width: 700px) { h1 { font-size: 40px; } }
+</style>

@@ -48,7 +48,9 @@ for (const [f, refs] of pages) {
       external.add(raw);
       continue;
     }
-    const [pathPart, anchor] = raw.split('#');
+    const [withQuery, anchor] = raw.split('#');
+    // A query string selects state on the page (/contact/?topic=deletion), not a file.
+    const pathPart = withQuery.split('?')[0];
     let target;
     if (pathPart === '') {
       target = f; // same-page anchor

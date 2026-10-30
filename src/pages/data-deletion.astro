@@ -13,15 +13,14 @@ import { legal } from '../data/legal';
  * platform Tamtree connects to. The privacy policy's #data-deletion section
  * links here.
  */
-const { contactEmail } = legal;
-const mail = `mailto:${contactEmail}`;
+const { contactPath } = legal;
 
 const sections = [
   { id: 'what-we-hold', title: 'What Tamtree holds' },
   { id: 'in-tamtree', title: 'Delete it in Tamtree' },
   { id: 'facebook-instagram', title: 'Remove access on Facebook and Instagram' },
   { id: 'other-platforms', title: 'YouTube and TikTok' },
-  { id: 'by-email', title: 'Ask us to delete it' },
+  { id: 'ask-us', title: 'Ask us to delete it' },
   { id: 'what-happens', title: 'What happens next' },
 ];
 ---
@@ -103,12 +102,12 @@ const sections = [
     </li>
   </ul>
 
-  <h2 id="by-email">Ask us to delete it</h2>
+  <h2 id="ask-us">Ask us to delete it</h2>
   <p>
-    If you cannot sign in, or want your whole Tamtree account deleted, email{' '}
-    <a href={mail}>{contactEmail}</a> from the address on your account (or the one you joined the
-    waitlist with) with the subject <strong>Data deletion request</strong>. Tell us which
-    connections or which account the request covers. If your request is about a Facebook Page or
+    If you cannot sign in, or want your whole Tamtree account deleted, use our{' '}
+    <a href={`${contactPath}?topic=deletion`}>contact page</a> and choose{' '}
+    <strong>Data deletion request</strong>. Give the email address on your account (or the one you
+    joined the waitlist with), and tell us which connections or which account the request covers. If your request is about a Facebook Page or
     Instagram account, include the Page name or Instagram username.
   </p>
 

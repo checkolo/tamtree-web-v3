@@ -1,0 +1,328 @@
+---
+import Base from '../../layouts/Base.astro';
+import { breadcrumbs } from '../../lib/seo';
+import { CONTACT_TOPICS } from '../../../waitlist/server.mjs';
+
+/**
+ * /contact/ — the only way to reach us, by design. The repo is public, so the
+ * inbox address is never in the HTML: the form posts to `/api/contact`
+ * (waitlist/server.mjs), which mails it to CONTACT_TO with the sender as
+ * reply-to. The privacy, terms and data-deletion pages all point here, with
+ * `?topic=` choosing the matching option.
+ *
+ * Like the waitlist it needs script for the proof-of-work stamp (src/lib/stamp.ts);
+ * the <noscript> says so, and a POST made anyway lands on /contact/not-sent/.
+ * The topic labels are the server's own, so a new topic cannot be offered
+ * here without the server knowing it.
+ */
+const topics = Object.entries(CONTACT_TOPICS as Record<string, string>);
+---
+
+<Base
+  title="Contact"
+  description="Contact Tamtree with a question, a privacy or data deletion request, or a legal notice."
+  jsonLd={[breadcrumbs([{ label: 'Contact' }], Astro.url.pathname)]}
+>
+  <section class="contact">
+    <div class="wrap">
+      <div class="contact__sheet">
+        <p class="eyebrow">Contact</p>
+        <h1>Get in touch.</h1>
+        <p class="contact__lede">
+          Questions, privacy and data deletion requests, and legal notices all come here. We reply
+          to the email address you give, usually within a few days and always within 30 days.
+        </p>
+
+        <form class="cf" id="contact" action="/api/contact" method="post">
+          <div class="cf__pair">
+            <div class="cf__field">
+              <label for="cf-name">Name <span class="cf__opt">(optional)</span></label>
+              <input id="cf-name" name="name" type="text" autocomplete="name" maxlength="200" />
+            </div>
+            <div class="cf__field">
+              <label for="cf-email">Email</label>
+              <input id="cf-email" name="email" type="email" autocomplete="email" required />
+            </div>
+          </div>
+
+          <div class="cf__field">
+            <label for="cf-topic">Topic</label>
+            <select id="cf-topic" name="topic">
+              {topics.map(([value, label]) => <option value={value}>{label}</option>)}
+            </select>
+          </div>
+
+          <div class="cf__field">
+            <label for="cf-message">Message</label>
+            <textarea id="cf-message" name="message" rows="8" maxlength="5000" required></textarea>
+            <p class="cf__hint">
+              For a data deletion request, say which connections or which account it covers, and
+              include the Page name or Instagram username if it is about Facebook or Instagram.
+            </p>
+          </div>
+
+          {/* Honeypot — off-screen and out of the tab order, so only a bot fills it. */}
+          <label class="cf__trap" aria-hidden="true">
+            Company <input type="text" name="company" tabindex="-1" autocomplete="off" />
+          </label>
+
+          <div class="cf__actions">
+            <button class="btn btn--primary cf__submit" type="submit">
+              <span class="cf__spin" aria-hidden="true"></span>
+              <span class="cf__label">Send message</span>
+            </button>
+            <p class="cf__note">
+              How we handle what you send: <a href="/privacy/#what-we-collect">privacy policy</a>.
+            </p>
+          </div>
+        </form>
+
+        <noscript>
+          <p class="cf__noscript">
+            The contact form needs JavaScript turned on, to keep bots out.
+          </p>
+        </noscript>
+
+        <p class="cf__msg" id="contact-msg" role="status" aria-live="polite" hidden></p>
+
+        <div class="cf__done" id="contact-done" role="status" tabindex="-1" hidden>
+          <p class="cf__done-title">Message sent.</p>
+          <p class="cf__done-text">We'll reply to <strong class="cf__done-email"></strong>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import { sendStamped } from '../../lib/stamp';
+
+  const FAILED: Record<string, string> = {
+    email: "That doesn't look like an email address — check it and try again.",
+    message: 'Write a message of up to 5,000 characters, then send it again.',
+    busy: 'Too many messages right now. Give it a few minutes and try again.',
+  };
+  const FALLBACK = "Something went wrong on our side and your message wasn't sent. Please try again shortly.";
+
+  const form = document.querySelector<HTMLFormElement>('#contact');
+  const msg = document.getElementById('contact-msg');
+  const done = document.getElementById('contact-done');
+  const submit = form?.querySelector<HTMLButtonElement>('button[type="submit"]');
+  const label = submit?.querySelector<HTMLElement>('.cf__label');
+  const cta = label?.textContent ?? '';
+
+  // /privacy/ and friends link here with ?topic=deletion and the like.
+  const topic = new URLSearchParams(location.search).get('topic');
+  const select = form?.querySelector<HTMLSelectElement>('select[name="topic"]');
+  if (topic && select && [...select.options].some((o) => o.value === topic)) select.value = topic;
+
+  const busy = (on: boolean) => {
+    if (!submit) return;
+    submit.disabled = on;
+    submit.setAttribute('aria-busy', String(on));
+    submit.classList.toggle('cf__submit--busy', on);
+    if (label) label.textContent = on ? 'Sending…' : cta;
+  };
+
+  // Firefox restores a disabled button on reload, bfcache the whole page.
+  window.addEventListener('pageshow', () => busy(false));
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!msg || !done || submit?.disabled) return;
+    busy(true);
+    msg.hidden = true;
+    const result = await sendStamped(form);
+    busy(false);
+    if (result.ok) {
+      const slot = done.querySelector('.cf__done-email');
+      if (slot) slot.textContent = String(new FormData(form).get('email') ?? '').trim();
+      form.hidden = true;
+      done.hidden = false;
+      done.focus();
+      return;
+    }
+    msg.textContent = FAILED[result.error] ?? FALLBACK;
+    msg.hidden = false;
+  });
+</script>
+
+<style>
+  .contact {
+    padding-block: var(--sec-y);
+  }
+
+  /* The legal pages' opaque sheet: the form never sits on the moving constellation. */
+  .contact__sheet {
+    max-width: 820px;
+    margin-inline: auto;
+    padding: 56px 72px 64px;
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    background: var(--page);
+    box-shadow: var(--card-shadow);
+  }
+
+  h1 {
+    margin-top: 14px;
+    font-size: clamp(32px, 4.4vw, 52px);
+  }
+
+  .contact__lede {
+    margin: 18px 0 0;
+    max-width: 60ch;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-2);
+  }
+
+  .cf {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    margin-top: 36px;
+  }
+
+  .cf[hidden],
+  .cf__done[hidden] { display: none; }
+
+  .cf__pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+
+  .cf__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cf__field label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .cf__opt {
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+
+  .cf__field input,
+  .cf__field select,
+  .cf__field textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--line-2);
+    border-radius: var(--r-md);
+    background: var(--field-bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+  }
+
+  .cf__field textarea {
+    resize: vertical;
+    min-height: 160px;
+    line-height: 1.55;
+  }
+
+  .cf__field input:focus-visible,
+  .cf__field select:focus-visible,
+  .cf__field textarea:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+  }
+
+  .cf__hint,
+  .cf__note {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-3);
+  }
+
+  .cf__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 22px;
+  }
+
+  .cf__submit--busy { cursor: progress; }
+
+  .cf__submit:disabled { transform: none; }
+
+  .cf__spin {
+    display: none;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+    animation: cf-spin 0.7s linear infinite;
+  }
+
+  .cf__submit--busy .cf__spin { display: block; }
+
+  @keyframes cf-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .cf__trap {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .cf__msg {
+    margin: 18px 0 0;
+    font-size: 16px;
+    color: var(--danger-ink);
+  }
+
+  .cf__noscript {
+    margin: 18px 0 0;
+    font-size: 15px;
+    color: var(--ink-2);
+  }
+
+  .cf__done {
+    margin-top: 36px;
+    padding: 20px 24px;
+    border-radius: var(--r-xl);
+    background: color-mix(in srgb, var(--good) 12%, var(--field-bg));
+    border: 1px solid color-mix(in srgb, var(--good) 45%, transparent);
+    outline: none;
+  }
+
+  .cf__done p { margin: 0; }
+
+  .cf__done-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cf__done .cf__done-text {
+    margin-top: 4px;
+    font-size: 15px;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+
+  .cf__done-email { color: var(--good-ink); }
+
+  /* The legal sheet's breakpoint, so the two read as one family on a tablet. */
+  @media (max-width: 860px) {
+    .contact__sheet { padding: 36px 22px 44px; border-radius: 16px; }
+  }
+
+  @media (max-width: 700px) {
+    .cf__pair { grid-template-columns: 1fr; }
+  }
+</style>

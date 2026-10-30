@@ -10,6 +10,7 @@ import {
   contactPayload,
   createHandler,
   leadingZeroBits,
+  parseContact,
   parseSignup,
   rateLimiter,
   stampMemory,
@@ -63,8 +64,8 @@ async function withServer(deps, fn) {
 }
 
 /** POSTs with a valid stamp added, unless the body already says pow_ or `raw` is set. */
-const post = (base, body, headers = {}, { raw = false } = {}) =>
-  fetch(`${base}/api/waitlist`, {
+const post = (base, body, headers = {}, { raw = false, path = '/api/waitlist' } = {}) =>
+  fetch(`${base}${path}`, {
     method: 'POST',
     redirect: 'manual',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
@@ -233,4 +234,94 @@ test('the hourly cap refuses signups across every address', async () => {
     assert.deepEqual(await third.json(), { ok: false, error: 'busy' });
   });
   assert.equal(resend.calls.length, 4);
+});
+
+const message = (base, body, headers = {}, opts = {}) => post(base, body, headers, { ...opts, path: '/api/contact' });
+
+test('contact parse: one-line name, known topic or general, normalised newlines', () => {
+  const c = parseContact('name=Ann%0ABcc:%20x@y.io&email=%20A@B.io&topic=evil&message=%20hi%0D%0Athere%20');
+  assert.equal(c.name, 'Ann Bcc: x@y.io');
+  assert.equal(c.email, 'a@b.io');
+  assert.equal(c.topic, 'general');
+  assert.equal(c.message, 'hi\nthere');
+  assert.equal(parseContact('topic=deletion').topic, 'deletion');
+  assert.equal(parseContact('topic=toString').topic, 'general');
+});
+
+test('contact goes to CONTACT_TO with the sender as reply-to', async () => {
+  const resend = fakeResend();
+  const server = createServer(
+    createHandler(configFrom({ ...ENV, CONTACT_TO: 'private@example.com' }), { log: quiet, fetchImpl: resend.fetchImpl }),
+  );
+  await new Promise((r) => server.listen(0, r));
+  try {
+    const base = `http://127.0.0.1:${server.address().port}`;
+    const res = await message(base, 'name=Ann&email=a@b.io&topic=deletion&message=Delete%20me', { Accept: 'application/json' });
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), { ok: true });
+  } finally {
+    server.close();
+  }
+  assert.deepEqual(resend.calls.map((c) => c.path), ['/emails']);
+  const mail = resend.calls[0].body;
+  assert.deepEqual(mail.to, ['private@example.com']);
+  assert.equal(mail.reply_to, 'a@b.io');
+  assert.equal(mail.subject, 'Data deletion request: Ann');
+  assert.match(mail.text, /From: Ann <a@b\.io>/);
+  assert.match(mail.text, /\n\nDelete me\n/);
+});
+
+test('contact falls back to the waitlist inbox when CONTACT_TO is unset', async () => {
+  const resend = fakeResend();
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const res = await message(base, 'email=a@b.io&message=hello');
+    assert.equal(res.status, 303);
+    assert.equal(res.headers.get('location'), 'https://www.tamtree.io/contact/sent/');
+  });
+  assert.deepEqual(resend.calls[0].body.to, ['inbox@tamtree.io']);
+  assert.equal(resend.calls[0].body.subject, 'General question: a@b.io');
+});
+
+test('contact refuses an empty or oversized message before Resend', async () => {
+  const resend = fakeResend();
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const json = { Accept: 'application/json' };
+    const empty = await message(base, 'email=a@b.io&message=%20%20', json);
+    assert.equal(empty.status, 400);
+    assert.deepEqual(await empty.json(), { ok: false, error: 'message' });
+    const long = await message(base, `email=a@b.io&message=${'x'.repeat(5001)}`, json);
+    assert.deepEqual(await long.json(), { ok: false, error: 'message' });
+  });
+  assert.equal(resend.calls.length, 0);
+});
+
+test('contact: no stamp lands on not-sent, a failed send says unavailable', async () => {
+  const resend = fakeResend({ '/emails': 500 });
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const raw = await message(base, 'email=a@b.io&message=hi', {}, { raw: true });
+    assert.equal(raw.headers.get('location'), 'https://www.tamtree.io/contact/not-sent/?reason=stamp');
+    const down = await message(base, 'email=a@b.io&message=hi', { Accept: 'application/json' });
+    assert.equal(down.status, 502);
+    assert.deepEqual(await down.json(), { ok: false, error: 'unavailable' });
+  });
+});
+
+test('contact has its own limits, apart from the waitlist', async () => {
+  const resend = fakeResend();
+  const contactHourlyCap = rateLimiter({ max: 1, windowMs: 3_600_000 });
+  await withServer({ fetchImpl: resend.fetchImpl, contactHourlyCap }, async (base) => {
+    const json = { Accept: 'application/json' };
+    assert.equal((await message(base, 'email=a@b.io&message=one', json)).status, 200);
+    assert.equal((await message(base, 'email=c@d.io&message=two', json)).status, 429);
+    assert.equal((await post(base, 'email=e@f.io', json)).status, 200);
+  });
+});
+
+test('the honeypot on the contact form looks like success and sends nothing', async () => {
+  const resend = fakeResend();
+  await withServer({ fetchImpl: resend.fetchImpl }, async (base) => {
+    const res = await message(base, 'email=a@b.io&message=hi&company=Acme', { Accept: 'application/json' });
+    assert.equal(res.status, 200);
+  });
+  assert.equal(resend.calls.length, 0);
 });

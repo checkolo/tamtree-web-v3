@@ -1,9 +1,11 @@
 /**
- * The waitlist endpoint — the one piece of tamtree.io that is not a file.
+ * The waitlist and contact endpoints — the one piece of tamtree.io that is not a file.
  *
- * Caddy proxies `POST www.tamtree.io/api/waitlist` here (deploy/Caddyfile.web).
- * Each signup becomes a Resend Contact, so the list lives where launch mail is
- * sent from, and the inbox gets a notification. Contract and setup:
+ * Caddy proxies `POST www.tamtree.io/api/waitlist` and `/api/contact` here
+ * (deploy/Caddyfile.web). Each signup becomes a Resend Contact, so the list
+ * lives where launch mail is sent from, and the inbox gets a notification. A
+ * contact message is mailed to CONTACT_TO with the sender as reply-to, which is
+ * what keeps that inbox's address off the public site. Contract and setup:
  * docs/waitlist.md.
  *
  * No dependencies on purpose: node:http and the built-in fetch are the whole
@@ -26,6 +28,9 @@ import { pathToFileURL } from 'node:url';
 
 const RESEND_API = 'https://api.resend.com';
 const MAX_BODY = 8 * 1024;
+// A contact message is free text; 5000 characters URL-encoded fits easily.
+const MAX_CONTACT_BODY = 32 * 1024;
+const MAX_MESSAGE = 5000;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const RATE_MAX = 5;
 const HOUR_MS = 60 * 60 * 1000;
@@ -34,6 +39,15 @@ const STAMP_WINDOW_S = 5 * 60;
 // `waitlist` is the hidden field every form sends; the other two are §10's
 // opt-ins. Anything else in `tag` is dropped rather than stored.
 const KNOWN_TAGS = ['waitlist', 'launch-news', 'early-access'];
+// The contact form's topic select. The label leads the subject line, so the
+// inbox can be filtered by it; an unknown value falls back to `general`.
+export const CONTACT_TOPICS = {
+  general: 'General question',
+  privacy: 'Privacy request',
+  deletion: 'Data deletion request',
+  legal: 'Legal notice',
+  waitlist: 'Waitlist',
+};
 // Deliberately loose: one @, no spaces, a dot in the domain. Resend does the
 // real validation; this only keeps obvious junk out of the inbox.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,12 +60,15 @@ export function configFrom(env) {
     from: env.WAITLIST_FROM,
     notifyTo: env.WAITLIST_NOTIFY_TO,
     siteOrigin: (env.SITE_ORIGIN || 'https://www.tamtree.io').replace(/\/$/, ''),
-    // Must match POW_BITS in src/components/WaitlistForm.astro. Each extra bit
+    // Must match POW_BITS in src/lib/stamp.ts. Each extra bit
     // doubles the work: 15 is ~32k hashes, well under a second on a phone.
     powBits: Number(env.WAITLIST_POW_BITS || 15),
     // Accepted signups per hour across every address — the ceiling on what a
     // bot spread over many IPs can push into the list and the inbox.
     hourlyCap: Number(env.WAITLIST_HOURLY_CAP || 100),
+    // Never in the repo or the HTML: the site is public and this inbox is not.
+    contactTo: env.CONTACT_TO || env.WAITLIST_NOTIFY_TO,
+    contactHourlyCap: Number(env.CONTACT_HOURLY_CAP || 30),
     segmentId: env.RESEND_SEGMENT_ID || '',
     // Resend topics are what a Broadcast is sent to, so each opt-in maps to
     // one. Unset ids are skipped: the opt-in still reaches the notification.
@@ -87,6 +104,21 @@ export function parseSignup(body) {
   // The honeypot: a field a person never sees, so only a bot fills it in.
   const trap = (params.get('company') || '').trim();
   return { email, tags, trap, stampTs: params.get('pow_ts') || '', stampNonce: params.get('pow_nonce') || '' };
+}
+
+export function parseContact(body) {
+  const params = new URLSearchParams(body);
+  const topic = params.get('topic') || '';
+  return {
+    // One line, so a name cannot add lines to the notification's header block.
+    name: (params.get('name') || '').replace(/\s+/g, ' ').trim().slice(0, 200),
+    email: (params.get('email') || '').trim().toLowerCase(),
+    topic: Object.hasOwn(CONTACT_TOPICS, topic) ? topic : 'general',
+    message: (params.get('message') || '').replace(/\r\n?/g, '\n').trim(),
+    trap: (params.get('company') || '').trim(),
+    stampTs: params.get('pow_ts') || '',
+    stampNonce: params.get('pow_nonce') || '',
+  };
 }
 
 export function leadingZeroBits(bytes) {
@@ -182,6 +214,36 @@ export function notificationPayload(cfg, { email, tags }, contactOk, at) {
   };
 }
 
+export function contactMessagePayload(cfg, { name, email, topic, message }, at) {
+  const from = name ? `${name} <${email}>` : email;
+  return {
+    from: cfg.from,
+    to: [cfg.contactTo],
+    reply_to: email,
+    subject: `${CONTACT_TOPICS[topic]}: ${name || email}`.slice(0, 200),
+    text: [
+      `From: ${from}`,
+      `Topic: ${CONTACT_TOPICS[topic]}`,
+      `At: ${at.toISOString()}`,
+      '',
+      message,
+      '',
+      '— Sent from the contact form at tamtree.io/contact/. Reply to answer them directly.',
+    ].join('\n'),
+  };
+}
+
+/** One write, so unlike a signup there is nothing to fall back on. */
+export async function sendContact(cfg, msg, { fetchImpl = fetch, log = console, now = () => new Date() } = {}) {
+  try {
+    await resend(fetchImpl, cfg.apiKey, '/emails', contactMessagePayload(cfg, msg, now()));
+    return true;
+  } catch (err) {
+    log.error(`contact: message from ${msg.email} not sent: ${err.message}`);
+    return false;
+  }
+}
+
 /**
  * The signup itself. It succeeds if either write lands: a contact with no
  * notification is still on the list, and a notification with no contact is
@@ -207,13 +269,13 @@ export async function subscribe(cfg, signup, { fetchImpl = fetch, log = console,
   return contactOk || notifyOk;
 }
 
-function readBody(req) {
+function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
     req.on('data', (chunk) => {
       size += chunk.length;
-      if (size > MAX_BODY) {
+      if (size > limit) {
         reject(Object.assign(new Error('body too large'), { status: 413 }));
         req.destroy();
         return;
@@ -226,11 +288,38 @@ function readBody(req) {
 }
 
 export function createHandler(cfg, deps = {}) {
-  const allow = deps.rateLimit ?? rateLimiter();
-  const underCap = deps.hourlyCap ?? rateLimiter({ max: cfg.hourlyCap, windowMs: HOUR_MS });
   const seen = deps.stamps ?? stampMemory();
   const clock = deps.now ?? (() => new Date());
   const log = deps.log ?? console;
+
+  // The two forms share every guard below; they differ in what a valid
+  // submission is, where it goes, and which receipt page a no-JS POST sees.
+  const routes = {
+    '/api/waitlist': {
+      name: 'waitlist',
+      maxBody: MAX_BODY,
+      allow: deps.rateLimit ?? rateLimiter(),
+      underCap: deps.hourlyCap ?? rateLimiter({ max: cfg.hourlyCap, windowMs: HOUR_MS }),
+      pages: { ok: '/waitlist/thanks/', failed: '/waitlist/sorry/' },
+      parse: parseSignup,
+      invalid: (s) => (isValidEmail(s.email) ? null : 'email'),
+      deliver: (s) => subscribe(cfg, s, { fetchImpl: deps.fetchImpl, log, now: clock }),
+    },
+    '/api/contact': {
+      name: 'contact',
+      maxBody: MAX_CONTACT_BODY,
+      allow: deps.contactRateLimit ?? rateLimiter(),
+      underCap: deps.contactHourlyCap ?? rateLimiter({ max: cfg.contactHourlyCap, windowMs: HOUR_MS }),
+      pages: { ok: '/contact/sent/', failed: '/contact/not-sent/' },
+      parse: parseContact,
+      invalid: (s) => {
+        if (!isValidEmail(s.email)) return 'email';
+        if (!s.message || s.message.length > MAX_MESSAGE) return 'message';
+        return null;
+      },
+      deliver: (s) => sendContact(cfg, s, { fetchImpl: deps.fetchImpl, log, now: clock }),
+    },
+  };
 
   return async function handle(req, res) {
     const url = new URL(req.url, 'http://internal');
@@ -239,7 +328,8 @@ export function createHandler(cfg, deps = {}) {
       res.writeHead(200, { 'Content-Type': 'text/plain' }).end('ok');
       return;
     }
-    if (url.pathname !== '/api/waitlist') {
+    const route = Object.hasOwn(routes, url.pathname) ? routes[url.pathname] : null;
+    if (!route) {
       res.writeHead(404, { 'Content-Type': 'text/plain' }).end('not found');
       return;
     }
@@ -254,7 +344,7 @@ export function createHandler(cfg, deps = {}) {
         res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         res.end(JSON.stringify(ok ? { ok } : { ok, error, ...extra }));
       } else {
-        const page = ok ? '/waitlist/thanks/' : `/waitlist/sorry/?reason=${error}`;
+        const page = ok ? route.pages.ok : `${route.pages.failed}?reason=${error}`;
         res.writeHead(303, { Location: `${cfg.siteOrigin}${page}`, 'Cache-Control': 'no-store' }).end();
       }
     };
@@ -266,31 +356,32 @@ export function createHandler(cfg, deps = {}) {
 
     // Caddy sets X-Forwarded-For to the caller; nothing else reaches this port.
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-    if (!allow(ip)) return reply(429, false, 'busy');
+    if (!route.allow(ip)) return reply(429, false, 'busy');
 
     let body;
     try {
-      body = await readBody(req);
+      body = await readBody(req, route.maxBody);
     } catch (err) {
       return reply(err.status || 400, false, 'invalid');
     }
 
-    const signup = parseSignup(body);
+    const submission = route.parse(body);
     // Answer the bot exactly as a person, so it has nothing to learn from.
-    if (signup.trap) return reply(200, true);
-    if (!isValidEmail(signup.email)) return reply(400, false, 'email');
+    if (submission.trap) return reply(200, true);
+    const invalid = route.invalid(submission);
+    if (invalid) return reply(400, false, invalid);
 
     const nowS = Math.floor(clock().getTime() / 1000);
-    const stamp = checkStamp(signup, { bits: cfg.powBits, nowS, seen });
+    const stamp = checkStamp(submission, { bits: cfg.powBits, nowS, seen });
     // `now` lets a visitor whose clock is off re-stamp against ours.
     if (stamp === 'clock') return reply(400, false, 'clock', { now: nowS });
     if (stamp !== 'ok') return reply(400, false, 'stamp');
-    if (!underCap('all')) {
-      log.warn('waitlist: hourly cap reached — refusing signups until the window rolls over');
+    if (!route.underCap('all')) {
+      log.warn(`${route.name}: hourly cap reached — refusing until the window rolls over`);
       return reply(429, false, 'busy');
     }
 
-    const ok = await subscribe(cfg, signup, { fetchImpl: deps.fetchImpl, log, now: clock });
+    const ok = await route.deliver(submission);
     return ok ? reply(200, true) : reply(502, false, 'unavailable');
   };
 }
@@ -300,6 +391,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const port = Number(process.env.PORT || 8787);
   const server = createServer(createHandler(cfg));
   server.requestTimeout = 15_000;
-  server.listen(port, () => console.log(`waitlist: listening on :${port}`));
+  server.listen(port, () => console.log(`waitlist + contact: listening on :${port}`));
   for (const sig of ['SIGTERM', 'SIGINT']) process.on(sig, () => server.close(() => process.exit(0)));
 }

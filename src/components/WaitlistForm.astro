@@ -5,8 +5,8 @@
  *
  * The one place on the site that needs script (owner's call, 2026-10-28): the
  * script computes a proof-of-work stamp that keeps bots out, and a POST without
- * one is refused. Without JS the <noscript> says so and offers the contact
- * email instead; a POST made anyway lands on /waitlist/sorry/. Nothing else on
+ * one is refused. Without JS the <noscript> says so and points to the contact
+ * page instead; a POST made anyway lands on /waitlist/sorry/. Nothing else on
  * the page depends on this — it is still a real form with a real action.
  *
  * The script sends the fields with `Accept: application/json` and renders the
@@ -95,8 +95,8 @@ const inputId = `${id}-email`;
 
 <noscript>
   <p class="wl__noscript">
-    The waitlist needs JavaScript on, to keep bots out. Or email{' '}
-    <a href={`mailto:${legal.contactEmail}`}>{legal.contactEmail}</a> and we'll add you.
+    The waitlist needs JavaScript on, to keep bots out. Or{' '}
+    <a href={legal.contactPath}>contact us</a> and we'll add you.
   </p>
 </noscript>
 
@@ -117,46 +117,13 @@ const inputId = `${id}-email`;
 </div>
 
 <script>
-  // Must match WAITLIST_POW_BITS in waitlist/server.mjs (default 15).
-  const POW_BITS = 15;
+  import { sendStamped } from '../lib/stamp';
 
   const FAILED: Record<string, string> = {
     email: "That doesn't look like an email address — check it and try again.",
     busy: 'Too many signups right now. Give it a few minutes and try again.',
   };
   const FALLBACK = "Something went wrong on our side and you're not on the list yet. Please try again shortly.";
-
-  function zeroBits(bytes: Uint8Array): number {
-    let bits = 0;
-    for (const byte of bytes) {
-      if (byte === 0) {
-        bits += 8;
-        continue;
-      }
-      return bits + Math.clz32(byte) - 24;
-    }
-    return bits;
-  }
-
-  /** The nonce for sha256(`${email}:${ts}:${nonce}`) — waitlist/server.mjs checkStamp. */
-  async function stamp(email: string, ts: number): Promise<number> {
-    const enc = new TextEncoder();
-    for (let nonce = 0; ; nonce++) {
-      const digest = await crypto.subtle.digest('SHA-256', enc.encode(`${email}:${ts}:${nonce}`));
-      if (zeroBits(new Uint8Array(digest)) >= POW_BITS) return nonce;
-    }
-  }
-
-  async function send(form: HTMLFormElement, ts: number) {
-    const body = new URLSearchParams(new FormData(form) as unknown as Record<string, string>);
-    // Normalised exactly as the server does, or the hash would not match.
-    const email = (body.get('email') ?? '').trim().toLowerCase();
-    body.set('pow_ts', String(ts));
-    body.set('pow_nonce', String(await stamp(email, ts)));
-    const res = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body });
-    const data = await res.json().catch(() => ({}));
-    return { ok: res.ok && data.ok === true, error: String(data.error ?? ''), now: Number(data.now) };
-  }
 
   for (const form of document.querySelectorAll<HTMLFormElement>('.wl')) {
     const msg = document.getElementById(`${form.id}-msg`);
@@ -195,14 +162,7 @@ const inputId = `${id}-email`;
       if (submit?.disabled) return;
       busy(true);
       msg.hidden = true;
-      let result = { ok: false, error: '', now: NaN };
-      try {
-        result = await send(form, Math.floor(Date.now() / 1000));
-        // This device's clock is off by minutes: stamp again against the server's.
-        if (result.error === 'clock' && Number.isFinite(result.now)) result = await send(form, result.now);
-      } catch {
-        // Offline, or the endpoint is down: the fallback copy covers both.
-      }
+      const result = await sendStamped(form);
       busy(false);
       if (result.ok) {
         const email = new FormData(form).get('email');

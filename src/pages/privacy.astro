@@ -16,15 +16,15 @@ import { legal } from '../data/legal';
  *
  * Every fact about the website itself is checked against the build: no
  * analytics, no cookies, the theme choice in localStorage (theme-init.js),
- * Google Fonts in <head> (Base.astro), the waitlist form posting to our own
- * endpoint, which stores signups with Resend (docs/waitlist.md), hosting on our own server at AWS in Sydney
+ * Google Fonts in <head> (Base.astro), the waitlist and contact forms posting
+ * to our own endpoint, which stores signups with Resend and mails contact
+ * messages through it to a Google-hosted inbox (docs/waitlist.md), hosting on our own server at AWS in Sydney
  * (DEPLOYMENT.md), whose access log is Caddy's (deploy/Caddyfile.web).
  *
  * The wording avoids anything gate:copy forbids (licensing, deployment model,
  * pricing), so this page commits to none of them.
  */
-const { entity, abn, contactEmail } = legal;
-const mail = `mailto:${contactEmail}`;
+const { entity, abn, contactPath } = legal;
 
 const sections = [
   { id: 'who-we-are', title: 'Who we are' },
@@ -58,7 +58,7 @@ const sections = [
   <h2 id="who-we-are">Who we are</h2>
   <p>
     Tamtree is operated by {entity} (ABN {abn}) ("Tamtree", "we", "us"). You can reach us about
-    anything in this policy at <a href={mail}>{contactEmail}</a>.
+    anything in this policy through our <a href={contactPath}>contact page</a>.
   </p>
 
   <h2 id="what-we-collect">What we collect</h2>
@@ -89,6 +89,13 @@ const sections = [
     We collect your email address and the updates you opt into (for example, launch news or early
     access). The list is held by our email provider, Resend. You can unsubscribe from any email
     we send.
+  </p>
+
+  <h3>When you contact us</h3>
+  <p>
+    The contact form sends us your name (if you give it), your email address, the topic you choose
+    and your message. Resend delivers it to our email inbox, which Google hosts. We use it only to
+    answer you and to keep a record of what you asked.
   </p>
 
   <h3>When you use Tamtree</h3>
@@ -178,7 +185,11 @@ const sections = [
       <strong>Amazon Web Services</strong>, which provides the server this website runs on, in
       Sydney, Australia.
     </li>
-    <li><strong>Resend</strong>, which holds the waitlist and sends our emails.</li>
+    <li>
+      <strong>Resend</strong>, which holds the waitlist, sends our emails and delivers contact
+      form messages.
+    </li>
+    <li><strong>Google</strong>, which hosts the inbox those messages arrive in.</li>
     <li><strong>Google Fonts</strong>, which serves the website's typefaces.</li>
     <li>
       <strong>The platforms you connect</strong> (YouTube, Meta, TikTok and others). We send them
@@ -201,6 +212,10 @@ const sections = [
   <h2 id="retention">How long we keep it</h2>
   <ul>
     <li><strong>Waitlist:</strong> until you unsubscribe or ask us to delete it.</li>
+    <li>
+      <strong>Contact messages:</strong> while we deal with your request, and afterwards only as
+      long as we need a record of it, unless you ask us to delete them sooner.
+    </li>
     <li>
       <strong>Account data and content:</strong> while your account is active, then deleted within
       90 days of closing it, unless the law requires us to keep it longer.
@@ -230,7 +245,8 @@ const sections = [
     <li>stop sending you emails, using the unsubscribe link in any of them.</li>
   </ul>
   <p>
-    Email <a href={mail}>{contactEmail}</a>. We will respond within 30 days. Depending on where you
+    Use our <a href={`${contactPath}?topic=privacy`}>contact page</a> and choose{' '}
+    <strong>Privacy request</strong>. We will respond within 30 days. Depending on where you
     live, for example the European Union, the United Kingdom or California, you may have further
     rights, such as data portability or objecting to certain processing, and we will honour them.
   </p>
@@ -248,13 +264,14 @@ const sections = [
       <a href="#connected-accounts">Connected social accounts</a>.
     </li>
     <li>
-      <strong>Your account and everything in it:</strong> email <a href={mail}>{contactEmail}</a>{' '}
-      from the address on the account, asking us to delete it. We confirm within 7 days and
+      <strong>Your account and everything in it:</strong> use our{' '}
+      <a href={`${contactPath}?topic=deletion`}>contact page</a> with the email address on the
+      account, and choose <strong>Data deletion request</strong>. We confirm within 7 days and
       complete the deletion within 30.
     </li>
     <li>
-      <strong>The waitlist:</strong> use the unsubscribe link in any email, or email us to be
-      removed entirely.
+      <strong>The waitlist:</strong> use the unsubscribe link in any email, or{' '}
+      <a href={`${contactPath}?topic=waitlist`}>contact us</a> to be removed entirely.
     </li>
   </ol>
   <p>
@@ -278,7 +295,8 @@ const sections = [
 
   <h2 id="contact">Contact and complaints</h2>
   <p>
-    Questions, requests and complaints go to <a href={mail}>{contactEmail}</a>. We will respond
+    Send questions, requests and complaints through our <a href={contactPath}>contact page</a>. We
+    will respond
     within 30 days. If you are not satisfied with our response, you can complain to the{' '}
     <a href="https://www.oaic.gov.au/privacy/privacy-complaints" rel="noopener"
       >Office of the Australian Information Commissioner</a
