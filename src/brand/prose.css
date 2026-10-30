@@ -313,6 +313,19 @@ tt-button {
 
 tt-button > p { margin: 0; }
 
+/* A post's call-to-action label is a sentence ("Read the other six things
+   automation tools can't retrofit"), not the two-word pill `.btn` assumes, so
+   it may wrap instead of pushing the page 75px past a phone's edge. */
+tt-button .btn {
+  max-width: 100%;
+  height: auto;
+  min-height: 52px;
+  padding-block: 12px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+}
+
 /* ── images and figures ─────────────────────────────────────────────────── */
 
 /* One look for every picture in a post, whether it was written as a bare
@@ -374,7 +387,8 @@ tt-figure figcaption::before {
   tt-steps > ol > li,
   tt-steps > ul > li { padding-left: 38px; }
   tt-stat { padding: 20px 20px; }
-  tt-stat > strong { font-size: 33px; }
+  /* `anywhere`: a value can be one long token (`workflow.invalid_expression`). */
+  tt-stat > strong { font-size: 33px; overflow-wrap: anywhere; }
   tt-ledger > table,
   tt-compare > table { font-size: 14px; }
   tt-ledger th, tt-compare th,

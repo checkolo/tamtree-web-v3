@@ -298,6 +298,17 @@ const dotFor: Record<string, string> = {
       perspective: none;
     }
 
+    /* `max-content` is ~390px of mono caps, so on a phone the hero clipped it
+       mid-word ("…00:12.4 ELAPSE"). Here it may wrap, centred. */
+    .scene__status {
+      max-width: 100%;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 10px;
+      font-size: 11px;
+      text-align: center;
+    }
+
     .scene__tilt {
       transform: none;
     }

@@ -222,7 +222,10 @@ const year = new Date().getFullYear();
       display: contents;
     }
 
-    .foot__col--legal > .toggle {
+    /* :global — .toggle is ThemeToggle's own element, so a scoped selector
+       never matched it and the grid stretched the pill to the Legal list's
+       full height (113px of "Light | Dark"). */
+    .foot__col--legal > :global(.toggle) {
       align-self: start;
       justify-self: start;
     }

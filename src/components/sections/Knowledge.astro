@@ -24,7 +24,7 @@ const ledger = costLedger();
       <Eyebrow n="05">— knowledge &amp; memory</Eyebrow>
       <h2>Knows your stuff.<br />Remembers your users.</h2>
       <p class="knowledge__lede">
-        Built-in knowledge bases ground every agent on your own data —
+        Built-in knowledge bases ground every agent on your own data —{' '}
         <span class="knowledge__em">no bolt-on vector plumbing.</span> And memory outlives the
         thread: agents recognize each end user and carry long-term context across conversations.
       </p>
@@ -37,7 +37,7 @@ const ledger = costLedger();
           <circle cx="234" cy="96" r="26" fill="var(--knowledge-core)" stroke="var(--brand)" stroke-width="1.6"></circle>
           <text x="234" y="100" text-anchor="middle" fill="var(--brand-deep)" font-family="JetBrains Mono, monospace" font-size="11">agent</text>
           <path d="M150 56 L182 80 M150 96 L184 96 M150 138 L182 114" stroke="color-mix(in srgb, var(--brand) 50%, transparent)" stroke-width="1.2" stroke-dasharray="3 5"></path>
-          <path d="M302 96 L348 96" stroke="var(--knowledge-link)" stroke-width="1.2"></path>
+          <path class="knowledge__link" d="M302 96 L348 96" stroke="var(--knowledge-link)" stroke-width="1.2"></path>
         </svg>
         <ul class="knowledge__sources">
           <li><Chip class="knowledge__chip">your docs</Chip></li>
@@ -59,7 +59,7 @@ const ledger = costLedger();
       <h2>Watch every token.<br />Cap every run.</h2>
       <p class="knowledge__lede">
         Token and cost tracking per step, rolled into a ledger. Budgets with a real kill-switch.
-        Model routing that sends easy work to cheap models.
+        Model routing that sends easy work to cheap models.{' '}
         <span class="knowledge__em">Your CFO can look at the bill without sitting down.</span>
       </p>
 
@@ -267,9 +267,13 @@ const ledger = costLedger();
     margin: 20px 0 0;
     padding: 0;
     display: flex;
+    flex-wrap: wrap;
     gap: 9px;
     list-style: none;
   }
+
+  /* A chip is one line; at 390px "kill-switch armed" broke in two inside it. */
+  .knowledge__controls :global(.chip) { white-space: nowrap; }
 
   @media (max-width: 700px) {
     .knowledge { padding: 84px 0; }
@@ -296,6 +300,10 @@ const ledger = costLedger();
     .knowledge__device :global(.knowledge__remember) { height: 32px; }
 
     .knowledge__sources { left: 16px; top: 32px; gap: 10px; }
-    .knowledge__memory { right: 14px; top: 66px; }
+    /* The drawing scales with the box but the chips are HTML at fixed sizes,
+       so in a 300px device the pill landed on the agent. Below 700px it sits
+       under the agent instead, and the link that pointed right at it goes. */
+    .knowledge__memory { right: 14px; top: auto; bottom: 12px; }
+    .knowledge__link { display: none; }
   }
 </style>

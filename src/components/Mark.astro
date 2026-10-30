@@ -11,6 +11,11 @@
  * "tamtree" in real text, so a title on the glyph would make a screen reader
  * announce the name twice. Decorative here means decorative — the meaning is
  * carried by the text, which is C3's rule for exactly this case.
+ *
+ * Sizes are written as `var(--mark-glyph/--mark-word, <size>)`, so a container
+ * can step the mark down at a breakpoint (the mobile nav does) without a second
+ * render. The glyph never shrinks in a crowded flex row: on a 390px phone the
+ * nav squeezed it to 0px wide while the wordmark survived.
  */
 interface Props {
   size?: number;
@@ -33,13 +38,14 @@ const wordSize = Math.round(size * 0.85);
     stroke-linejoin="round"
     aria-hidden="true"
     focusable="false"
+    style={`width:var(--mark-glyph, ${size}px);height:var(--mark-glyph, ${size}px)`}
   >
     <path d="M50 25V75"></path>
     <path d="M39 30 50 41 61 30"></path>
     <path d="M35 42 50 57 65 42"></path>
     <path d="M34 75H66"></path>
   </svg>
-  {wordmark && <span class="mark__word" style={`font-size:${wordSize}px`}>tamtree</span>}
+  {wordmark && <span class="mark__word" style={`font-size:var(--mark-word, ${wordSize}px)`}>tamtree</span>}
 </span>
 
 <style>
@@ -47,6 +53,10 @@ const wordSize = Math.round(size * 0.85);
     display: inline-flex;
     align-items: center;
     gap: 11px;
+  }
+
+  .mark svg {
+    flex-shrink: 0;
   }
 
   .mark__word {

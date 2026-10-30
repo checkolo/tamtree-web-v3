@@ -147,24 +147,47 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
     cursor: pointer;
   }
 
-  /* The mobile artboard's layout, not a shrink of the desktop one (V2). */
+  /* The mobile artboard's layout, not a shrink of the desktop one (V2).
+     Budget at 390px (iPhone 13/14/16): 350px inside the gutters for the mark
+     (~105), theme switch (40), CTA (~136), menu (40) and three 8px gaps — 345.
+     At the desktop sizes the row needed ~390px, so flexbox shrank the only
+     item with no floor, the mark's glyph, to 0px. Nothing here may shrink;
+     if it stops fitting, the breakpoints below take the slack, not the logo. */
   @media (max-width: 700px) {
     .nav__inner {
       height: 60px;
-      gap: 10px;
+      gap: 8px;
+    }
+
+    .nav__home {
+      flex-shrink: 0;
+      --mark-glyph: 22px;
+      --mark-word: 20px;
+    }
+
+    .nav__home :global(.mark) {
+      gap: 9px;
     }
 
     .nav__menu {
       display: inline-flex;
+      flex-shrink: 0;
       order: 3;
     }
 
     .nav__nav {
-      gap: 10px;
+      gap: 8px;
+      margin-left: auto;
     }
 
     .nav__actions {
-      gap: 10px;
+      gap: 8px;
+    }
+
+    .nav :global(.nav__cta) {
+      height: 40px;
+      padding: 0 16px;
+      font-size: 14px;
     }
 
     .nav__list {
@@ -190,17 +213,25 @@ const isCurrent = (href: string) => here === href || here.startsWith(href);
     }
   }
 
-  /* The smallest phones (320px): mark, CTA and menu only just fit, so the
-     theme switch steps out — the footer toggle still offers the choice — and
-     the CTA gives up some padding rather than slide under the menu button. */
-  @media (max-width: 359px) {
-    .nav :global(.tswitch) {
-      display: none;
+  /* 375px (iPhone SE, 13 mini): 335px inside the gutters is ~10px short, so
+     the gaps close a step and the CTA gives up some padding. */
+  @media (max-width: 389px) {
+    .nav__inner,
+    .nav__nav,
+    .nav__actions {
+      gap: 6px;
     }
 
     .nav :global(.nav__cta) {
-      padding: 0 12px;
-      font-size: 14px;
+      padding: 0 13px;
+    }
+  }
+
+  /* The smallest phones (320px): mark, CTA and menu only just fit, so the
+     theme switch steps out — the footer toggle still offers the choice. */
+  @media (max-width: 359px) {
+    .nav :global(.tswitch) {
+      display: none;
     }
   }
 </style>

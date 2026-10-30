@@ -430,10 +430,50 @@ const description =
       font-size: 21px;
     }
 
+    /* At 620px the table scrolled inside a 350px card, so a phone saw the
+       Pipelines column cut mid-sentence and no Crews column at all. Here each
+       row reflows: the attribute becomes a label across the top and the two
+       answers sit side by side under the column heads. */
+    .ov__table {
+      display: block;
+      min-width: 0;
+    }
+
+    .ov__table thead,
+    .ov__table tbody {
+      display: block;
+    }
+
+    .ov__table tr {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ov__table tbody tr:last-child {
+      border-bottom: 0;
+    }
+
+    .ov__table thead td {
+      display: none;
+    }
+
     .ov__table th,
     .ov__table td {
       padding: 14px 16px;
-      font-size: 15px;
+      font-size: 14.5px;
+      border-bottom: 0;
+    }
+
+    .ov__table tbody th {
+      grid-column: 1 / -1;
+      width: auto;
+      padding-bottom: 0;
+      font-size: 11px;
+    }
+
+    .ov__table td + td {
+      border-left: 1px solid var(--line);
     }
 
     .ov__col {
