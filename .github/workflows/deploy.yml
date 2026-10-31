@@ -1,0 +1,89 @@
+name: deploy
+
+# Manual only (Actions -> deploy -> Run workflow, branch main): syncs the blog
+# content, builds main and ships it to the one-server host (www.tamtree.io) with
+# the same script `make deploy` runs. Publishing a post is a push to
+# tamtree-ai/blog, then a click here — nothing in this repo needs committing.
+#
+# The runner reaches the box over Tailscale as tag:ci; port 22 is never opened
+# to it. It is the same host and the same access as checkolo/tamtree's deploy,
+# so the secrets are the same values. Repository setup, all on the `production`
+# environment:
+#   secrets  TS_OAUTH_CLIENT_ID, TS_OAUTH_SECRET  Tailscale OAuth client, scope auth_keys, tag:ci
+#            DEPLOY_SSH_KEY                       private key whose public half is in ubuntu's authorized_keys
+#            DEPLOY_KNOWN_HOSTS                   `ssh-keyscan <DEPLOY_SSH_HOST>` output
+#   vars     DEPLOY_SSH_HOST                      the box's tailnet name or 100.x address
+# `mode: check` previews without touching the host; `mode: rollback` is
+# `make deploy-rollback` (back to the previous release, headers included).
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "deploy, check (preview only) or rollback"
+        type: choice
+        options: [deploy, check, rollback]
+        default: deploy
+      force:
+        description: "Redeploy even when the host already serves this release"
+        type: boolean
+        default: false
+
+jobs:
+  deploy:
+    name: ${{ inputs.mode }} main to tamtree-app
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://www.tamtree.io
+    # One site deploy at a time; a second click waits rather than racing the
+    # symlink switch. The host also holds its own flock.
+    concurrency:
+      group: deploy-web-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # the script lists the commits since the deployed one
+      # Version comes from package.json's packageManager.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+      - name: SSH config for tamtree-app
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_HOST: ${{ vars.DEPLOY_SSH_HOST }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CONFIG
+          Host tamtree-app
+            HostName ${DEPLOY_SSH_HOST}
+            User ubuntu
+            IdentityFile ~/.ssh/deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking yes
+          CONFIG
+      - name: Deploy
+        env:
+          MODE: ${{ inputs.mode }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          args=(--yes)
+          case "$MODE" in
+            check) args+=(--check) ;;
+            rollback) args+=(--rollback) ;;
+          esac
+          [ "$FORCE" = true ] && args+=(--force)
+          scripts/deploy_remote.sh "${args[@]}"

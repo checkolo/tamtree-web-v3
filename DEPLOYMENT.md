@@ -305,10 +305,11 @@ it here, commit the PNGs there.
 
 ## What is deliberately not here
 
-- **No deploy on push.** A deploy is a person running `make deploy`. Doing it
-  from CI would put an SSH key for the server that runs the app into a GitHub
-  secret; the script takes everything from flags and environment variables, so
-  that stays possible the day it is worth it.
+- **No deploy on push.** A deploy is a person running `make deploy`, or
+  clicking Actions → deploy → Run workflow on `main`
+  (`.github/workflows/deploy.yml`). The workflow runs the same script with
+  `--yes`, reaching the host over Tailscale with the same `production`
+  environment secrets as `checkolo/tamtree`'s deploy; its header lists them.
 - **No preview deploy per content PR.** Contributors are a small known team, and
   the local path above covers the same need without a second pipeline to
   maintain.
