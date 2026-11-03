@@ -245,6 +245,7 @@ test('contact parse: one-line name, known topic or general, normalised newlines'
   assert.equal(c.topic, 'general');
   assert.equal(c.message, 'hi\nthere');
   assert.equal(parseContact('topic=deletion').topic, 'deletion');
+  assert.equal(parseContact('topic=brands').topic, 'brands');
   assert.equal(parseContact('topic=toString').topic, 'general');
 });
 
