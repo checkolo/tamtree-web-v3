@@ -12,7 +12,7 @@ export const founding = {
   places: 5,
   placesLeft: 5,
   /** ISO date the founding offer closes, if the places have not gone first. */
-  closes: '2027-02-28',
+  closes: '2026-11-30',
   months: 3,
   /** The discount founding clients keep on standard prices after the founding months. */
   afterDiscount: 25,
