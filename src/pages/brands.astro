@@ -26,6 +26,7 @@ const closes = formatLegalDate(founding.closes);
 const live = platforms.live.join(', ').replace(/, ([^,]*)$/, ' and $1');
 const soon = platforms.soon.join(' and ');
 const open = founding.placesLeft > 0;
+const reservedNote = founding.reserved > 0 ? ` · ${founding.reserved} reserved` : '';
 
 const steps = [
   {
@@ -188,7 +189,7 @@ const jsonLd = [
         </div>
 
         <ul class="bh__facts" aria-label="At a glance">
-          <li><Chip tone="live" dot size="sm">{founding.placesLeft} of {founding.places} places open</Chip></li>
+          <li><Chip tone="live" dot size="sm">{founding.placesLeft} of {founding.places} places open{reservedNote}</Chip></li>
           <li><Chip size="sm">closes {closes}</Chip></li>
           <li><Chip size="sm">AUD · ex-GST</Chip></li>
         </ul>
@@ -363,7 +364,7 @@ const jsonLd = [
       <div class="fo__count">
         <p class="fo__big" aria-hidden="true">{founding.placesLeft}<span>of {founding.places}</span></p>
         <p class="fo__label">
-          {open ? `${founding.placesLeft} of ${founding.places} founding places open` : 'Founding places are full'}
+          {open ? `${founding.placesLeft} of ${founding.places} founding places open${reservedNote}` : 'Founding places are full'}
         </p>
         <p class="fo__close">Closes {closes}, or when the places are gone.</p>
       </div>

@@ -6,11 +6,15 @@
  * `agent-orchestrator/marketing/2026-11-03-social-media-workflows/00-PLAN.md`.
  * Prices are AUD, ex-GST, monthly. `placesLeft` is printed on the page as a
  * public count, so it must only ever be the true number: lower it by hand as
- * places are taken, and close the offer by setting it to 0.
+ * places are taken, and close the offer by setting it to 0. `reserved` counts
+ * places held for a real client who has not signed yet (already subtracted
+ * from `placesLeft`); set it back to 0 when they sign or walk away.
  */
 export const founding = {
   places: 5,
-  placesLeft: 5,
+  placesLeft: 4,
+  /** Held for natureznest (brand kit) pending sign-up, 2026-11-03. */
+  reserved: 1,
   /** ISO date the founding offer closes, if the places have not gone first. */
   closes: '2026-11-30',
   months: 3,
