@@ -47,6 +47,7 @@ export const CONTACT_TOPICS = {
   deletion: 'Data deletion request',
   legal: 'Legal notice',
   waitlist: 'Waitlist',
+  brands: 'Brands — founding place',
 };
 // Deliberately loose: one @, no spaces, a dot in the domain. Resend does the
 // real validation; this only keeps obvious junk out of the inbox.
