@@ -7,7 +7,7 @@ import { founding } from '../data/brands';
 import { profiles } from '../data/social';
 
 /**
- * /social/ — the link-in-bio page. Instagram allows one link on a profile, so
+ * /bio/ — the link-in-bio page. Instagram allows one link on a profile, so
  * this is the page that link points at: the few places a visitor from a reel
  * actually wants to go, then every Tamtree profile.
  *
@@ -52,8 +52,8 @@ const glyphs: Record<string, string> = {
 const jsonLd = [
   {
     '@type': 'WebPage',
-    '@id': `${SITE}/social/#page`,
-    url: `${SITE}/social/`,
+    '@id': `${SITE}/bio/#page`,
+    url: `${SITE}/bio/`,
     name: 'Tamtree links',
     isPartOf: { '@id': WEBSITE_ID },
     about: { '@id': ORG_ID },

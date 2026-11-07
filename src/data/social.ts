@@ -1,5 +1,5 @@
 /**
- * Tamtree's own social profiles — the links /social/ is built from, and the
+ * Tamtree's own social profiles — the links /bio/ is built from, and the
  * one place to add a profile when an account goes live.
  *
  * A profile with an empty `url` is not rendered, so a platform can be listed
