@@ -18,7 +18,7 @@ export const profiles: SocialProfile[] = [
   // The Page has no username yet, so it is linked by ID. Swap in
   // facebook.com/<username> once one is set (Page settings › Username).
   { id: 'facebook', name: 'Facebook', handle: 'Tamtree', url: 'https://www.facebook.com/1424997467365330' },
-  { id: 'youtube', name: 'YouTube', handle: '', url: '' },
+  { id: 'youtube', name: 'YouTube', handle: '@tamtree-io', url: 'https://www.youtube.com/@tamtree-io' },
   { id: 'tiktok', name: 'TikTok', handle: '', url: '' },
   { id: 'linkedin', name: 'LinkedIn', handle: '', url: '' },
 ];
