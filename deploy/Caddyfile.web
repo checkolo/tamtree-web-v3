@@ -25,6 +25,11 @@ www.tamtree.io {
 		reverse_proxy waitlist:8787
 	}
 
+	# /brands/ is retired (2026-11-09); old links, the blog post and shared
+	# posts land on the home page instead of the bare 404.
+	@brands path /brands /brands/ /brands/*
+	redir @brands / permanent
+
 	# `current` is a symlink to releases/<tag>, switched by scripts/deploy_remote.sh.
 	root * /srv/web/current
 

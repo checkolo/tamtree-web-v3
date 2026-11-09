@@ -24,7 +24,7 @@ const linksFor = (group: Feature['group']) =>
 
 /** Generated from data/product.ts, so a footer link cannot outlive its page. */
 const columns = [
-  { id: 'foot-product', label: 'Product', links: [...linksFor('product'), { href: '/brands/', label: 'For brands' }] },
+  { id: 'foot-product', label: 'Product', links: linksFor('product') },
   { id: 'foot-platform', label: 'Platform', links: linksFor('platform') },
 ];
 

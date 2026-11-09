@@ -3,7 +3,6 @@ import Base from '../layouts/Base.astro';
 import Mark from '../components/Mark.astro';
 import Eyebrow from '../components/Eyebrow.astro';
 import { breadcrumbs, ORG_ID, SITE, WEBSITE_ID } from '../lib/seo';
-import { founding } from '../data/brands';
 import { profiles } from '../data/social';
 
 /**
@@ -13,25 +12,15 @@ import { profiles } from '../data/social';
  *
  * Built for a phone held in one hand: one column, full-width tap targets of at
  * least 56px, the most useful link first. The profiles come from
- * src/data/social.ts and the founding count from src/data/brands.ts, so
- * nothing on this page is typed twice.
+ * src/data/social.ts, so nothing on this page is typed twice.
  *
  * The links are an <ul> of plain <a>s — a list of destinations, not actions.
  * Platform glyphs are `aria-hidden`; the visible name is the accessible name.
  */
 const live = profiles.filter((p) => p.url);
-const open = founding.placesLeft > 0;
 
 const links = [
-  {
-    href: '/brands/',
-    title: 'Done-for-you shorts for your brand',
-    note: open
-      ? `Founding offer · ${founding.placesLeft} of ${founding.places} places left`
-      : 'Branded shorts, approved by you',
-    featured: true,
-  },
-  { href: '/contact/?topic=brands', title: 'Book a chat', note: 'Tell us about your brand' },
+  { href: '/contact/?topic=brands', title: 'Book a chat', note: 'Tell us about your brand', featured: true },
   { href: '/how-it-works/', title: 'How Tamtree works', note: 'Workflows with a person in the loop' },
   { href: '/blog/', title: 'Read the blog', note: 'Notes from building it' },
   { href: '/', title: 'tamtree.io', note: 'The website' },
@@ -64,7 +53,7 @@ const jsonLd = [
 
 <Base
   title="Links"
-  description="Every Tamtree link in one place: done-for-you shorts for brands, booking a chat, the blog, and Tamtree on Instagram, Facebook and more."
+  description="Every Tamtree link in one place: booking a chat, how it works, the blog, and Tamtree on Instagram, Facebook and more."
   jsonLd={jsonLd}
 >
   <section class="links wrap">
