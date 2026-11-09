@@ -18,7 +18,7 @@ import { legal } from '../data/legal';
  * The platform clause names the YouTube Terms of Service, which YouTube API
  * Services require an app's own terms to bind users to.
  */
-const { entity, abn, contactPath, governingState } = legal;
+const { entity, contactPath, governingState } = legal;
 
 const sections = [
   { id: 'agreement', title: 'This agreement' },
@@ -45,7 +45,7 @@ const sections = [
 >
   <h2 id="agreement">This agreement</h2>
   <p>
-    These terms are an agreement between you and {entity} (ABN {abn}) ("Tamtree", "we", "us").
+    These terms are an agreement between you and {entity} ("Tamtree", "we", "us").
     They cover this website, the waitlist, and the Tamtree product (together, "the service"). By
     using the service you agree to them. If you use it for an organisation, you agree on its behalf
     and confirm that you are allowed to.

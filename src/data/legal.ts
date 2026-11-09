@@ -12,18 +12,16 @@
 export const legal = {
   /**
    * Who operates Tamtree. A partnership is not a legal entity of its own in
-   * Australia, so the partners are the "we" — the ABN is the partnership's.
-   * Read in a sentence: "operated by {entity} (ABN {abn})".
+   * Australia, so the partners are the "we".
+   * Read in a sentence: "operated by {entity}". No ABN on the site (2026-11-09).
    */
   entity: 'the partners of Tamtree, a partnership',
-  /** Australian Business Number, shown beside the entity. */
-  abn: '13 506 987 156',
   /** Where privacy requests, data deletion and legal notices go: the form, not an address. */
   contactPath: '/contact/',
   /** The Australian State or Territory whose law governs the Terms. */
   governingState: 'New South Wales',
   /** ISO date the current text took effect. */
-  lastUpdated: '2026-10-30',
+  lastUpdated: '2026-11-09',
   site: 'https://www.tamtree.io',
 } as const;
 
