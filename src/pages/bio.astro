@@ -20,10 +20,10 @@ import { profiles } from '../data/social';
 const live = profiles.filter((p) => p.url);
 
 const links = [
-  { href: '/contact/?topic=brands', title: 'Book a chat', note: 'Tell us about your brand', featured: true },
-  { href: '/how-it-works/', title: 'How Tamtree works', note: 'Workflows with a person in the loop' },
+  { href: '/how-it-works/', title: 'How Tamtree works', note: 'Draft, test, grade, publish', featured: true },
   { href: '/blog/', title: 'Read the blog', note: 'Notes from building it' },
   { href: '/', title: 'tamtree.io', note: 'The website' },
+  { href: '/contact/', title: 'Get in touch', note: 'Questions and feedback' },
 ];
 
 // Simple stroked glyphs on a 24-unit grid, drawn in currentColor.
@@ -53,14 +53,14 @@ const jsonLd = [
 
 <Base
   title="Links"
-  description="Every Tamtree link in one place: booking a chat, how it works, the blog, and Tamtree on Instagram, Facebook and more."
+  description="Every Tamtree link in one place: how it works, the blog, and Tamtree on Instagram, Facebook and more."
   jsonLd={jsonLd}
 >
   <section class="links wrap">
     <header class="links-head">
       <Mark size={56} wordmark={false} />
       <h1>tamtree</h1>
-      <p>Your content, handled. Branded shorts made for you, and nothing posts without your yes.</p>
+      <p>Workflows with a person in the loop. Notes and clips from building Tamtree.</p>
     </header>
 
     <ul class="links-list" role="list">
